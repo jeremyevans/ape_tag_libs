@@ -85,14 +85,15 @@ Cached version located here:
     http://www.ikol.dk/~jan/musepack/klemm/www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html
 '''
 
-from struct import pack as _pack, unpack as _unpack
+from cStringIO import StringIO as _StringIO
 from os.path import isfile as _isfile
+from struct import pack as _pack, unpack as _unpack
 
 # Variable definitions
 
 __version__ = '0.9'
 _maxapesize = 8192
-_commands = 'create update replace delete getfields getrawtag'.split()
+_commands = 'create update replace delete getfields getrawtag getnewrawtag'.split()
 _tagmustexistcommands = 'update getfields getrawtag'.split()
 _filelikeattrs = 'flush read seek tell truncate write'.split()
 _badapeitemkeys = 'id3 tag oggs mp+'.split()
@@ -214,14 +215,14 @@ class ApeItem(list):
 
 # Private functions
 
-def _ape(fil, fields, action, removefields = []):
+def _ape(fil, fields, action, removefields = [], updateid3 = False):
     '''Get or Modify APE tag for file'''
     if not hasattr(removefields, '__iter__') \
        or not callable(removefields.__iter__):
         raise TagError, "removefields is not an iterable"
     
     apesize = 0
-    filesize, id3data = _getfilesizeandid3(fil)    
+    filesize, id3data = _getfilesizeandid3(fil)
     data = fil.read(32)
 
     if _apepreamble != data[:12] or _apefooterflags != data[20:24]:
@@ -246,7 +247,8 @@ def _ape(fil, fields, action, removefields = []):
         if action == "delete":
             fil.truncate(fil.tell())
             fil.seek(0,2)
-            fil.write(id3data)
+            if not updateid3:
+                fil.write(id3data)
             return 0
             
     if action == "getrawtag":
@@ -268,9 +270,20 @@ def _ape(fil, fields, action, removefields = []):
             apeitems[key.lower()] = ApeItem(key, value)
      
     newtag = _makeapev2tag(apeitems)
-
+    
+    if action == "getnewrawtag":
+        return newtag
+    
     if len(newtag) > _maxapesize:
         raise TagError, 'New tag is too large: %i bytes' % len(data)
+    
+    if updateid3:
+        newid3 = _StringIO()
+        if action != 'replace':
+            newid3.write(id3data)
+        id3data = _id3(newid3, _apefieldstoid3fields(fields), "getnewrawtag")
+        newid3.close()
+    
     # truncate does not seem to work properly in all cases without 
     # explicitly given the position
     fil.truncate(fil.tell())
@@ -384,6 +397,9 @@ def _id3(fil, fields, action):
            tagfields[field.lower()] = value
     
     newtag = _makeid3tag(tagfields)
+
+    if action == "getnewrawtag":
+        return newtag
 
     if data:
         fil.truncate(fil.tell() - 128)
@@ -520,12 +536,12 @@ def _stringoverlaps(string1, string2):
 
 _sortapeitems = lambda a, b: cmp(len(a), len(b))
 
-def _tag(function, fil, fields = {}, action = "update", *args):
+def _tag(function, fil, fields = {}, action = "update", *args, **kwargs):
     '''Preform tagging operation, check args, open/close file if necessary'''
     origfil = fil
     fil, fields, action = _checkargs(fil, fields, action)
     try:
-        return function(fil, fields, action, *args)
+        return function(fil, fields, action, *args, **kwargs)
     finally:
         if isinstance(origfil, basestring):
             # filename given as an argument, close file object
@@ -543,9 +559,7 @@ def createid3(fil, fields = {}):
     
 def createtags(fil, fields = {}):
     '''Create/update both APE and ID3v1 tags on fil with the information in fields'''
-    apefields = createape(fil, fields)
-    createid3(fil, _apefieldstoid3fields(fields))
-    return apefields
+    return _tag(_ape, fil, fields, 'create', updateid3=True)
 
 def deleteape(fil):
     '''Delete APE tag from fil if it exists'''
@@ -558,7 +572,7 @@ def deleteid3(fil):
 def deletetags(fil):
     '''Delete APE and ID3v1 tags from fil if either exists'''
     deleteid3(fil)
-    return deleteape(fil)
+    return _tag(_ape, fil, action='delete', updateid3=True)
 
 def getapefields(fil):
     '''Return fields from APE tag in fil'''
@@ -586,9 +600,7 @@ def replaceid3(fil, fields = {}):
     
 def replacetags(fil, fields = {}):
     '''Replace/create both APE and ID3v1 tags on fil with the information in fields'''
-    apefields = replaceape(fil, fields)
-    replaceid3(fil, _apefieldstoid3fields(fields))
-    return apefields
+    return _tag(_ape, fil, fields, 'replace', updateid3=True)
 
 def updateape(fil, fields = {}, removefields = []):
     '''Update APE tag in fil with the information in fields
@@ -606,6 +618,4 @@ def updatetags(fil, fields = {}, removefields = []):
     
     removefields: iterable yielding strings of APE tag fields to remove
     '''
-    apefields = updateape(fil, fields, removefields)
-    updateid3(fil, _apefieldstoid3fields(fields))
-    return apefields
+    return _tag(_ape, fil, fields, 'update', removefields, True)

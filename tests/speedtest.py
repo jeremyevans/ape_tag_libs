@@ -1,4 +1,5 @@
 from timeit import Timer
+import ApeTag, create, delete, getfields, getrawtag, replace, update, walktree
 
 def test(testname = 'getfields', numtimes = 1):
     t = Timer('walktree(test, False)', 'from walktree import walktree\nfrom %s import test' % testname)
