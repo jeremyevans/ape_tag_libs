@@ -1,6 +1,6 @@
 from distutils.core import setup
 setup(name="py-ApeTag",
-      version="0.10",
+      version="0.11",
       description="A pure Python library for manipulating APEv2 and ID3v1 tags",
       author="Quasi Reality",
       author_email="quasireality@users.sourceforge.net",

@@ -18,20 +18,22 @@ speeds of the different tag actions. On my machine, the following is true for a
 sample album (10 tracks, 45 minutes, for both tags):
 
 getrawtag is the fastest operation
-getfields takes about 35% longer than getrawtag
-replace takes about 40% longer than getrawtag
-create takes about 45% longer than getrawtag
-delete takes about 48% longer than getrawtag
-update takes about 79% longer than getrawtag
+getfields takes about 66% longer than getrawtag
+replace takes about 124% longer than getrawtag
+create takes about 129% longer than getrawtag
+delete takes about 134% longer than getrawtag
+update takes about 179% longer than getrawtag
 
 In terms of total time for the entire album:
-getrawtag = 12.4ms
-getfields = 16.8ms
-replace = 17.3ms
-create = 18.0ms
-delete = 18.3ms
-update = 22.2ms
+getrawtag = 7.6ms
+getfields = 12.6ms
+replace = 17.0ms
+create = 17.4ms
+delete = 17.8ms
+update = 21.2ms
 
 Speeds were roughly 100% faster going from version 0.6 to 0.7, about 20%
 slower going from version 0.8 to 0.9, with that time more than gained back
-between 0.9 and 0.10.
+between 0.9 and 0.10.  Version 0.11 is about 10% faster than version 0.10.
+Note that the time comparisons are not perfect, since the speed tests have
+changed with the versions.

@@ -28,7 +28,7 @@ fields: dictionary like object of tag fields that has an iteritems method
     which is an iterator of key, value tuples. 
     APE:
         key: must be a regular string with length 2-255 inclusive, containing
-            only characters in the range 0x20-0x7f
+            only ASCII characters in the range 0x20-0x7f
         value: must be a string or a list or tuple of them, or an ApeItem
     ID3:
         key: must be title, artist, album, year, comment, genre, or track*
@@ -45,10 +45,11 @@ string on success of getraw functions
 dict on success of create, update, replace, or getfields
     key is the field name as a string
     (APE) value is an ApeItem, which is a list subclass with the field values
-        stored in the list as unicode strings, and the following special attrs:
+        stored in the list as strings, and the following special attributes:
         key: same as key of dict
         readonly: whether the field was marked read only
-        type: type of tag field (utf8, binary, external, or reserved)
+        type: type of tag field (utf8, binary, external, or reserved),
+              utf8 type means values in list are unicode strings
     (ID3) value is a regular string
     
 Public Functions Raise
@@ -64,8 +65,8 @@ Notes
 When using functions that modify both tags, the accepted arguments and return
     value are the same for the APE funtion.
 Raising errors other than IOError, UnicodeError, or TagError is considered a
-    bug unless the program using this library is specifically designed to raise
-    other errors.
+    bug unless fields contains a non-basestring (or a list containing a
+    non-basestring).
 Only APEv2 tags are supported. APEv1 tags without a header are not supported.
 Only writes ID3v1.1 tags.  Assumes all tags are ID3v1.1.  The only exception to
     this is when it detects an ID3v1.0 tag, it will return 0 as the track
@@ -79,10 +80,11 @@ Read-only flags can be read, created, and modified (they are not respected).
 If you are storing non 7-bit ASCII data in a tag, you should pass in unicode
     strings instead of regular strings, or pass in an already created ApeItem.
 Inserting binary data into tags is "strongly unrecommended."
+This library doesn't check to make sure that tag items marked as external are
+    in the proper format.
 Official APEv2 specification is here:
     http://www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html
-Cached version located here:
-    http://www.ikol.dk/~jan/musepack/klemm/www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html
+Cached version located here: http://209.220.159.58/mpp/sv8/apetag.html
 '''
 
 from os.path import isfile as _isfile
@@ -90,7 +92,7 @@ from struct import pack as _pack, unpack as _unpack
 
 # Variable definitions
 
-__version__ = '0.10'
+__version__ = '0.11'
 _maxapesize = 8192
 _commands = 'create update replace delete getfields getrawtag getnewrawtag'.split()
 _tagmustexistcommands = 'update getfields getrawtag'.split()
@@ -147,25 +149,32 @@ class TagError(StandardError):
 
 class ApeItem(list):
     '''Contains individual APE tag items'''
-    def __init__(self, key = None, values = []):
+    def __init__(self, key = None, values = [], type = 'utf8', readonly = False):
         list.__init__(self)
         if key is None:
             return
         if not self.validkey(key):
             raise TagError, 'Invalid item key for ape tag item: %r' % key
+        if type not in _apeitemtypes:
+            raise TagError, 'Invalid item type for ape tag item: %r' % type
         self.key = key
-        self.readonly = False
-        self.type = 'utf8'
+        self.readonly = bool(readonly)
+        self.type = type
         if isinstance(values, basestring):
             values = [values]
-        self.extend([unicode(value) for value in values])
+        if type == 'utf8':
+            values = [unicode(value) for value in values]
+        self.extend(values)
     
     def maketag(self):
         '''Return on disk representation of tag item
         
         self.parsetag(self.maketag(), 0) should result in no change to self
         '''
-        values = '\x00'.join([value.encode('utf8') for value in self])
+        if self.type == 'utf8':
+            values = '\x00'.join([value.encode('utf8') for value in self])
+        else:
+            values = '\x00'.join(self)
         size = _pack("<i",len(values))
         flags = chr(int(self.readonly) + 2 * (_apeitemtypes.index(self.type)))
         return '%s\x00\x00\x00%s%s\x00%s' % (size, flags, self.key, values)
@@ -198,10 +207,12 @@ class ApeItem(list):
         self.key = itemkey
         curpos = keyend + itemlength + 1
         itemvalue = data[keyend+1:curpos]
-        if self.type == 'binary':
-            self.append(itemvalue)
-        else:
+        if self.type == 'utf8':
             self.extend(itemvalue.decode('utf8').split('\x00'))
+        elif self.type == 'external':
+            self.extend(itemvalue.split('\x00'))
+        else:
+            self.append(itemvalue)
         return curpos
     
     def validkey(self, key):
@@ -252,10 +263,14 @@ def _ape(fil, fields, action, removefields = [], updateid3 = False):
             return 0
             
     if action == "getrawtag":
+        if updateid3:
+            return data, _id3(fil, [], "getrawtag")
         return data
     if action == "getfields":
+        if updateid3:
+            return _restoredictcase(_parseapetag(data)), \
+                   _id3(fil, [], "getfields")
         return _restoredictcase(_parseapetag(data))
-    
     if not data or action == "replace":
         apeitems = {}
     else:
@@ -502,12 +517,9 @@ def _parseid3tag(data):
 
 def _removeapeitems(apeitems, removefields):
     '''Remove items from the APE tag'''
-    for itemkey in removefields:
-        if not isinstance(itemkey, str):
-            raise TagError, "Invalid entry in removeitems: %r" % itemkey
-        itemkey = itemkey.lower()
-        if itemkey in apeitems.keys():
-            del apeitems[itemkey]
+    for key in [key.lower() for key in removefields if hasattr(key, 'lower')]:
+        if key in apeitems:
+            del apeitems[key]
             
 def _restoredictcase(apeitems):
     '''Restore the case of the dictionary keys for the ApeItems'''
@@ -573,6 +585,10 @@ def getid3fields(fil):
     '''Return fields from ID3v1 tag in fil (including blank fields)'''
     return _tag(_id3, fil, action='getfields')
 
+def gettagfields(fil):
+    '''Get APE and ID3 tag fields tuple'''
+    return _tag(_ape, fil, action='getfields', updateid3=True)
+
 def getrawape(fil):
     '''Return raw APE tag from fil'''
     return _tag(_ape, fil, action='getrawtag')
@@ -580,6 +596,10 @@ def getrawape(fil):
 def getrawid3(fil):
     '''Return raw ID3v1 tag from fil'''
     return _tag(_id3, fil, action='getrawtag')
+
+def getrawtags(fil):
+    '''Get raw APE and ID3 tag tuple'''
+    return _tag(_ape, fil, action='getrawtag', updateid3=True)
 
 def replaceape(fil, fields = {}):
     '''Replace/create APE tag in fil with the information in fields'''

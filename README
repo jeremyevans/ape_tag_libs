@@ -8,7 +8,10 @@ storing just audio file metadata).
 
 The module is in written in pure Python, so it should be useable on all 
 platforms that Python supports.  The primary testing platform is currently 
-Windows.
+Windows.  Minimum python version required should be 2.2, since the code uses
+list comprehensions (testing has only been done on 2.3).  Modifying the code to
+work with Python 2.0 shouldn't be difficult, though there aren't any plans to
+do so.
 
 The library is complete, but it hasn't been widely used, so there may still be
 some bugs in it.  I haven't found any bugs in my normal use of it that I
@@ -17,8 +20,8 @@ haven't already fixed, though.
 The public functions should be named obviously.  There are functions for
 creating, replacing, updating, and deleting APE and ID3 tags both separately
 and together.  There are also functions for getting the fields and the raw
-string for the APE and ID3 tags separately.  Public function arguments, return
-values, and various notes are stored in the module docstring.
+string for the tags.  Public function arguments, return values, and various 
+notes are stored in the module docstring.
 
 To run the tests for the library, see the README.tests file.
 
@@ -32,6 +35,15 @@ regular basis, so it is unlikely to be different from the latest release.
 Thank you for downloading this library. I hope you find it useful. 
 
 Changelog:
+0.11 - 2005-04-02
+- Add getrawtags and gettagfields public functions that return a tuple of 
+  strings and dicts, respectively for the APE and ID3 tags.  This results in a
+  substantial speedup compared to calling the functions for the APE and ID3 
+  tags separately.
+- Add ability to specify type and readonly flag for ApeItems on initialization
+- Only use unicode for utf8 ApeItems; binary, external, and reserved items use
+  regular strings.
+
 0.10 - 2005-03-21
 - Better automated conversion from APE fields to ID3 fields in functions that
   modify both tags

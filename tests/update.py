@@ -2,7 +2,7 @@ from ApeTag import updatetags
 from walktree import walktree, fields
 
 def test(filename, printoutput):
-    updatetags(filename, fields)
+    updatetags(filename, fields, ['Year'])
     if printoutput:
         print 'Updated tag for %s' % filename
 

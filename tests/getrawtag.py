@@ -1,14 +1,10 @@
-from ApeTag import getrawid3, getrawape
+from ApeTag import getrawtags
 from walktree import walktree
 
 def test(filename, printoutput):
-    apev2 = getrawape(filename)
-    id3 = getrawid3(filename)
+    ape, id3 = getrawtags(filename)
     if printoutput:
-        print 'Raw Tag for', filename
-        print 'ID3: %r' % id3
-        print 'APEv2: %r' % apev2
-        print ' '
+        print 'Raw Tag for %s\nID3: %r\nAPE: %r\n' % (filename, id3, ape)
 
 if __name__ == '__main__':
     walktree(test)
