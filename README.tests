@@ -1,6 +1,7 @@
 The tests for py-apev2tag are located in the tests directory.  After you have
-installed py-apev2tag, copy the files that you would like to test in the
-tests/tagtest directory. Then run one of the scripts in the tests directory.
+installed py-apev2tag, create a subdirectory named tagtest under tests and 
+copy the files that you would like to test into the tests/tagtest directory. 
+Then run one of the scripts in the tests directory.
 
 WARNING: Other than getfields and getrawtag, the other tests modify the files
     you place in the tests/tagtest directory, so you should copy the files you
