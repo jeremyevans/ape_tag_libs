@@ -21,9 +21,10 @@
 '''Module for manipulating APEv2 and ID3v1.1 tags'''
 
 from struct import pack as _pack, unpack as _unpack
+from os.path import isfile as _isfile
 
 # Variable definitions
-__version__ = '0.7'
+__version__ = '0.8'
 _commands = 'create update replace delete getfields getrawtag'.split()
 _tagmustexistcommands = 'update getfields getrawtag'.split()
 _filelikeattrs = 'flush read seek tell truncate write'.split()
@@ -78,7 +79,53 @@ class TagError(StandardError):
 
 # Private Helper functions
 
+def _apefieldstoid3fields(fields):
+    '''Convert APEv2 tag fields to ID3 tag fields '''
+    id3fields = {}
+    for key, value in fields.iteritems():
+        if not isinstance(key, str):
+            raise TagError, 'Invalid tag field: %r' % key
+        key = key.lower()
+        if key.startswith('track'):
+            try:
+                id3fields['track'] = int(value)
+            except ValueError:
+                pass
+        elif key == 'genre':
+            if value in id3genres:
+                id3fields['genre'] = id3genres.index(value)
+            elif value in _id3genreslower:
+                id3fields['genre'] = _id3genreslower.index(value)
+        elif key in _id3fields:
+            if isinstance(value, str):
+                id3fields[key] = value
+            elif isinstance(value, unicode):
+                id3fields[key] = value.encode('utf8', 'replace')
+            elif isinstance(value, (list, tuple)):
+                try:
+                    id3fields[key] = ', '.join(value)
+                except ValueError:
+                    raise TagError, 'Invalid tag value for %s field: %r' % (key, value)
+            elif isinstance(value, dict):
+                if 'value' not in value or not isinstance(value['value'], str):
+                    raise TagError, 'Invalid tag value for %s field: %r' % (key, value)
+                id3fields[key] = value['value']
+    return id3fields
+
 _apelengthreduce = lambda i1, i2: i1 + 9 + len(i2["key"]) + len(i2["value"])
+
+def _checkargs(fil, fields, action):
+    '''Check that arguments are valid, convert them, or raise an error'''
+    if not (isinstance(action,str) and action.lower() in _commands):
+        raise TagError, "%r is not a valid action" % action
+    action = action.lower()
+    fil = _getfileobj(fil, action)
+    for attr in _filelikeattrs:
+        if not hasattr(fil, attr) or not callable(getattr(fil, attr)):
+            raise TagError, "file does not support method %r" % attr
+    if not hasattr(fields, 'items') or not callable(fields.items):
+        raise TagError, "fields does not support method 'items'"
+    return fil, fields, action
 
 def _getapefields(apeitems):
     '''Convert internal dictionary of APEv2 tag fields to external format'''
@@ -107,6 +154,16 @@ def _getapefields(apeitems):
             returnfields[item["key"]] = {"type":typestring, "value":itemvalue}
     return returnfields
 
+def _getfileobj(fil, action):
+    '''Return a file object if given a filename, otherwise return file'''
+    if isinstance(fil, basestring) and _isfile(fil):
+        if action in ('getfields', 'getrawtag'):
+            mode = 'rb'
+        else:
+            mode = 'r+b'
+        return file(fil, mode)
+    return fil
+
 def _makeapev2tag(apeitems):
     '''Construct an APEv2 tag string from a list of dictionaries'''
     apeentries = []
@@ -132,6 +189,7 @@ def _makeid3tag(fields):
     for field, value in newfields.items():
         if not isinstance(field, str):
             del newfields[field]
+        field = field.lower()
         if field.startswith('track'):
             try:
                 newfields['track'] = chr(int(value))
@@ -170,7 +228,7 @@ def _parseapev2tag(data):
     # 64 is size of header + footer, 11 is minimum item length item
     if numitems > (len(data) - 32)/11:
         raise TagError, 'Corrupt tag, specifies more items that is possible ' \
-                        'given space remaining %i items' % numitems
+                        'given space remaining: %i items' % numitems
     # Parse each item in the tag
     curpos = 32
     for x in range(numitems):
@@ -222,14 +280,14 @@ def _validapeitemkey(key):
 
 # Public functions
 
-def apev2tag(apefile, addfields = {}, removefields = [], action = "update"):
+def apev2tag(fil, fields = {}, removefields = [], action = "update"):
     '''Manipulate APEv2 tag.
     
     Arguments
     ---------
-    apefile: already opened file or file-like object that supports flush, seek,
-        read, truncate, tell, and write.
-    addfields: dictionary like object of tag fields that has an items method
+    fil: filename string OR already opened file or file-like object that
+        supports flush, seek, read, truncate, tell, and write
+    fields: dictionary like object of tag fields that has an items method
         which returns a list of key, value tuples to add/replace.  
         key: must be a regular string with length 2-255 inclusive
         value: must be a string or a list or tuple of them, or a 
@@ -238,7 +296,7 @@ def apev2tag(apefile, addfields = {}, removefields = [], action = "update"):
                 type: value must be either 'utf8', 'binary', or 'external'
     removefields: iterable yielding strings of tag fields to remove
     action should be one of the following strings (update is the default):
-        update: Creates or replaces tag fields in addfields, 
+        update: Creates or replaces tag fields in fields, 
             removes tag fields in removefields (remaining fields unchanged)
         create: Create tag if it doesn't exist, otherwise update
         replace: Remove APEv2 tag from file (if it exists), create new tag 
@@ -297,17 +355,10 @@ def apev2tag(apefile, addfields = {}, removefields = [], action = "update"):
         http://www.ikol.dk/~jan/musepack/klemm/www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html
     '''
     
-    for attr in _filelikeattrs:
-        if not hasattr(apefile, attr) or not callable(getattr(apefile, attr)):
-            raise TagError, "apefile does not support method %r" % attr
-    if not hasattr(addfields, 'items') or not callable(addfields.items):
-        raise TagError, "addfields does not support method 'items'"
+    fil, fields, action = _checkargs(fil, fields, action)
     if not hasattr(removefields, '__iter__') or not callable(removefields.__iter__):
         raise TagError, "removefields is not an iterable"
-    if not (isinstance(action,str) and action.lower() in _commands):
-        raise TagError, "%r is not a valid action" % action
-    
-    action = action.lower()
+
     hasid3 = True
     hasapev2 = True
     id3data = ""
@@ -317,17 +368,17 @@ def apev2tag(apefile, addfields = {}, removefields = [], action = "update"):
     numitems = 0
     maxsize = 8192 # Maximum length of APEv2 tag
     
-    apefile.seek(0, 2)
-    filesize = apefile.tell()
-    apefile.seek(-1 * 128, 1)
-    data = apefile.read(128)
+    fil.seek(0, 2)
+    filesize = fil.tell()
+    fil.seek(-1 * 128, 1)
+    data = fil.read(128)
     if data[:3] != 'TAG':
         hasid3 = False
-        apefile.seek(-1 * 32, 1)
+        fil.seek(-1 * 32, 1)
     else:
         id3data = data
-        apefile.seek(-1 * 160, 1)
-    data = apefile.read(32)
+        fil.seek(-1 * 160, 1)
+    data = fil.read(32)
 
     if _apepreamble != data[:12] or _apefooterflags != data[20:24]:
         if action in _tagmustexistcommands:
@@ -342,15 +393,15 @@ def apev2tag(apefile, addfields = {}, removefields = [], action = "update"):
         if apesize + len(id3data) > filesize:
             raise TagError, 'Existing tag says it is larger than the file: ' \
                             '%i bytes' % apesize
-        apefile.seek(-1 * apesize, 1)
-        data = apefile.read(apesize)
+        fil.seek(-1 * apesize, 1)
+        data = fil.read(apesize)
         if _apepreamble != data[:12] or _apeheaderflags != data[20:24]:
             return TagError, 'Nonexistent or corrupt tag, missing tag header'
-        apefile.seek(-1 * apesize, 1)
+        fil.seek(-1 * apesize, 1)
         if action == "delete":
-            apefile.truncate(apefile.tell())
-            apefile.seek(0,2)
-            apefile.write(id3data)
+            fil.truncate(fil.tell())
+            fil.seek(0,2)
+            fil.write(id3data)
             return 0
             
     if action == "getrawtag":
@@ -369,7 +420,7 @@ def apev2tag(apefile, addfields = {}, removefields = [], action = "update"):
                 del apeitems[itemkey.lower()]
 
     # Add requested items to tag
-    for itemkey, itemvalue in addfields.items():
+    for itemkey, itemvalue in fields.items():
         if not _validapeitemkey(itemkey):
             raise TagError, 'Invalid item key: %r' % itemkey
         itemkeylower = itemkey.lower()
@@ -412,21 +463,21 @@ def apev2tag(apefile, addfields = {}, removefields = [], action = "update"):
         raise TagError, 'New tag is too large: %i bytes' % len(data)
     # truncate() does not seem to work properly in all cases without 
     #  explicitly given the position
-    apefile.truncate(apefile.tell())
+    fil.truncate(fil.tell())
     # Must seek to end of file as truncate appears to modify the file's
     #  current position in certain cases
-    apefile.seek(0,2)
-    apefile.write(newtag + id3data)
-    apefile.flush()
+    fil.seek(0,2)
+    fil.write(newtag + id3data)
+    fil.flush()
     return _getapefields(apeitems)
 
-def id3tag(id3file,fields={},action="update"):
+def id3tag(fil,fields={},action="update"):
     '''Manipulate ID3v1.1 tag
     
     Arguments
     ---------
-    id3file: already opened file or file-like object that supports flush, seek,
-        read, truncate, tell, and write.
+    fil: filename string OR already opened file or file-like object that
+        supports flush, seek, read, truncate, tell, and write
     fields: dictionary or dictionary like object of tag fields that has an
             items method which returns a list of key, value tuples, with the
             following keys recognized:
@@ -465,18 +516,11 @@ def id3tag(id3file,fields={},action="update"):
     you have comment fields using 29 or 30 characters.
     '''
     
-    for attr in _filelikeattrs:
-        if not hasattr(id3file, attr) or not callable(getattr(id3file, attr)):
-            raise TagError, "id3file does not support method %r" % attr
-    if not hasattr(fields, 'items') or not callable(fields.items):
-        raise TagError, "fields does not support method 'items'"
-    if not (isinstance(action,str) and action.lower() in _commands):
-        raise TagError, "%r is not a valid action" % action
-        
-    action = action.lower()
+    fil, fields, action = _checkargs(fil, fields, action)
+    
     tagexists = True
-    id3file.seek(-128, 2)
-    data = id3file.read(128)
+    fil.seek(-128, 2)
+    data = fil.read(128)
     
     # See if tag exists
     if data[0:3] != 'TAG':
@@ -487,7 +531,7 @@ def id3tag(id3file,fields={},action="update"):
         tagexists = False
     else:      
         if action == "delete":
-            id3file.truncate(id3file.tell() - 128)
+            fil.truncate(fil.tell() - 128)
             return 0
     
     if action == "getrawtag":
@@ -507,8 +551,53 @@ def id3tag(id3file,fields={},action="update"):
     newtag = _makeid3tag(tagfields)
 
     if tagexists:
-        id3file.truncate(id3file.tell() - 128)
-    id3file.seek(0, 2)
-    id3file.write(newtag)
-    id3file.flush()
+        fil.truncate(fil.tell() - 128)
+    fil.seek(0, 2)
+    fil.write(newtag)
+    fil.flush()
     return _parseid3tag(newtag)
+    
+# Public helper functions
+# See docstring for apev2tag and id3tag for these functions
+
+def createapev2(fil, fields = {}):
+    return apev2tag(fil, fields, action='create')
+def createid3(fil, fields = {}):
+    return id3tag(fil, fields, 'create')
+def createtags(fil, fields = {}):
+    createid3(fil, _apefieldstoid3fields(fields))
+    return createapev2(fil, fields)
+
+def deleteapev2(fil):
+    return apev2tag(fil, action='delete')
+def deleteid3(fil):
+    return id3tag(fil, action='delete')
+def deletetags(fil):
+    deleteid3(fil)
+    return deleteapev2(fil)
+
+def getapev2fields(fil):
+    return apev2tag(fil, action='getfields')
+def getid3fields(fil):
+    return id3tag(fil, action='getfields')
+
+def getrawapev2(fil):
+    return apev2tag(fil, action='getrawtag')
+def getrawid3(fil):
+    return id3tag(fil, action='getrawtag')
+
+def replaceapev2(fil, fields = {}):
+    return apev2tag(fil, fields, action='replace')
+def replaceid3(fil, fields = {}):
+    return id3tag(fil, fields, 'replace')
+def replacetags(fil, fields = {}):
+    replaceid3(fil, _apefieldstoid3fields(fields))
+    return replaceapev2(fil, fields)
+
+def updateapev2(fil, fields = {}, removefields = []):
+    return apev2tag(fil, fields, removefields, 'update')
+def updateid3(fil, fields = {}):
+    return id3tag(fil, fields, 'update')
+def updatetags(fil, fields = {}, removefields = []):
+    updateid3(fil, _apefieldstoid3fields(fields))
+    return updateapev2(fil, fields, removefields)

@@ -26,7 +26,7 @@ help(apev2tag)
 To run the tests for the library, see the README.tests file.
 
 If you find any bugs, would like additional documentation, or want to submit a
-patch, please use Sourceforge (http://sourceforge.net/projects/py-apev2tag/).
+patch, please use Sourceforge (http://sourceforge.net/projects/pylibape/).
 
 The most current source code can be accessed via anonymous SVN at 
 svn://209.220.159.58/py-apev2tag/.  Note that the library isn't modified on a
@@ -35,6 +35,15 @@ regular basis, so it is unlikely to be different from the latest release.
 Thank you for downloading this library. I hope you find it useful. 
 
 Changelog:
+0.8 - 2005-03-13
+- Helper functions such as createtags, deletetags, getrawapev2, getid3fields,
+  etc. added so you don't have to call id3tag and apev2tag directly with the
+  appropriate action.
+- You can now pass a filename instead of a file-like object to any of the
+  public functions.
+- Revised tests removing much of the duplicative code
+- Line endings for all files converted to LF (was a mix of LF and CRLF before)
+  
 0.7 - 2005-02-05
 - Entire code base refactored, resulting in major performance enhancements in
   parsing and writing APEv2 tags (over twice as fast as 0.6)

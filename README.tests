@@ -7,47 +7,28 @@ WARNING: Other than getfields and getrawtag, the other tests modify the files
     you place in the tests/tagtest directory, so you should copy the files you
     want to test, and not just move them into the directory.
 
-The tests are appropriately named, but here's a more thorough description of 
-each:
-
-create.py: Creates both tags on the files, or updates the tags already
-    there.  It adds the apev2 fields 'TestTitle' and 'TestArtist', and sets the
-    id3 'track' field to 0.
-    
-delete.py: Deletes both or either tags on the files, if present.
-
-getfields.py: Prints out the string representation of the python dictionary
-    of the fields in both tags.
-    
-getrawtag.py: Prints out the raw tag string for both tags.
-
-replace.py: Deletes both tags from the files, if they exist, and
-    creates new tags using the same info as create.py.
-
-update.py: Updates both tags, if they exist, by swapping the artist and title 
-    fields.
-
-After you have run create, delete, replace, or update, you should run getfields
-    or getrawtag to see if the tests were successful.
+The tests should be appropriately named.  Create, replace, and update modify 
+the Title, Artist, and Track fields to 'Test Create Title', 'Test Create
+Artist' and 0, respectively. After you have run create, delete, replace, or 
+update, you should run getfields or getrawtag to see if the tests were
+successful.
 	
 Additionally, there is a module named speedtest that can be used to test speeds
-for various tagging operations (used to test the performance increase
-between 0.6 and 0.7, which turned about to be over 100%).  Using this module,
-you can test relative speeds of the different tag actions (and different
-versions of py-apev2tag). On my machine, the following is true for a sample
-album (10 tracks, 45 minutes):
+for various tagging operations.  Using this module, you can test relative
+speeds of the different tag actions. On my machine, the following is true for a
+sample album (10 tracks, 45 minutes):
 
 getrawtag is the fastest operation
-getfields takes about 52% longer than getrawtag
-delete takes about 61% longer than getrawtag
-create takes about 87% longer than getrawtag
-replace takes about 128% longer than getrawtag
-update takes about 272% longer than getrawtag
+getfields takes about 13% longer than getrawtag
+delete takes about 34% longer than getrawtag
+replace takes about 85% longer than getrawtag
+create takes about 91% longer than getrawtag
+update takes about 93% longer than getrawtag
 
 In terms of total time for the entire album (yes, those are in milliseconds):
-getrawtag = 6.9ms
-getfields = 10.5ms
-delete = 11.1ms
-create = 12.9ms
-replace = 15.7ms
-update = 25.7ms
+getrawtag = 13.0ms
+getfields = 14.7ms
+delete = 17.4ms
+replace = 24.0ms
+create = 24.8ms
+update = 25.1ms

@@ -1,22 +1,14 @@
-def test(printoutput = True):
-    import apev2tag
-    import os
-    tagdir = 'tagtest'
-    for path, dirs, files in os.walk(tagdir, topdown=False):
-        for fil in files:
-            try:
-                fname = os.path.normpath(os.path.join(path, fil))
-                f = file(fname,'rb')
-                apev2 = apev2tag.apev2tag(f,action="getfields")
-                id3 = apev2tag.id3tag(f,action="getfields")
-                if printoutput:
-                    print 'Tag Fields for %s' % fname
-                    print 'ID3: %s' % id3
-                    print 'APEv2: %s' % apev2
-                    print ' '
-            except apev2tag.TagError, error:
-                if printoutput:
-                    print error, error.getmoreinfo(), fname
+from apev2tag import getid3fields, getapev2fields
+from walktree import walktree
+
+def test(filename, printoutput):
+    apev2 = getapev2fields(filename)
+    id3 = getid3fields(filename)
+    if printoutput:
+        print 'Tag Fields for', filename
+        print 'ID3: %s' % id3
+        print 'APEv2: %s' % apev2
+        print ' '
 
 if __name__ == '__main__':
-    test()
+    walktree(test)
