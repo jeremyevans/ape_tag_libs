@@ -296,6 +296,7 @@ def _apefieldstoid3fields(fields):
         elif key == 'genre':
             if not isinstance(value, basestring):
                 raise TagError, 'Invalid tag value for genre: %r' % value
+            id3fields[key] = value
         elif key in _id3fields:
             if isinstance(value, (list, tuple)):
                 try:
