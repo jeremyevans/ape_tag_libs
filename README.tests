@@ -1,0 +1,30 @@
+The tests for py-apev2tag are located in the tests directory.  After you have
+installed py-apev2tag, copy the files that you would like to test in the
+tests/tagtest directory. Then run one of the scripts in the tests directory.
+
+WARNING: Other than getfields and getrawtag, the other tests modify the files
+    you place in the tests/tagtest directory, so you should copy the files you
+    want to test, and not just move them into the directory.
+
+The tests are appropriately named, but here's a more thorough description of 
+each:
+
+create.py: Creates both tags on the files, or updates the tags already
+    there.  It adds the apev2 fields 'TestTitle' and 'TestArtist', and sets the
+    id3 'track' field it sets to 0.
+    
+delete.py: Deletes both or either tags on the files, if present.
+
+getfields.py: Prints out the string representation of the python dictionary
+    of the fields in both tags.
+    
+getrawtag.py: Prints out the raw tag string for both tags.
+
+replace.py: Deletes both tags from the files, if they exist, and
+    creates new tags using the same info as create.py.
+
+update.py: Updates both tags, if they exist, by swapping the artist and title 
+    fields.
+
+After you have run create, delete, replace, or update, you should run getfields
+    or getrawtag to see if the tests were successful.

@@ -87,7 +87,7 @@ class TagError(Exception):
     def getmoreinfo(self):
         return self.moreinfo
 
-def id3(id3file,fields={},action="update"):
+def id3tag(id3file,fields={},action="update"):
     '''Manipulate ID3v1.1 tag.
     
     Arguments
@@ -225,7 +225,7 @@ def id3(id3file,fields={},action="update"):
     id3file.write(data)
     return getfields(data)
 
-def ape(apefile, addfields = {}, removefields = [], action = "update"):
+def apev2tag(apefile, addfields = {}, removefields = [], action = "update"):
     '''Manipulate APEv2 tag.
     
     Arguments
@@ -272,8 +272,7 @@ def ape(apefile, addfields = {}, removefields = [], action = "update"):
     The APEv2 tag is appended to the end of the file.  If the file already
         has id3v1 tag at the end, it is recognized and the APEv2 tag is 
         placed directly before it.  
-    APEv2 tags already contained in the file must be appended to the end 
-        and possess both a header and a footer in order to be recognized.
+    APEv1 tags (those without a header) are not supported.
     Maximum allowed size for the APEv2 tag is 8192 bytes, as recommended
         by the creator of the APEv2 spec.
     There is no support for read-only tag fields, since there is no way of
@@ -296,6 +295,11 @@ def ape(apefile, addfields = {}, removefields = [], action = "update"):
     Official APEv2 specification is here: 
         http://www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html
     '''
+    
+    if not (isinstance(apefile, file) and isinstance(addfields, dict) \
+       and isinstance(removefields, (list, tuple)) \
+       and isinstance(action, str) and action.lower() in _commands):
+        raise TagError(0,"One of the arguments is bad")
     
     def getfields(apeitems):
         '''Returns a dictionary of the tag fields'''
@@ -354,57 +358,53 @@ def ape(apefile, addfields = {}, removefields = [], action = "update"):
     apesize = 0
     numitems = 0
     apeitems = {}
-    # 8320 = 8192 (8K) + 128 for the id3v1 tag
-    readsize = 8320 
-    
-    if not (isinstance(apefile, file) and isinstance(addfields, dict) \
-       and isinstance(removefields, (list, tuple)) \
-       and isinstance(action, str) and action.lower() in _commands):
-        raise TagError(0,"One of the arguments is bad")
-    
-    apefile.seek(-1 * readsize, 2)
-    data = apefile.read(readsize)
-    if data[-128:-125] != 'TAG':
+    apepreamble = "APETAGEX\xD0\x07\x00\x00"
+    maxsize = 8192 # Maximum length of APEv2 tag
+    apefile.seek(0, 2)
+    filesize = apefile.tell()
+    apefile.seek(-1 * 128, 1)
+    data = apefile.read(128)
+    if data[:3] != 'TAG':
         hasid3 = False
+        apefile.seek(-1 * 32, 1)
     else:
-        id3data = data[-128:]
-        data = data[:-128]
+        id3data = data
+        apefile.seek(-1 * 160, 1)
+    data = apefile.read(32)
 
-    apetagcount = data.count("APETAGEX\xD0\x07\x00\x00")
-    if apetagcount == 0:
+    if apepreamble != data[:12] or footerflags != data[20:24]:
         if action in ("update", "getfields", "getrawtag"):
             raise TagError(1, action + ' specified')
         elif action == "delete":
             return 0
         hasapev2 = False
-        apetagstart = len(data)
-    elif apetagcount == 2:
-        apetagstart = data.find("APETAGEX\xD0\x07\x00\x00")
-        if action == "delete":
-            apefile.seek(-1 * readsize + apetagstart,2)
-            apefile.truncate()
-            apefile.write(id3data)
-            return 0    
     else:
-        return TagError(1, " ".join('Either header or footer is missing,',
-            'or there are multiple APEv2 tags'))
-
-    if action == "getrawtag":
-        return data[apetagstart:] 
-
-    if hasapev2 and action != "replace":
-        data = data[apetagstart:]
         apesize = struct.unpack("<i",data[12:16])[0] + 32
-        if  apesize != len(data):
-            raise TagError(2, 'Specified Size: ' + str(apesize) + \
-                              ' Actual Size: ' + str(len(data)))
-        
+        if apesize > maxsize:
+            raise TagError(3, 'Existing tag is too large: %s bytes' % apesize)
+        if apesize + len(id3data) > filesize:
+            raise TagError(3, 'Existing tag says it is larger than the file')
+        apefile.seek(-1 * apesize, 1)
+        data = apefile.read(apesize)
+        if apepreamble != data[:12] or headerflags != data[20:24]:
+            return TagError(1, 'The tag header is missing')
+        apefile.seek(-1 * apesize, 1)
+        if action == "delete":
+            apefile.truncate(apefile.tell())
+            apefile.seek(0,2)
+            apefile.write(id3data)
+            return 0
+            
+    if action == "getrawtag":
+        return data
+
+    if hasapev2 and action != "replace":        
         numitems = struct.unpack("<i",data[16:20])[0]
-        # (8192 - 64 (len(header+footer))) / 11 (min len of item) = 738
-        if numitems > 738:
+        # 64 is size of header + footer, 11 is minimum item length item
+        if numitems > (apesize - 64)/11:
             raise TagError(5, 'Tag specified ' + numitems + ' items')
-        
-        headerflags = data[20:24]
+            
+        # Remove header
         data = data[32:]
             
         # Parse each item in the tag
@@ -420,13 +420,11 @@ def ape(apefile, addfields = {}, removefields = [], action = "update"):
             apeitems[itemkey.lower()] = \
                 {"key":itemkey, "flags":itemflags, "value":itemvalue}
         if len(data) != 32:
-            raise TagError(4, " ".join('Tag should be fully parsed, but', 
-                str(len(data)), 
-                'bytes are still remaining, so tag is probably corrupt'))
+            raise TagError(4, 'Tag should be fully parsed, but %s bytes are'  
+                'still remaining, so tag is probably corrupt' % len(data))
             
         if action == "getfields":
             return getfields(apeitems)
-        footerflags = data[20:24]
         
         # Remove requested items from tag
         for itemkey in removefields:
@@ -477,13 +475,13 @@ def ape(apefile, addfields = {}, removefields = [], action = "update"):
         else:
             raise TagError(0, itemkey + ' in addfields is bad')
     
-    apesize = 64
+    apesize = 32
     for item in apeitems.values():
         apesize += 9 + len(item["key"]) + len(item["value"])
     numitems = len(apeitems)
     
     # Construct tag string
-    data = "APETAGEX\xD0\x07\x00\x00" + struct.pack("<i",apesize-32) + \
+    data = apepreamble + struct.pack("<i",apesize) + \
              struct.pack("<i",numitems) + headerflags + "\x00" * 8
     for item in apeitems.values():
         apeentries.append(struct.pack("<i",len(item["value"])) + \
@@ -491,11 +489,15 @@ def ape(apefile, addfields = {}, removefields = [], action = "update"):
     # Sort items according to their length, per the APEv2 standard
     apeentries.sort(sortfields)
     data += "".join(apeentries)
-    data += "APETAGEX\xD0\x07\x00\x00" + struct.pack("<i",apesize-32) + \
+    data += apepreamble + struct.pack("<i",apesize) + \
               struct.pack("<i",numitems) + footerflags + "\x00" * 8
-    if len(data) > readsize:
-        raise TagError(3, 'New tag is too large: ' + str(len(data)) + ' bytes')
-    apefile.seek(-1 * readsize + apetagstart,2)
-    apefile.truncate()
+    if len(data) > maxsize:
+        raise TagError(3, 'New tag is too large: %s bytes' % len(data))
+    # truncate() does not seem to work properly in all cases without 
+    #  explicitly given the position
+    apefile.truncate(apefile.tell())
+    # Must seek to end of file as truncate appears to modify the file's
+    #  current position in certain cases
+    apefile.seek(0,2)
     apefile.write(data + id3data)
     return getfields(apeitems)

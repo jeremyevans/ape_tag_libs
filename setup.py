@@ -1,6 +1,6 @@
 from distutils.core import setup
-setup(name="pylibape",
-      version="0.5",
+setup(name="apev2tag",
+      version="0.6",
       description="Library for manipulating APEv2 and ID3v1.1 tags",
       author="Quasi Reality",
       author_email="quasireality@users.sourceforge.net",
@@ -14,7 +14,7 @@ setup(name="pylibape",
                     'Programming Language :: Python',
                     'Topic :: Multimedia'
       ],
-      py_modules=["pylibape"],
+      py_modules=["apev2tag"],
 )
 
 

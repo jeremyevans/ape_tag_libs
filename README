@@ -1,26 +1,30 @@
-pylibape is a pure python library for manipulating both APEv2 and ID3v1.1 tags.
-It aims for standards compliance with the APEv2 spec 
+py-apev2tag (formally pylibape) is a pure python library for manipulating both 
+APEv2 and ID3v1.1 tags.  It aims for standards compliance with the APEv2 spec 
 (http://www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html).  APEv2 is the 
-standard tagging format for Musepack (.mpc) files, though it can also be used 
+standard tagging format for Musepack (.mpc) files, and it can also be used 
 with mp3s as an alternative to the mess than is ID3v2.
 
-It should be useable on all platforms that Python supports, though the primary 
-testing platform is currently Windows.
+The module is in written in pure python, so it should be useable on all 
+platforms that Python supports.  The primary testing platform is currently 
+Windows.
 
-The library is mostly complete, but hasn't undergone thorough bugtesting.
+The library is mostly complete, but hasn't undergone thorough bugtesting.  I 
+haven't found any bugs in my normal use of it that I haven't already fixed
 
-The library has two functions (ape and id3) and one class (TagError).  At the
-risk of being obvious, ape manipulates APEv2 tags, and id3 manipulates ID3v1.1
-tags.  TagError is raised if there is a problem with the tag itself, or with
-the calling arguments.  For a complete description about how to use the 
+The library has two functions (apev2tag and id3tag) and one class (TagError).  
+At the risk of being obvious, ape manipulates APEv2 tags, and id3 manipulates 
+ID3v1.1 tags.  TagError is raised if there is a problem with the tag itself, or
+with the calling arguments.  For a complete description about how to use the 
 library, install it and then run the following commands from inside the python 
 interpreter:
 
-import pylibape
-help(pylibape)
+import apev2tag
+help(apev2tag)
+
+To run the tests for the library, see the README.tests file.
 
 If you find any bugs, would like additional documentation, or want to submit a
-patch, please use Sourceforge (http://sourceforge.net/projects/pylibape/).
+patch, please use Sourceforge (http://sourceforge.net/projects/py-apev2tag/).
 
 Thank you for downloading this library. I hope you find it useful. 
 
