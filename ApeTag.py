@@ -85,13 +85,12 @@ Cached version located here:
     http://www.ikol.dk/~jan/musepack/klemm/www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html
 '''
 
-from cStringIO import StringIO as _StringIO
 from os.path import isfile as _isfile
 from struct import pack as _pack, unpack as _unpack
 
 # Variable definitions
 
-__version__ = '0.9'
+__version__ = '0.10'
 _maxapesize = 8192
 _commands = 'create update replace delete getfields getrawtag getnewrawtag'.split()
 _tagmustexistcommands = 'update getfields getrawtag'.split()
@@ -102,8 +101,6 @@ _apeitemtypes = 'utf8 binary external reserved'.split()
 _apeheaderflags = "\x00\x00\x00\xA0"
 _apefooterflags = "\x00\x00\x00\x80"
 _apepreamble = "APETAGEX\xD0\x07\x00\x00"
-_apetypeflags = {"utf8":"\x00\x00\x00\x00", "binary":"\x00\x00\x00\x02",
-                 "external":"\x00\x00\x00\x04" }
 _id3tagformat = 'TAG%(title)s%(artist)s%(album)s%(year)s%(comment)s' \
                 '\x00%(track)s%(genre)s'
 _id3fields = {'title': (3,33), 'artist': (33,63), 'album': (63,93), 
@@ -222,6 +219,7 @@ def _ape(fil, fields, action, removefields = [], updateid3 = False):
         raise TagError, "removefields is not an iterable"
     
     apesize = 0
+    tagstart = None
     filesize, id3data = _getfilesizeandid3(fil)
     data = fil.read(32)
 
@@ -231,6 +229,7 @@ def _ape(fil, fields, action, removefields = [], updateid3 = False):
         elif action == "delete":
             return 0
         data = ''
+        tagstart = fil.tell()
     else:
         # file has a valid APE footer
         apesize = _unpack("<i",data[12:16])[0] + 32
@@ -240,15 +239,16 @@ def _ape(fil, fields, action, removefields = [], updateid3 = False):
             raise TagError, 'Existing tag says it is larger than the file: ' \
                             '%i bytes' % apesize
         fil.seek(-1 * apesize, 1)
+        tagstart = fil.tell()
         data = fil.read(apesize)
         if _apepreamble != data[:12] or _apeheaderflags != data[20:24]:
             return TagError, 'Nonexistent or corrupt tag, missing tag header'
-        fil.seek(-1 * apesize, 1)
         if action == "delete":
-            fil.truncate(fil.tell())
+            fil.truncate(tagstart)
             fil.seek(0,2)
             if not updateid3:
                 fil.write(id3data)
+            fil.flush()
             return 0
             
     if action == "getrawtag":
@@ -278,15 +278,11 @@ def _ape(fil, fields, action, removefields = [], updateid3 = False):
         raise TagError, 'New tag is too large: %i bytes' % len(data)
     
     if updateid3:
-        newid3 = _StringIO()
-        if action != 'replace':
-            newid3.write(id3data)
-        id3data = _id3(newid3, _apefieldstoid3fields(fields), "getnewrawtag")
-        newid3.close()
+        if action != 'replace' and id3data:
+            fil.truncate(filesize - 128)
+        id3data = _id3(fil, _apefieldstoid3fields(fields), "getnewrawtag")
     
-    # truncate does not seem to work properly in all cases without 
-    # explicitly given the position
-    fil.truncate(fil.tell())
+    fil.truncate(tagstart)
     # Must seek to end of file as truncate appears to modify the file's
     # current position in certain cases
     fil.seek(0,2)
@@ -364,14 +360,12 @@ def _getfilesizeandid3(fil):
 
 def _id3(fil, fields, action):
     '''Get or Modify ID3 tag for file'''
-    origfil = fil
-    fil, fields, action = _checkargs(fil, fields, action)
-    
     fil.seek(-128, 2)
+    tagstart = fil.tell()
     data = fil.read(128)
     
-    # See if tag exists
     if data[0:3] != 'TAG':
+        # Tag doesn't exist
         if action == "delete":
             return 0
         if action in _tagmustexistcommands: 
@@ -379,7 +373,7 @@ def _id3(fil, fields, action):
         data = ''
     else:      
         if action == "delete":
-            fil.truncate(fil.tell() - 128)
+            fil.truncate(tagstart)
             return 0
     
     if action == "getrawtag":
@@ -402,13 +396,10 @@ def _id3(fil, fields, action):
         return newtag
 
     if data:
-        fil.truncate(fil.tell() - 128)
+        fil.truncate(tagstart)
     fil.seek(0, 2)
     fil.write(newtag)
     fil.flush()
-    if isinstance(origfil, basestring):
-        # filename given as an argument, close file object
-        fil.close()
     return _parseid3tag(newtag)
 
 def _makeapev2tag(apeitems):

@@ -1,7 +1,7 @@
 from distutils.core import setup
 setup(name="py-ApeTag",
-      version="0.9",
-      description="Library for manipulating APEv2 and ID3v1.1 tags",
+      version="0.10",
+      description="A pure Python library for manipulating APEv2 and ID3v1 tags",
       author="Quasi Reality",
       author_email="quasireality@users.sourceforge.net",
       url="http://sourceforge.net/projects/pylibape/",

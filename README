@@ -1,5 +1,5 @@
 py-ApeTag (formally pylibape/py-apev2tag) is a pure Python library for
-manipulating both APE and ID3v1 tags.  It aims for standards compliance with
+manipulating both APEv2 and ID3v1 tags.  It aims for standards compliance with
 the APE spec (http://www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html). APE is
 the standard tagging format for Musepack (.mpc) and Monkey's Audio files
 (.ape), and it can also be used with mp3s as an alternative to the mess that is
@@ -32,6 +32,12 @@ regular basis, so it is unlikely to be different from the latest release.
 Thank you for downloading this library. I hope you find it useful. 
 
 Changelog:
+0.10 - 2005-03-21
+- Better automated conversion from APE fields to ID3 fields in functions that
+  modify both tags
+- Update the ID3 and APE tags at the same time if modifying both tags (instead 
+  of opening and closing the file twice)
+
 0.9 - 2005-03-20
 - Rename module from apev2tag to ApeTag
 - Remove apev2tag and id3tag functions, the helper functions that debuted in
