@@ -1,4 +1,4 @@
-from apev2tag import deletetags
+from ApeTag import deletetags
 from walktree import walktree
 
 def test(filename, printoutput):

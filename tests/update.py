@@ -1,4 +1,4 @@
-from apev2tag import updatetags
+from ApeTag import updatetags
 from walktree import walktree, fields
 
 def test(filename, printoutput):

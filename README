@@ -1,27 +1,24 @@
-py-apev2tag (formally pylibape) is a pure python library for manipulating both 
-APEv2 and ID3v1.1 tags.  It aims for standards compliance with the APEv2 spec 
-(http://www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html).  APEv2 is the 
-standard tagging format for Musepack (.mpc) files, and it can also be used 
-with mp3s as an alternative to the mess that is ID3v2.x (technically, it can
-be used on any file type and is not limited to storing just audio file 
-metadata).
+py-ApeTag (formally pylibape/py-apev2tag) is a pure Python library for
+manipulating both APE and ID3v1 tags.  It aims for standards compliance with
+the APE spec (http://www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html). APE is
+the standard tagging format for Musepack (.mpc) and Monkey's Audio files
+(.ape), and it can also be used with mp3s as an alternative to the mess that is
+ID3v2.x (technically, it can be used on any file type and is not limited to
+storing just audio file metadata).
 
-The module is in written in pure python, so it should be useable on all 
+The module is in written in pure Python, so it should be useable on all 
 platforms that Python supports.  The primary testing platform is currently 
 Windows.
 
-The library is mostly complete, but hasn't undergone thorough bugtesting.  I 
-haven't found any bugs in my normal use of it that I haven't already fixed.
+The library is complete, but it hasn't been widely used, so there may still be
+some bugs in it.  I haven't found any bugs in my normal use of it that I
+haven't already fixed, though.
 
-The library has two public functions (apev2tag and id3tag) and one exception 
-class (TagError).  At the risk of being obvious, apev2tag manipulates APEv2 
-tags, and id3tag manipulates ID3v1.1 tags.  TagError is raised if there is a 
-problem with the tag itself, or with the calling arguments.  For a complete 
-description about how to use the library, install it and then run the following
-commands from inside the python interpreter:
-
-import apev2tag
-help(apev2tag)
+The public functions should be named obviously.  There are functions for
+creating, replacing, updating, and deleting APE and ID3 tags both separately
+and together.  There are also functions for getting the fields and the raw
+string for the APE and ID3 tags separately.  Public function arguments, return
+values, and various notes are stored in the module docstring.
 
 To run the tests for the library, see the README.tests file.
 
@@ -29,12 +26,27 @@ If you find any bugs, would like additional documentation, or want to submit a
 patch, please use Sourceforge (http://sourceforge.net/projects/pylibape/).
 
 The most current source code can be accessed via anonymous SVN at 
-svn://209.220.159.58/py-apev2tag/.  Note that the library isn't modified on a
+svn://209.220.159.58/py-ApeTag/.  Note that the library isn't modified on a
 regular basis, so it is unlikely to be different from the latest release.
 
 Thank you for downloading this library. I hope you find it useful. 
 
 Changelog:
+0.9 - 2005-03-20
+- Rename module from apev2tag to ApeTag
+- Remove apev2tag and id3tag functions, the helper functions that debuted in
+  0.8 are now the public interface to the library
+- Significant internal changes, most notably error handling during APE tag
+  parsing (fixing a possible denial of service caused by a malicious tag) and
+  automated closing of files opened by the library
+- Return values for the APE create, update, replace, and getfields functions
+  have changed, they now returns of dict with ApeItem (a list subclass with
+  unicode strings) values, instead of the previous dict with values that could
+  be strings, unicode strings, could be lists, or dicts.
+- Easier benchmarking in speedtest, defaults to test all functions
+- Added ability to read, create, and modify the read only tag flag.
+- Added ability to modify the maximum size of APE tags (default still 8K)
+
 0.8 - 2005-03-13
 - Helper functions such as createtags, deletetags, getrawapev2, getid3fields,
   etc. added so you don't have to call id3tag and apev2tag directly with the

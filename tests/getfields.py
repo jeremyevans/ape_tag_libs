@@ -1,8 +1,8 @@
-from apev2tag import getid3fields, getapev2fields
+from ApeTag import getid3fields, getapefields
 from walktree import walktree
 
 def test(filename, printoutput):
-    apev2 = getapev2fields(filename)
+    apev2 = getapefields(filename)
     id3 = getid3fields(filename)
     if printoutput:
         print 'Tag Fields for', filename

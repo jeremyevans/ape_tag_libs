@@ -1,4 +1,4 @@
-from apev2tag import createtags
+from ApeTag import createtags
 from walktree import walktree, fields
 
 def test(filename, printoutput):

@@ -1,5 +1,5 @@
-The tests for py-apev2tag are located in the tests directory.  After you have
-installed py-apev2tag, create a subdirectory named tagtest under tests and 
+The tests for py-ApeTag are located in the tests directory.  After you have
+installed py-ApeTag, create a subdirectory named tagtest under tests and 
 copy the files that you would like to test into the tests/tagtest directory. 
 Then run one of the scripts in the tests directory.
 
@@ -9,7 +9,7 @@ WARNING: Other than getfields and getrawtag, the other tests modify the files
 
 The tests should be appropriately named.  Create, replace, and update modify 
 the Title, Artist, and Track fields to 'Test Create Title', 'Test Create
-Artist' and 0, respectively. After you have run create, delete, replace, or 
+Artist' and '0', respectively. After you have run create, delete, replace, or 
 update, you should run getfields or getrawtag to see if the tests were
 successful.
 	
@@ -19,16 +19,19 @@ speeds of the different tag actions. On my machine, the following is true for a
 sample album (10 tracks, 45 minutes):
 
 getrawtag is the fastest operation
-getfields takes about 13% longer than getrawtag
-delete takes about 34% longer than getrawtag
-replace takes about 85% longer than getrawtag
-create takes about 91% longer than getrawtag
-update takes about 93% longer than getrawtag
+getfields takes about 34% longer than getrawtag
+delete takes about 48% longer than getrawtag
+replace takes about 95% longer than getrawtag
+create takes about 106% longer than getrawtag
+update takes about 123% longer than getrawtag
 
-In terms of total time for the entire album (yes, those are in milliseconds):
-getrawtag = 13.0ms
-getfields = 14.7ms
-delete = 17.4ms
-replace = 24.0ms
-create = 24.8ms
-update = 25.1ms
+In terms of total time for the entire album:
+getrawtag = 14.3ms
+getfields = 19.1ms
+delete = 21.1ms
+replace = 27.9ms
+create = 29.5ms
+update = 31.9ms
+
+Speeds were roughly 100% faster going from version 0.6 to 0.7, and about 20%
+slower going from version 0.8 to 0.9.

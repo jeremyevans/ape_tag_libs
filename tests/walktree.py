@@ -1,4 +1,4 @@
-from apev2tag import TagError
+from ApeTag import TagError
 from os import walk
 from os.path import join as joinpath
 fields = {'Title':'Test Create Title', 'Artist':'Test Create Artist',
