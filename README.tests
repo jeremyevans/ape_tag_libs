@@ -12,7 +12,7 @@ each:
 
 create.py: Creates both tags on the files, or updates the tags already
     there.  It adds the apev2 fields 'TestTitle' and 'TestArtist', and sets the
-    id3 'track' field it sets to 0.
+    id3 'track' field to 0.
     
 delete.py: Deletes both or either tags on the files, if present.
 
@@ -29,3 +29,25 @@ update.py: Updates both tags, if they exist, by swapping the artist and title
 
 After you have run create, delete, replace, or update, you should run getfields
     or getrawtag to see if the tests were successful.
+	
+Additionally, there is a module named speedtest that can be used to test speeds
+for various tagging operations (used to test the performance increase
+between 0.6 and 0.7, which turned about to be over 100%).  Using this module,
+you can test relative speeds of the different tag actions (and different
+versions of py-apev2tag). On my machine, the following is true for a sample
+album (10 tracks, 45 minutes):
+
+getrawtag is the fastest operation
+getfields takes about 52% longer than getrawtag
+delete takes about 61% longer than getrawtag
+create takes about 87% longer than getrawtag
+replace takes about 128% longer than getrawtag
+update takes about 272% longer than getrawtag
+
+In terms of total time for the entire album (yes, those are in milliseconds):
+getrawtag = 6.9ms
+getfields = 10.5ms
+delete = 11.1ms
+create = 12.9ms
+replace = 15.7ms
+update = 25.7ms
