@@ -7,11 +7,10 @@ WARNING: Other than getfields and getrawtag, the other tests modify the files
     you place in the tests/tagtest directory, so you should copy the files you
     want to test, and not just move them into the directory.
 
-The tests should be appropriately named.  Create, replace, and update modify 
-the Title, Artist, and Track fields to 'Test Create Title', 'Test Create
-Artist' and '0', respectively. After you have run create, delete, replace, or 
-update, you should run getfields or getrawtag to see if the tests were
-successful.
+The tests should be appropriately named.  After you have run create, delete,
+replace, or update, you should run getfields or getrawtag to see if the tests
+were successful. Too test different values for the tests, modify the fields
+variable in walktree.py.
 	
 Additionally, there is a module named speedtest that can be used to test speeds
 for various tagging operations.  Using this module, you can test relative

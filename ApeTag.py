@@ -285,25 +285,27 @@ def _apefieldstoid3fields(fields):
     '''Convert APE tag fields to ID3 tag fields '''
     id3fields = {}
     for key, value in fields.iteritems():
-        if not isinstance(key, str):
-            raise TagError, 'Invalid tag field: %r' % key
         key = key.lower()
+        if isinstance(value, (list, tuple)):
+            if not value:
+                value = ''
+            else:
+                value = value[0]
         if key.startswith('track'):
             try:
-                id3fields['track'] = int(value)
+                value = int(value)
             except ValueError:
-                pass
+                value = 0
+            if (0 < value < 256):
+                id3fields['track'] = value
+            else:
+                id3fields['track'] = 0
         elif key == 'genre':
-            if not isinstance(value, basestring):
-                raise TagError, 'Invalid tag value for genre: %r' % value
-            id3fields[key] = value
+            if isinstance(value, basestring) and value.lower() in _id3genresdict:
+                id3fields[key] = value
+            else:
+                id3fields[key] = ''
         elif key in _id3fields:
-            if isinstance(value, (list, tuple)):
-                try:
-                    value = ', '.join(value)
-                except ValueError:
-                    raise TagError, 'Invalid tag value for %s field: %r' \
-                                    % (key, value)
             if isinstance(value, unicode):
                 value = value.encode('utf8')
             id3fields[key] = value
@@ -422,10 +424,12 @@ def _makeid3tag(fields):
                 if not isinstance(value, basestring):
                     raise TagError, "%r is an invalid value for 'genre'" % value
                 value = value.lower()
-                if value in _id3genresdict:
+                if not value:
+                    value = 255
+                elif value in _id3genresdict:
                     value = _id3genresdict[value]
                 else:
-                    value = 255
+                    raise TagError, "%r is an invalid value for 'genre'" % value
             elif not (0 <= value < 256):
                 value = 255
             newfields[field] = chr(value)
@@ -539,8 +543,9 @@ def createid3(fil, fields = {}):
     
 def createtags(fil, fields = {}):
     '''Create/update both APE and ID3v1 tags on fil with the information in fields'''
+    apefields = createape(fil, fields)
     createid3(fil, _apefieldstoid3fields(fields))
-    return createape(fil, fields)
+    return apefields
 
 def deleteape(fil):
     '''Delete APE tag from fil if it exists'''
@@ -581,8 +586,9 @@ def replaceid3(fil, fields = {}):
     
 def replacetags(fil, fields = {}):
     '''Replace/create both APE and ID3v1 tags on fil with the information in fields'''
+    apefields = replaceape(fil, fields)
     replaceid3(fil, _apefieldstoid3fields(fields))
-    return replaceape(fil, fields)
+    return apefields
 
 def updateape(fil, fields = {}, removefields = []):
     '''Update APE tag in fil with the information in fields
@@ -600,5 +606,6 @@ def updatetags(fil, fields = {}, removefields = []):
     
     removefields: iterable yielding strings of APE tag fields to remove
     '''
+    apefields = updateape(fil, fields, removefields)
     updateid3(fil, _apefieldstoid3fields(fields))
-    return updateape(fil, fields, removefields)
+    return apefields

@@ -1,8 +1,9 @@
-from ApeTag import TagError
+from ApeTag import TagError, ApeItem
 from os import walk
 from os.path import join as joinpath
-fields = {'Title':'Test Create Title', 'Artist':'Test Create Artist',
-    'Track':'0' }
+fields = {'Title':'Test Create Title'.split(), 'Artist':['Test Create Artist'],
+    'Track':'1024', 'Genre':['Blarg', 'Rock'], 'Album':'Test Album',
+    'Test Ape Item':ApeItem('Ape Item', 'Ape Item Test'.split())}
 
 def walktree(function, printoutput = True, tagdir = 'tagtest'):
     for root, dirs, files in walk(tagdir, topdown=False):
