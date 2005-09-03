@@ -20,8 +20,10 @@ haven't already fixed, though.
 The public functions should be named obviously.  There are functions for
 creating, replacing, updating, and deleting APE and ID3 tags both separately
 and together.  There are also functions for getting the fields and the raw
-string for the tags.  Public function arguments, return values, and various 
-notes are stored in the module docstring.
+string for the tags, as well as checking for existence of tags.  There are also
+advanced modify functions that take callback functions allowing complete
+manipulation of the tags.  Public function arguments, return values, and
+various notes are stored in the module docstring.
 
 To run the tests for the library, see the README.tests file.
 
@@ -35,6 +37,18 @@ regular basis, so it is unlikely to be different from the latest release.
 Thank you for downloading this library. I hope you find it useful. 
 
 Changelog:
+0.12 - 2005-09-03
+- Convert the the library to use callback functions internally for modifying
+  tags
+- New has* functions to check for the existence of tags
+- New print* functions for pretty printing tag fields
+- New modify* functions that allow for user defined callbacks
+- Ability to call the library on the command line with filenames (prints the 
+  tag fields for each file)
+- Fix bugs in id3 tagging when both tags are modified simultaneously
+- Small performance improvements offsetting the speed reduction due to callback
+  functions
+
 0.11 - 2005-04-02
 - Add getrawtags and gettagfields public functions that return a tuple of 
   strings and dicts, respectively for the APE and ID3 tags.  This results in a

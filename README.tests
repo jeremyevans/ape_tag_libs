@@ -9,7 +9,7 @@ WARNING: Other than getfields and getrawtag, the other tests modify the files
 
 The tests should be appropriately named.  After you have run create, delete,
 replace, or update, you should run getfields or getrawtag to see if the tests
-were successful. Too test different values for the tests, modify the fields
+were successful. To test different values for the tests, modify the fields
 variable in walktree.py.
 	
 Additionally, there is a module named speedtest that can be used to test speeds
@@ -18,22 +18,23 @@ speeds of the different tag actions. On my machine, the following is true for a
 sample album (10 tracks, 45 minutes, for both tags):
 
 getrawtag is the fastest operation
-getfields takes about 66% longer than getrawtag
-replace takes about 124% longer than getrawtag
-create takes about 129% longer than getrawtag
-delete takes about 134% longer than getrawtag
-update takes about 179% longer than getrawtag
+getfields takes about 78% longer than getrawtag
+replace takes about 118% longer than getrawtag
+create takes about 138% longer than getrawtag
+delete takes about 141% longer than getrawtag
+update takes about 185% longer than getrawtag
 
 In terms of total time for the entire album:
-getrawtag = 7.6ms
-getfields = 12.6ms
-replace = 17.0ms
-create = 17.4ms
-delete = 17.8ms
-update = 21.2ms
+getrawtag = 7.4ms
+getfields = 13.2ms
+replace = 16.1ms
+delete = 17.6ms
+create = 17.8ms
+update = 21.1ms
 
 Speeds were roughly 100% faster going from version 0.6 to 0.7, about 20%
 slower going from version 0.8 to 0.9, with that time more than gained back
-between 0.9 and 0.10.  Version 0.11 is about 10% faster than version 0.10.
-Note that the time comparisons are not perfect, since the speed tests have
-changed with the versions.
+between 0.9 and 0.10.  Version 0.11 was about 10% faster than version 0.10.
+Versions 0.12 and 0.11 are about the same speed.  Note that the time 
+comparisons are not perfect, since the speed tests have changed with the 
+versions.

@@ -1,4 +1,4 @@
-# Copyright (c) 2004-2005 Quasi Reality
+# Copyright (c) 2004-2005 Jeremy Evans
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy 
 # of this software and associated documentation files (the "Software"), to deal
@@ -37,12 +37,15 @@ fields: dictionary like object of tag fields that has an iteritems method
             track*: integer or sting representation of one
             genre: integer or string (if string, must be a case insensitive
                 match for one of the strings in id3genres to be recognized)
+removefields (updateape and updatetags): iterable of fields to remove from the
+    APE tag (and set to blank in the ID3 tag).
 
 Public Functions Return
 -----------------------
 0 on success of delete functions
+bool on success of has functions
 string on success of getraw functions
-dict on success of create, update, replace, or getfields
+dict on success of create, update, replace, modify, or getfields
     key is the field name as a string
     (APE) value is an ApeItem, which is a list subclass with the field values
         stored in the list as strings, and the following special attributes:
@@ -59,6 +62,18 @@ IOError on problem accessing file (make sure read/write access is allowed
 (APE functions only) UnicodeError on problems converting regular strings to
     UTF-8 (See note, or just use unicode strings)
 TagError on other errors
+
+Callback Functions
+------------------
+The modify* functions take callback functions and extra keyword arguments.
+The callback functions are called with the tag dictionary and any extra keyword
+arguments given in the call to modify*.  This dictionary should be modified and
+must be returned by the callback functions.  There isn't much error checking
+done after this stage, so incorrectly written callback functions may result in
+corrupt tags or exceptions being raised elsewhere in the module.  The 
+modifytags function takes two separate callback functions, one for the APE tag
+and one for the ID3 tag.  See the _update*tagcallback functions for examples of
+how callback functions should be written.
     
 Notes
 -----
@@ -92,10 +107,12 @@ from struct import pack as _pack, unpack as _unpack
 
 # Variable definitions
 
-__version__ = '0.11'
+__version__ = '0.12'
 _maxapesize = 8192
-_commands = 'create update replace delete getfields getrawtag getnewrawtag'.split()
+_commands = '''create update replace delete getfields getrawtag getnewrawtag
+  hastag'''.split()
 _tagmustexistcommands = 'update getfields getrawtag'.split()
+_stringallowedcommands = 'getrawtag getnewrawtag getfields hastag'.split()
 _filelikeattrs = 'flush read seek tell truncate write'.split()
 _badapeitemkeys = 'id3 tag oggs mp+'.split()
 _badapeitemkeychars = ''.join([chr(x) for x in range(32) + range(128,256)])
@@ -223,16 +240,11 @@ class ApeItem(list):
 
 # Private functions
 
-def _ape(fil, fields, action, removefields = [], updateid3 = False):
-    '''Get or Modify APE tag for file'''
-    if not hasattr(removefields, '__iter__') \
-       or not callable(removefields.__iter__):
-        raise TagError, "removefields is not an iterable"
-    
+def _ape(fil, action, callback = None, callbackkwargs = {}, updateid3 = False):
+    '''Get or Modify APE tag for file'''            
     apesize = 0
     tagstart = None
-    filesize, id3data = _getfilesizeandid3(fil)
-    data = fil.read(32)
+    filesize, id3data, data = _getfilesizeandid3andapefooter(fil)
 
     if _apepreamble != data[:12] or _apefooterflags != data[20:24]:
         if action in _tagmustexistcommands:
@@ -240,7 +252,7 @@ def _ape(fil, fields, action, removefields = [], updateid3 = False):
         elif action == "delete":
             return 0
         data = ''
-        tagstart = fil.tell()
+        tagstart = fil.tell() - len(id3data)
     else:
         # file has a valid APE footer
         apesize = _unpack("<i",data[12:16])[0] + 32
@@ -249,59 +261,65 @@ def _ape(fil, fields, action, removefields = [], updateid3 = False):
         if apesize + len(id3data) > filesize:
             raise TagError, 'Existing tag says it is larger than the file: ' \
                             '%i bytes' % apesize
-        fil.seek(-1 * apesize, 1)
+        fil.seek(-1 * apesize - len(id3data), 1)
         tagstart = fil.tell()
         data = fil.read(apesize)
         if _apepreamble != data[:12] or _apeheaderflags != data[20:24]:
-            return TagError, 'Nonexistent or corrupt tag, missing tag header'
+            raise TagError, 'Nonexistent or corrupt tag, missing tag header'
         if action == "delete":
-            fil.truncate(tagstart)
-            fil.seek(0,2)
+            fil.seek(tagstart)
             if not updateid3:
                 fil.write(id3data)
+            fil.truncate()
             fil.flush()
             return 0
             
+    if action == "hastag":
+        if updateid3:
+            return data and id3data
+        return bool(data)
     if action == "getrawtag":
         if updateid3:
-            return data, _id3(fil, [], "getrawtag")
+            return data, id3data
         return data
     if action == "getfields":
         if updateid3:
             return _restoredictcase(_parseapetag(data)), \
-                   _id3(fil, [], "getfields")
+              _id3(id3data, "getfields")
         return _restoredictcase(_parseapetag(data))
     if not data or action == "replace":
         apeitems = {}
     else:
         apeitems = _parseapetag(data)
-        _removeapeitems(apeitems, removefields)
-
-    # Add requested items to tag
-    for key, value in fields.iteritems():
-        if isinstance(value, ApeItem):
-            apeitems[value.key.lower()] = value
-        else:
-            apeitems[key.lower()] = ApeItem(key, value)
-     
+    
+    if callable(callback):
+        apeitems = callback(apeitems, **callbackkwargs)
+            
     newtag = _makeapev2tag(apeitems)
     
     if action == "getnewrawtag":
+        if updateid3:
+            return newtag, _id3(id3data, "getnewrawtag")
         return newtag
     
     if len(newtag) > _maxapesize:
         raise TagError, 'New tag is too large: %i bytes' % len(data)
     
     if updateid3:
-        if action != 'replace' and id3data:
-            fil.truncate(filesize - 128)
-        id3data = _id3(fil, _apefieldstoid3fields(fields), "getnewrawtag")
+        if action == 'replace':
+            id3data = ''
+        elif action != 'create' and not id3data:
+            raise TagError, "Nonexistant or corrupt tag, can't %s" % action
+        if callable(updateid3):
+            id3data = _id3(id3data, "getnewrawtag", updateid3, callbackkwargs)
+        else:
+            callbackkwargs['convertfromape'] = True
+            id3data = _id3(id3data, "getnewrawtag", _updateid3tagcallback, 
+              callbackkwargs)
     
-    fil.truncate(tagstart)
-    # Must seek to end of file as truncate appears to modify the file's
-    # current position in certain cases
-    fil.seek(0,2)
+    fil.seek(tagstart)
     fil.write(newtag + id3data)
+    fil.truncate()
     fil.flush()
     return _restoredictcase(apeitems)
 
@@ -320,7 +338,7 @@ def _apefieldstoid3fields(fields):
                 value = int(value)
             except ValueError:
                 value = 0
-            if (0 < value < 256):
+            if (0 <= value < 256):
                 id3fields['track'] = value
             else:
                 id3fields['track'] = 0
@@ -337,7 +355,7 @@ def _apefieldstoid3fields(fields):
 
 _apelengthreduce = lambda i1, i2: i1 + len(i2)
 
-def _checkargs(fil, fields, action):
+def _checkargs(fil, action):
     '''Check that arguments are valid, convert them, or raise an error'''
     if not (isinstance(action,str) and action.lower() in _commands):
         raise TagError, "%r is not a valid action" % action
@@ -346,51 +364,68 @@ def _checkargs(fil, fields, action):
     for attr in _filelikeattrs:
         if not hasattr(fil, attr) or not callable(getattr(fil, attr)):
             raise TagError, "fil does not support method %r" % attr
+    return fil, action
+    
+def _checkfields(fields):
+    '''Check that the fields quacks like a dict'''
     if not hasattr(fields, 'items') or not callable(fields.items):
         raise TagError, "fields does not support method 'items'"
-    return fil, fields, action
+    
+def _checkremovefields(removefields):
+    '''Check that removefields is iterable'''
+    if not hasattr(removefields, '__iter__') \
+       or not callable(removefields.__iter__):
+        raise TagError, "removefields is not an iterable"
 
 def _getfileobj(fil, action):
     '''Return a file object if given a filename, otherwise return file'''
     if isinstance(fil, basestring) and _isfile(fil):
-        if action in ('getfields', 'getrawtag'):
+        if action in _stringallowedcommands:
             mode = 'rb'
         else:
             mode = 'r+b'
         return file(fil, mode)
     return fil
 
-def _getfilesizeandid3(fil):
+def _getfilesizeandid3andapefooter(fil):
     '''Return file size and ID3 tag if it exists, and seek to start of APE footer'''
     fil.seek(0, 2)
     filesize = fil.tell()
-    fil.seek(-1 * 128, 1)
-    data = fil.read(128)
-    if data[:3] != 'TAG':
-        fil.seek(-1 * 32, 1)
-        data = ''
+    fil.seek(filesize - 160)
+    data = fil.read(160)
+    if data[32:35] != 'TAG':
+        apefooter = data[128:]
+        id3 = ''
     else:
-        fil.seek(-1 * 160, 1)
-    return filesize, data
+        id3 = data[32:]
+        apefooter = data[:32]
+    return filesize, id3, apefooter
 
-def _id3(fil, fields, action):
+def _id3(fil, action, callback = None, callbackkwargs={}):
     '''Get or Modify ID3 tag for file'''
-    fil.seek(-128, 2)
-    tagstart = fil.tell()
-    data = fil.read(128)
-    
-    if data[0:3] != 'TAG':
-        # Tag doesn't exist
-        if action == "delete":
-            return 0
-        if action in _tagmustexistcommands: 
-            raise TagError, "Nonexistant or corrupt tag, can't %s" % action
-        data = ''
-    else:      
-        if action == "delete":
-            fil.truncate(tagstart)
-            return 0
-    
+    if isinstance(fil, str):
+        if action not in _stringallowedcommands:
+            raise TagError, "String not allowed for %s action" % action
+        data = fil
+    else:
+        fil.seek(-128, 2)
+        tagstart = fil.tell()
+        data = fil.read(128)
+        if data[0:3] != 'TAG':
+            # Tag doesn't exist
+            if action == "delete":
+                return 0
+            if action in _tagmustexistcommands: 
+                raise TagError, "Nonexistant or corrupt tag, can't %s" % action
+            data = ''
+            tagstart += 128
+        else:      
+            if action == "delete":
+                fil.truncate(tagstart)
+                return 0
+
+    if action == "hastag":
+        return bool(data) 
     if action == "getrawtag":
         return data 
     if action == "getfields":
@@ -401,18 +436,15 @@ def _id3(fil, fields, action):
     else:
         tagfields = _parseid3tag(data)
         
-    for field, value in fields.iteritems():
-       if isinstance(field, str):
-           tagfields[field.lower()] = value
+    if callable(callback):
+        tagfields = callback(tagfields, **callbackkwargs)
     
     newtag = _makeid3tag(tagfields)
 
     if action == "getnewrawtag":
         return newtag
 
-    if data:
-        fil.truncate(tagstart)
-    fil.seek(0, 2)
+    fil.seek(tagstart)
     fil.write(newtag)
     fil.flush()
     return _parseid3tag(newtag)
@@ -438,6 +470,8 @@ def _makeid3tag(fields):
         field = field.lower()
         if field.startswith('track'):
             try:
+                if not value:
+                    value = 0
                 newfields['track'] = chr(int(value))
             except ValueError:
                 raise TagError, '%r is an invalid value for %r' % (value, field)
@@ -455,7 +489,7 @@ def _makeid3tag(fields):
             elif not (0 <= value < 256):
                 value = 255
             newfields[field] = chr(value)
-    for field, (startpos, endpos) in _id3fields.items():
+    for field, (startpos, endpos) in _id3fields.iteritems():
         maxlength = endpos - startpos
         if field in newfields:
             fieldlength = len(newfields[field])
@@ -501,7 +535,7 @@ def _parseapetag(data):
 def _parseid3tag(data):
     '''Parse an ID3 tag and return a dictionary of tag fields'''
     fields = {}
-    for key,(start,end) in _id3fields.items():
+    for key,(start,end) in _id3fields.iteritems():
         fields[key] = data[start:end].rstrip("\x00")
     if data[125] == "\x00":
         # ID3v1.1 tags have tracks
@@ -514,6 +548,33 @@ def _parseid3tag(data):
     else:
         fields["genre"] = ''
     return fields
+
+def _printapeitems(apeitems):
+    '''Pretty print given APE Items'''
+    items = apeitems.items()
+    items.sort()
+    print 'APE Tag\n-------'
+    for key, value in items:
+        if value.readonly:
+            key = '[read only] %s' % key
+        if value.type == 'utf8':
+            value = u', '.join([v.encode('ascii', 'replace') for v in value])
+        else:
+            key = '[%s] %s' % (value.type, key)
+            if value.type == 'binary':
+                value = '[binary data]'
+            else:
+                value = ', '.join(value)
+        print '%s: %s' % (key, value)
+
+def _printid3items(tagfields):
+    '''Pretty print given ID3 Fields'''
+    items = tagfields.items()
+    items.sort()
+    print 'ID3 Tag\n-------'
+    for key, value in items:
+        if value:
+            print '%s: %s' % (key, value)
 
 def _removeapeitems(apeitems, removefields):
     '''Remove items from the APE tag'''
@@ -539,30 +600,68 @@ def _stringoverlaps(string1, string2):
 
 _sortapeitems = lambda a, b: cmp(len(a), len(b))
 
-def _tag(function, fil, fields = {}, action = "update", *args, **kwargs):
+def _tag(function, fil, action="update", *args, **kwargs):
     '''Preform tagging operation, check args, open/close file if necessary'''
     origfil = fil
-    fil, fields, action = _checkargs(fil, fields, action)
+    fil, action = _checkargs(fil, action)
+    if 'callbackkwargs' in kwargs:
+        if 'fields' in kwargs['callbackkwargs']:
+            _checkfields(kwargs['callbackkwargs']['fields'])
     try:
-        return function(fil, fields, action, *args, **kwargs)
+        return function(fil, action, *args, **kwargs)
     finally:
         if isinstance(origfil, basestring):
             # filename given as an argument, close file object
             fil.close()
+    
+def _updateapeitems(apeitems, fields):
+    '''Add/Update apeitems using data from fields'''
+    for key, value in fields.iteritems():
+        if isinstance(value, ApeItem):
+            apeitems[value.key.lower()] = value
+        else:
+            apeitems[key.lower()] = ApeItem(key, value)
+    return apeitems
+
+def _updateapetagcallback(apeitems, fields={}, removefields=[]):
+    '''Add and/or remove fields from the apeitems'''
+    if removefields:
+        _removeapeitems(apeitems, removefields)
+    return _updateapeitems(apeitems, fields)
+
+def _updateid3fields(tagfields, fields):
+    '''Update ID3v1 tagfields using fields'''
+    for field, value in fields.iteritems():
+       if isinstance(field, str):
+           tagfields[field.lower()] = value
+    return tagfields
+
+def _updateid3tagcallback(tagfields, fields={}, removefields=[], 
+  convertfromape = False):
+    '''Add and/or remove fields from the ID3v1 tagfields'''
+    if convertfromape:
+        fields = _apefieldstoid3fields(fields)
+    for field in removefields:
+        if field in tagfields:
+            tagfields[field.lower()] = ''
+    return _updateid3fields(tagfields, fields)
 
 # Public functions
 
 def createape(fil, fields = {}):
     '''Create/update APE tag in fil with the information in fields'''
-    return _tag(_ape, fil, fields, 'create')
+    return _tag(_ape, fil, 'create', callback=_updateapetagcallback, 
+      callbackkwargs={'fields':fields})
     
 def createid3(fil, fields = {}):
     '''Create/update ID3v1 tag in fil with the information in fields'''
-    return _tag(_id3, fil, fields, 'create')
+    return _tag(_id3, fil, 'update', callback=_updateid3tagcallback, 
+      callbackkwargs={'fields':fields})
     
 def createtags(fil, fields = {}):
     '''Create/update both APE and ID3v1 tags on fil with the information in fields'''
-    return _tag(_ape, fil, fields, 'create', updateid3=True)
+    return _tag(_ape, fil, 'create', callback=_updateapetagcallback, 
+      callbackkwargs={'fields':fields}, updateid3=True)
 
 def deleteape(fil):
     '''Delete APE tag from fil if it exists'''
@@ -586,7 +685,7 @@ def getid3fields(fil):
     return _tag(_id3, fil, action='getfields')
 
 def gettagfields(fil):
-    '''Get APE and ID3 tag fields tuple'''
+    '''Get APE and ID3v1 tag fields tuple'''
     return _tag(_ape, fil, action='getfields', updateid3=True)
 
 def getrawape(fil):
@@ -598,35 +697,95 @@ def getrawid3(fil):
     return _tag(_id3, fil, action='getrawtag')
 
 def getrawtags(fil):
-    '''Get raw APE and ID3 tag tuple'''
+    '''Get raw APE and ID3v1 tag tuple'''
     return _tag(_ape, fil, action='getrawtag', updateid3=True)
+    
+def hasapetag(fil):
+    '''Return raw APE tag from fil'''
+    return _tag(_ape, fil, action='hastag')
+    
+def hasid3tag(fil):
+    '''Return raw ID3v1 tag from fil'''
+    return _tag(_id3, fil, action='hastag')
+
+def hastags(fil):
+    '''Get raw APE and ID3v1 tag tuple'''
+    return _tag(_ape, fil, action='hastag', updateid3=True)
+    
+def modifyape(fil, callback, action='update', **kwargs):
+    '''Modify APE tag using user-defined callback and kwargs'''
+    return _tag(_ape, fil, action=action, callback=callback, 
+      callbackkwargs=kwargs)
+    
+def modifyid3(fil, callback, action='update', **kwargs):
+    '''Modify ID3v1 tag using user-defined callback and kwargs'''
+    return _tag(_id3, fil, action=action, callback=callback, 
+      callbackkwargs=kwargs)
+    
+def modifytags(fil, apecallback, id3callback=True, action='update', **kwargs):
+    '''Modify APE and ID3v1 tags using user-defined callbacks and kwargs
+    
+    Both apecallback and id3callback receive the same kwargs provided, so they
+    need to have the same interface.
+    '''
+    return _tag(_ape, fil, action=action, callback=apecallback, 
+      updateid3=id3callback, callbackkwargs=kwargs)
+      
+def printapetag(fil):
+    '''Print APE tag fields for fil'''
+    _printapeitems(getapefields(fil))
+    
+def printid3tag(fil):
+    '''Print ID3 tag fields for fil'''
+    _printid3items(getid3fields(fil))
+    
+def printtags(fil):
+    '''Print APE and ID3 tag fields for fil'''
+    apeitems, tagfields = gettagfields(fil)
+    _printapeitems(apeitems)
+    _printid3items(tagfields)
 
 def replaceape(fil, fields = {}):
     '''Replace/create APE tag in fil with the information in fields'''
-    return _tag(_ape, fil, fields, action='replace')
+    return _tag(_ape, fil, 'replace', callback=_updateapetagcallback, 
+      callbackkwargs={'fields':fields})
     
 def replaceid3(fil, fields = {}):
     '''Replace/create ID3v1 tag in fil with the information in fields'''
-    return _tag(_id3, fil, fields, 'replace')
+    return _tag(_id3, fil, 'replace', callback=_updateid3tagcallback, 
+      callbackkwargs={'fields':fields})
     
 def replacetags(fil, fields = {}):
     '''Replace/create both APE and ID3v1 tags on fil with the information in fields'''
-    return _tag(_ape, fil, fields, 'replace', updateid3=True)
+    return _tag(_ape, fil, 'replace', callback=_updateapetagcallback, 
+      callbackkwargs={'fields':fields}, updateid3=True)
 
 def updateape(fil, fields = {}, removefields = []):
-    '''Update APE tag in fil with the information in fields
-    
-    removefields: iterable yielding strings of tag fields to remove
-    '''
-    return _tag(_ape, fil, fields, 'update', removefields)
+    '''Update APE tag in fil with the information in fields'''
+    _checkremovefields(removefields)
+    return _tag(_ape, fil, 'update', callback=_updateapetagcallback, 
+      callbackkwargs={'fields':fields, 'removefields':removefields})
     
 def updateid3(fil, fields = {}):
     '''Update ID3v1 tag in fil with the information in fields'''
-    return _tag(_id3, fil, fields, 'update')
+    return _tag(_id3, fil, 'update', callback=_updateid3tagcallback, 
+      callbackkwargs={'fields':fields})
     
 def updatetags(fil, fields = {}, removefields = []):
-    '''Update both APE and ID3v1 tags on fil with the information in fields
-    
-    removefields: iterable yielding strings of APE tag fields to remove
-    '''
-    return _tag(_ape, fil, fields, 'update', removefields, True)
+    '''Update both APE and ID3v1 tags on fil with the information in fields'''
+    _checkremovefields(removefields)
+    return _tag(_ape, fil, 'update', callback=_updateapetagcallback, 
+      callbackkwargs={'fields':fields, 'removefields':removefields}, 
+      updateid3=True)
+
+if __name__ == '__main__':
+    import sys
+    for filename in sys.argv[1:]:
+        if _isfile(filename):
+            print '\n%s' % filename
+            try:
+                printtags(filename)
+            except TagError:
+                print 'Missing APE or ID3 Tag'
+        else:
+            print "%s: file doesn't exist" % filename
