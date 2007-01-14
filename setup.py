@@ -1,11 +1,12 @@
+#!/usr/bin/env python
 from distutils.core import setup
 setup(name="py-ApeTag",
-      version="0.12",
+      version="1.0",
       description="A pure Python library for manipulating APEv2 and ID3v1 tags",
       author="Jeremy Evans",
-      author_email="quasireality@users.sourceforge.net",
+      author_email="jeremyevans0@gmail.com",
       url="http://sourceforge.net/projects/pylibape/",
-      classifiers= ['Development Status :: 4 - Beta',
+      classifiers= ['Development Status :: 5 - Production/Stable',
                     'Environment :: Other Environment',
                     'Intended Audience :: Developers',
                     'License :: OSI Approved :: MIT License',

@@ -1,15 +1,15 @@
 py-ApeTag (formally pylibape/py-apev2tag) is a pure Python library for
 manipulating both APEv2 and ID3v1 tags.  It aims for standards compliance with
-the APE spec (http://www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html). APE is
-the standard tagging format for Musepack (.mpc) and Monkey's Audio files
+the APE spec (http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification). 
+APE is the standard tagging format for Musepack (.mpc) and Monkey's Audio files
 (.ape), and it can also be used with mp3s as an alternative to the mess that is
 ID3v2.x (technically, it can be used on any file type and is not limited to
 storing just audio file metadata).
 
 The module is in written in pure Python, so it should be useable on all 
-platforms that Python supports.  The primary testing platform is currently 
-Windows.  Minimum python version required should be 2.2, since the code uses
-list comprehensions (testing has only been done on 2.3).  Modifying the code to
+platforms that Python supports.  It has been tested on Windows and OpenBSD.  
+The minimum python version required should be 2.2, since the code uses
+list comprehensions (testing has only been done on 2.4).  Modifying the code to
 work with Python 2.0 shouldn't be difficult, though there aren't any plans to
 do so.
 
@@ -25,18 +25,33 @@ advanced modify functions that take callback functions allowing complete
 manipulation of the tags.  Public function arguments, return values, and
 various notes are stored in the module docstring.
 
-To run the tests for the library, see the README.tests file.
+To run the tests for the library, run python test_ApeTag.py.
 
 If you find any bugs, would like additional documentation, or want to submit a
 patch, please use Sourceforge (http://sourceforge.net/projects/pylibape/).
 
 The most current source code can be accessed via anonymous SVN at 
-svn://209.220.159.58/py-ApeTag/.  Note that the library isn't modified on a
+svn://suven.no-ip.org/py-ApeTag/.  Note that the library isn't modified on a
 regular basis, so it is unlikely to be different from the latest release.
 
 Thank you for downloading this library. I hope you find it useful. 
 
 Changelog:
+1.0 - 2006-01-13
+- Replace manual test files with automated unittest-based test suite
+- Ensure UTF-8 encoding for tag items marked "external"
+- Check for matching header and footer tag sizes and item counts
+- Return boolean for hastags
+- Join values with commas when creating ID3 tags from APE fields, instead of 
+  taking the first value
+- Work with small file sizes (including zero byte files)
+- In updatetags, make removefields case insensitive when removing fields
+  from the ID3 tag
+- Fix createid3 being defined the same as updateid3, and thus giving errors on
+  files without ID3 tags
+- Make APEv2 Date field correspond to ID3v1 year field if it is an integer
+- Add shebang line for running library directly
+
 0.12 - 2005-09-03
 - Convert the the library to use callback functions internally for modifying
   tags

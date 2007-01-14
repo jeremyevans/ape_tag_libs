@@ -1,4 +1,5 @@
-# Copyright (c) 2004-2005 Jeremy Evans
+#!/usr/bin/env python
+# Copyright (c) 2004-2007 Jeremy Evans
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy 
 # of this software and associated documentation files (the "Software"), to deal
@@ -97,9 +98,8 @@ If you are storing non 7-bit ASCII data in a tag, you should pass in unicode
 Inserting binary data into tags is "strongly unrecommended."
 This library doesn't check to make sure that tag items marked as external are
     in the proper format.
-Official APEv2 specification is here:
-    http://www.personal.uni-jena.de/~pfk/mpp/sv8/apetag.html
-Cached version located here: http://209.220.159.58/mpp/sv8/apetag.html
+APEv2 specification is here:
+    http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
 '''
 
 from os.path import isfile as _isfile
@@ -107,7 +107,7 @@ from struct import pack as _pack, unpack as _unpack
 
 # Variable definitions
 
-__version__ = '0.12'
+__version__ = '1.0'
 _maxapesize = 8192
 _commands = '''create update replace delete getfields getrawtag getnewrawtag
   hastag'''.split()
@@ -179,7 +179,7 @@ class ApeItem(list):
         self.type = type
         if isinstance(values, basestring):
             values = [values]
-        if type == 'utf8':
+        if type == 'utf8' or type == 'external':
             values = [unicode(value) for value in values]
         self.extend(values)
     
@@ -188,7 +188,7 @@ class ApeItem(list):
         
         self.parsetag(self.maketag(), 0) should result in no change to self
         '''
-        if self.type == 'utf8':
+        if self.type == 'utf8' or self.type == 'external':
             values = '\x00'.join([value.encode('utf8') for value in self])
         else:
             values = '\x00'.join(self)
@@ -224,10 +224,8 @@ class ApeItem(list):
         self.key = itemkey
         curpos = keyend + itemlength + 1
         itemvalue = data[keyend+1:curpos]
-        if self.type == 'utf8':
+        if self.type == 'utf8' or self.type == 'external':
             self.extend(itemvalue.decode('utf8').split('\x00'))
-        elif self.type == 'external':
-            self.extend(itemvalue.split('\x00'))
         else:
             self.append(itemvalue)
         return curpos
@@ -252,7 +250,7 @@ def _ape(fil, action, callback = None, callbackkwargs = {}, updateid3 = False):
         elif action == "delete":
             return 0
         data = ''
-        tagstart = fil.tell() - len(id3data)
+        tagstart = filesize - len(id3data)
     else:
         # file has a valid APE footer
         apesize = _unpack("<i",data[12:16])[0] + 32
@@ -261,11 +259,13 @@ def _ape(fil, action, callback = None, callbackkwargs = {}, updateid3 = False):
         if apesize + len(id3data) > filesize:
             raise TagError, 'Existing tag says it is larger than the file: ' \
                             '%i bytes' % apesize
-        fil.seek(-1 * apesize - len(id3data), 1)
+        fil.seek(-apesize - len(id3data), 2)
         tagstart = fil.tell()
         data = fil.read(apesize)
         if _apepreamble != data[:12] or _apeheaderflags != data[20:24]:
             raise TagError, 'Nonexistent or corrupt tag, missing tag header'
+        if apesize != _unpack("<i",data[12:16])[0] + 32:
+            raise TagError, 'Corrupt tag, header and footer sizes do not match'
         if action == "delete":
             fil.seek(tagstart)
             if not updateid3:
@@ -276,7 +276,7 @@ def _ape(fil, action, callback = None, callbackkwargs = {}, updateid3 = False):
             
     if action == "hastag":
         if updateid3:
-            return data and id3data
+            return bool(data) and bool(id3data)
         return bool(data)
     if action == "getrawtag":
         if updateid3:
@@ -332,7 +332,7 @@ def _apefieldstoid3fields(fields):
             if not value:
                 value = ''
             else:
-                value = value[0]
+                value = ', '.join(value)
         if key.startswith('track'):
             try:
                 value = int(value)
@@ -347,6 +347,11 @@ def _apefieldstoid3fields(fields):
                 id3fields[key] = value
             else:
                 id3fields[key] = ''
+        elif key == 'date':
+            try:
+                id3fields['year'] = str(int(value))
+            except ValueError:
+                pass
         elif key in _id3fields:
             if isinstance(value, unicode):
                 value = value.encode('utf8')
@@ -391,14 +396,23 @@ def _getfilesizeandid3andapefooter(fil):
     '''Return file size and ID3 tag if it exists, and seek to start of APE footer'''
     fil.seek(0, 2)
     filesize = fil.tell()
-    fil.seek(filesize - 160)
-    data = fil.read(160)
-    if data[32:35] != 'TAG':
-        apefooter = data[128:]
-        id3 = ''
+    id3 = ''
+    apefooter = ''
+    if filesize < 64: #No possible APE or ID3 tag
+        apefooter = ''
+    elif filesize < 128: #No possible ID3 tag
+        fil.seek(filesize - 32)
+        apefooter = fil.read(32)
     else:
-        id3 = data[32:]
-        apefooter = data[:32]
+        fil.seek(filesize - 128)
+        data = fil.read(128)
+        if data[:3] != 'TAG':
+            apefooter = data[96:]
+        else:
+            id3 = data
+            if filesize >= 160:
+                fil.seek(filesize - 160)
+                apefooter = fil.read(32)
     return filesize, id3, apefooter
 
 def _id3(fil, action, callback = None, callbackkwargs={}):
@@ -408,9 +422,13 @@ def _id3(fil, action, callback = None, callbackkwargs={}):
             raise TagError, "String not allowed for %s action" % action
         data = fil
     else:
-        fil.seek(-128, 2)
-        tagstart = fil.tell()
-        data = fil.read(128)
+        fil.seek(0, 2)
+        tagstart = fil.tell() 
+        if tagstart < 128:
+            data = ''
+        else:
+            fil.seek(-128,2)
+            data = fil.read(128)
         if data[0:3] != 'TAG':
             # Tag doesn't exist
             if action == "delete":
@@ -418,8 +436,8 @@ def _id3(fil, action, callback = None, callbackkwargs={}):
             if action in _tagmustexistcommands: 
                 raise TagError, "Nonexistant or corrupt tag, can't %s" % action
             data = ''
-            tagstart += 128
         else:      
+            tagstart -= 128
             if action == "delete":
                 fil.truncate(tagstart)
                 return 0
@@ -511,6 +529,8 @@ def _parseapetag(data):
     '''Parse an APEv2 tag and return a dictionary of tag fields'''
     apeitems = {}
     numitems = _unpack("<i",data[16:20])[0]
+    if numitems != _unpack("<i",data[-16:-12])[0]:
+        raise TagError, 'Corrupt tag, mismatched header and footer item count' 
     # 32 is size of footer, 11 is minimum item length item
     if numitems > (len(data) - 32)/11:
         raise TagError, 'Corrupt tag, specifies more items that is possible ' \
@@ -642,7 +662,7 @@ def _updateid3tagcallback(tagfields, fields={}, removefields=[],
     if convertfromape:
         fields = _apefieldstoid3fields(fields)
     for field in removefields:
-        if field in tagfields:
+        if field.lower() in tagfields:
             tagfields[field.lower()] = ''
     return _updateid3fields(tagfields, fields)
 
@@ -655,7 +675,7 @@ def createape(fil, fields = {}):
     
 def createid3(fil, fields = {}):
     '''Create/update ID3v1 tag in fil with the information in fields'''
-    return _tag(_id3, fil, 'update', callback=_updateid3tagcallback, 
+    return _tag(_id3, fil, 'create', callback=_updateid3tagcallback, 
       callbackkwargs={'fields':fields})
     
 def createtags(fil, fields = {}):
