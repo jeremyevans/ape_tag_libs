@@ -37,7 +37,7 @@ regular basis, so it is unlikely to be different from the latest release.
 Thank you for downloading this library. I hope you find it useful. 
 
 Changelog:
-1.0 - 2006-01-13
+1.0 - 2007-01-13
 - Replace manual test files with automated unittest-based test suite
 - Ensure UTF-8 encoding for tag items marked "external"
 - Check for matching header and footer tag sizes and item counts
