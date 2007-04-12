@@ -388,7 +388,7 @@ class ApeTag
       raise ApeTagError, "Tag size (#{tag_size}) larger than possible" if tag_size + id3.length > file_size
       raise ApeTagError, "Tag size (#{tag_size}) is larger than #{MAX_SIZE}" if tag_size > MAX_SIZE
       raise ApeTagError, "Item count (#{tag_item_count}) is larger than #{MAX_ITEM_COUNT}" if tag_item_count > MAX_ITEM_COUNT
-      raise ApeTagError, "Item count (#{tag_item_count}) is larger than possible" if tag_item_count > tag_size-64/ApeItem::MIN_SIZE
+      raise ApeTagError, "Item count (#{tag_item_count}) is larger than possible" if tag_item_count > (tag_size-64)/ApeItem::MIN_SIZE
       file.seek(-tag_size-id3.length, IO::SEEK_END)
       @tag_start=file.pos
       @tag_header=file.read(32)
