@@ -1,0 +1,307 @@
+.TH apetag 3 "2007-05-10"
+.SH NAME
+.B apetag
+\- APEv2 tag reader/writer/updater
+.SH SYNOPSIS
+.B #include <apetag.h>
+.P
+.B ApeTag* ApeTag_new(FILE* file, u_int32_t flags);
+.P
+.B int ApeTag_free(ApeTag* tag);
+.P
+.B int ApeTag_exists(ApeTag* tag);
+.P
+.B int ApeTag_remove(ApeTag* tag);
+.P
+.B int ApeTag_raw(ApeTag* tag, char** raw);
+.P
+.B int ApeTag_parse(ApeTag* tag);
+.P
+.B int ApeTag_update(ApeTag* tag);
+.P
+.B int ApeTag_add_field(ApeTag* tag, ApeItem* item);
+.P
+.B int ApeTag_remove_field(ApeTag* tag, char* key);
+.P
+.B int ApeTag_clear_fields(ApeTag* tag);
+.SH DESCRIPTION
+.SS QUICK INTRO
+.BR apetag 's
+API is fairly straight forward.  Some common things to remember:
+.IP \(bu 2
+Most functions assert that their pointer arguments are not NULL.
+.IP \(bu 2
+For the public functions that return an int, negative numbers imply an error:
+.IP \(bu 4
+-1: Check 
+.IR errno ,
+see 
+.I tag->error
+for function name.
+.IP \(bu 4
+-2: File error, check 
+.BR ferror ,
+see 
+.I tag->error
+for function name.
+.IP \(bu 4
+-3: Apetag consistancy error, see
+.I tag->error
+for reason.
+.IP \(bu 2
+All
+.IR ApeItem s
+added to the database must be created on the heap.
+.IP \(bu 2
+The fields of the tag are stored in a 
+.I DB_HASH
+format database.
+.IP \(bu 4
+The keys are NULL-terminated strings (
+.IR char* )
+.IP \(bu 4
+The values are
+.I ApeItem** 
+.IP \(bu 2
+ApeItem keys are NULL-terminated strings.
+.IP \(bu 2
+ApeItem values are unterminated strings, since they can contain '\\0'.
+The size of the value is stored in the
+.IR ApeItem 's
+size.  
+.IP \(bu 2
+All
+.IR ApeItem s
+and their keys and values must be stored on the heap.
+.SS DATA STRUCTURES
+The
+.B apetag
+library exists to read/write/update APEv2 tags in files. 
+The library is written in an object oriented fashion, 
+using two C structures:
+.P
+#include <apetag.h>
+.P
+typedef struct {
+    FILE* file;           /* file containing tag */
+    DB* fields;           /* DB_HASH format database */
+                          /* Keys are NULL-terminated */
+                          /* Values are ApeItem** */
+    char* tag_header;     /* Tag Header data */
+    char* tag_data;       /* Tag body data */
+    char* tag_footer;     /* Tag footer data */
+    char* id3;            /* ID3 data, if any */
+    char* error;          /* String for last error */
+    u_int32_t flags;      /* Internal tag flags */
+    u_int32_t size;       /* On disk size in bytes */
+    u_int32_t item_count; /* On disk item count */
+    u_int32_t num_fields; /* In database item count */
+    long offset;          /* Start of tag in file */
+.br
+} ApeTag;
+.P
+.I file
+and
+.I flags
+are the only members that should be set by the user, and
+they should only be set using
+.BR "ApeTag_new" .
+The values in the
+.I fields
+member are 
+.IR ApeItem** ,
+where 
+.I ApeItem
+is defined as:
+.P
+typedef struct {
+    u_int32_t size;        /* Size of the value */
+    u_int32_t flags;       /* Flags on the item */
+    char* key;             /* NULL-terminated string */
+    char* value;           /* Unterminated string */
+.br
+} ApeItem;
+.P
+Adding new fields to the tag requires creating the 
+.I ApeItem
+manually,
+using 
+.B malloc
+for both the 
+.I ApeItem
+itself, as well as its key and value,
+as all must be stored on the heap.  A pointer to the item is then passed
+to 
+.BR ApeTag_add_field .
+.SS FUNCTIONS
+.B ApeTag* ApeTag_new(FILE* file, u_int32_t flags);
+.P
+For a given
+.I file
+and
+.IR flags ,
+allocates an empty 
+.IR ApeTag ,
+initializes it to the
+default values and returns a pointer to it.
+The only flag the should be passed is
+.IR APE_NO_ID3 ,
+which tells the library to ignore any existing ID3 tag when reading
+a tag, and not to write an ID3 tag.
+.P
+Returns a valid 
+.I ApeTag*
+if successful; otherwise a null pointer is returned 
+and errno is set to ENOMEM.
+.P
+.B int ApeTag_free(ApeTag* tag);
+.P
+Frees all data associated with an 
+.IR ApeTag ,
+except for the file pointer.
+This includes freeing all related 
+.IR ApeItem s
+and their keys and
+values.
+Since you pass the file pointer to 
+.BR ApeTag_new ,
+you are expected to free it
+yourself.
+.P
+Returns 0 if successful, and -1 if there were problems closing 
+.IR tag->fields .
+Note that you can't check 
+.I tag->error
+on error, as 
+.I tag
+has already been freed.
+.P
+.B int ApeTag_exists(ApeTag* tag);
+.P
+Checks if the file associated with 
+.I tag
+already contains a valid APE tag.
+.P
+Returns 1 if the tag exists, 0 if it does not, <0 on error.  
+.P
+.B int ApeTag_remove(ApeTag* tag);
+.P
+Removes the APE tag from the file associated with 
+.IR tag ,
+if the file has one.
+.P
+This function parses the header and footer of the tag and will error instead
+of removing a tag if the header or footer of the tag is corrupt.
+.P
+Returns 1 if the tag doesn't exist, 0 if it does exist and the tag was
+removed successfully, <0 on error. 
+.P
+.B int ApeTag_raw(ApeTag* tag, char** raw);
+.P
+Populates the passed pointer with the raw string for the entire tag.  The
+length of the raw string will always be
+.BR TAG_LENGTH(tag) .
+.P
+Note that you need to pass a 
+.IR char** ,
+not a 
+.IR char* ,
+and you are responsible for
+freeing the 
+.IR char* .
+.P
+Returns 0 on success, <0 on error.
+.P
+.B int ApeTag_parse(ApeTag* tag);
+.P
+Parses the tag and populates 
+.IR tag->fields .
+Calls 
+.B ApeTag_ape_field
+to
+add each field, and operates no differently than adding all the fields
+manually.
+.P
+Returns 0 on success, <0 on error.
+.P
+.B int ApeTag_update(ApeTag* tag);
+.P
+Updates 
+.I tag->file
+with the new tag information.  Writes an ID3 tag as well as
+an APE tag unless the 
+.I APE_NO_ID3
+flag is used or the file already has an APE
+tag but doesn't have an ID3 tag.  
+.P
+Note that if you want to update an existing tag, you need to populate
+.I tag->fields
+with 
+.B ApeTag_parse
+before calling
+.BR ApeTag_update .
+Otherwise,
+it'll overwrite the tag instead of updating it.
+.P
+Returns 0 on success, <0 on error.
+.P
+.B int ApeTag_add_field(ApeTag* tag, ApeItem* item);
+.P
+Adds a field to
+.IR tag->fields .
+The field cannot already exist in 
+.IR tag->fields .
+The
+.I item
+itself, as well as 
+.I item->key
+and 
+.IR item->value ,
+must be
+created on the heap, as they are all freed when calling 
+.BR ApeTag_free , 
+.BR ApeTag_clear_fields ,
+or
+.BR ApeTag_remove_field .
+.P
+This function creates
+.I tag->fields
+if it doesn't already exist. It also
+increments 
+.IR tag->num_fields .
+Adding fields directly to
+.I tag->fields
+without going through 
+.B ApeTag_add_field
+is not recommended nor supported.
+.P
+Returns 0 on success, <0 on error.
+.P
+.B int ApeTag_remove_field(ApeTag* tag, char* key);
+.P
+Removes the field with a matching key from
+.IR tag->fields .
+Also decrements
+.IR tag->num_fields .
+Removing fields directly from
+.I tag->fields
+without going through
+.B ApeTag_remove_field
+is not recommended nor supported.
+.P
+Returns 0 on success, 1 if the field did not exist tag->fields, <0 on
+error.
+.P
+.B int ApeTag_clear_fields(ApeTag* tag);
+.P
+Frees all ApeItems referenced in
+.IR tag->fields ,
+and then closes tag->fields.
+.P
+Returns 0 on success, -1 on error.
+.SH AUTHOR
+.B apetag
+is written by Jeremy Evans.  You can contact the author at
+jeremyevans0@gmail.com, and suggestions or bug reports are welcome.
+.SH SEE ALSO
+apeinfo(1), malloc(3), ferror(3)

@@ -1,0 +1,53 @@
+libapetag                         http://www.sourceforge.net/projects/pylibape/
+===============================================================================
+
+Table of Contents
+==================
+1 Introduction
+2 License
+3 Installation
+4 API
+5 apeinfo
+
+1 Introduction
+===============
+
+libapetag implements an APEv2 tag parser/writer.  It aims for standards
+compliance with the APEv2 tag specification [1].  APEv2 is the tagging format
+used by Musepack (.mpc), Monday's Audio (.ape), WavPack (.wv), and OptimFROG
+(.ofr) audio formats, and it can also be used with mp3s as an alternative to
+ID3v2.[234].  
+
+[1] http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
+
+2 License
+=========
+
+libapetag is released under the MIT License, which gives you freedom to do
+pretty much anything you want with it as long as you include a copy of the
+license.  A copy of the license is included in the LICENSE file.
+
+3 Installation
+==============
+
+Hopefully, it's as simple as:
+
+  $ make # build library
+  $ make regress # Check that all tests complete successfully
+  $ sudo make install # install library and program
+
+However, this may fail, and if it does, hopefully it can be fixed by a simple
+change in the Makefile.  If you have to patch the library to make it work on
+your system, please contribute patches back via SourceForge.
+
+4 API
+=====
+
+See the man page for a description of the API.
+
+5 apeinfo
+=========
+
+apeinfo is a short C program that gives an example using the library.  It just
+analyzes the files given on the command line and outputs the contents of each
+item in the tag if the tag exists.

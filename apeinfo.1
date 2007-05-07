@@ -1,0 +1,29 @@
+.TH apeinfo 1 "2007-05-10"
+.SH NAME
+.B apeinfo
+\- APEv2 tag information displayer
+.SH SYNOPSIS
+.B apeinfo
+file [...]
+.SH DESCRIPTION
+.B apeinfo
+is a simple tool that displays information about
+APEv2 tags in the files passed on the command line.
+.P
+For each file, it prints the filename and the number of fields
+in the APEv2 tag for that file, as well as the name and value of
+each field.  If the file doesn't have an APEv2 tag, it states that
+and doesn't print any fields.
+.P
+The
+.B apeinfo
+utility exits 0 if all of the named files existed and there
+were no problems accessing them.  If an error occurs,
+.B apeinfo
+warns on the standard output and exits with a value of 1.
+.SH AUTHOR
+.B apeinfo
+is written by Jeremy Evans.  You can contact the author at
+jeremyevans0@gmail.com, and suggestions or bug reports are welcome.
+.SH SEE ALSO
+apetag(3)
