@@ -11,14 +11,9 @@
 #
 # The module is in written in pure Ruby, so it should be useable on all 
 # platforms that Ruby supports.  It has been tested on OpenBSD.  
-# The minimum python version required should be 1.8, but it has only been tested
+# The minimum Ruby version required should be 1.8, but it has only been tested
 # on 1.8.4.  Modifying the code to work with previous version shouldn't be
 # difficult, though there aren't any plans to do so.
-#
-# The library is complete, but it hasn't been used, so there may still be
-# some bugs in it.  I haven't found any bugs in my normal use of it that I
-# haven't already fixed, though. RDoc documentation is available, as is
-# Test::Unit based testing.
 #
 # General Use:
 #
@@ -363,7 +358,7 @@ class ApeTag
         ape_item_keys.add(item.key_downcased)
         ape_items[item.key] = item
       end
-      raise ApeTagError, "Data remaing after specified number of items parsed" if offset != tag_data.length
+      raise ApeTagError, "Data remaining after specified number of items parsed" if offset != tag_data.length
       @fields = ape_items
     end
     

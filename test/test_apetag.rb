@@ -277,12 +277,12 @@ class ApeTagTest < Test::Unit::TestCase
     data[48] = 1
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
-    # Test unmatched header and footer item size, header size wrong
+    # Test unmatched header and footer item count, header size wrong
     data[48] = 0
     data[16] = 1
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
-    # Test unmatched header and footer item size, footer size wrong
+    # Test unmatched header and footer item count, footer size wrong
     data = EXAMPLE_APE_TAG.dup
     data[48] -=1
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
