@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |s| 
   s.name = "apetag"
-  s.version = "1.0.1"
+  s.version = "1.1.0"
   s.author = "Jeremy Evans"
   s.email = "code@jeremyevans.net"
   s.platform = Gem::Platform::RUBY
@@ -10,5 +10,6 @@ spec = Gem::Specification.new do |s|
   s.require_path = "."
   s.test_files = Dir["test/test_apetag.rb"]
   s.has_rdoc = true
+  s.add_dependency('cicphash', [">= 1.0.0"])
 end
 

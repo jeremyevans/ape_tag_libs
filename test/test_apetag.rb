@@ -102,7 +102,6 @@ class ApeTagTest < Test::Unit::TestCase
     assert_equal false, ai.read_only
     assert_equal 'utf8', ai.ape_type
     assert_equal 'BlaH', ai.key
-    assert_equal 'blah', ai.key_downcased
     assert_equal 'BlAh', ai.string_value
     assert_equal "\04\0\0\0\0\0\0\0BlaH\0BlAh", ai.raw
     assert_equal true, ai.valid?
@@ -120,8 +119,8 @@ class ApeTagTest < Test::Unit::TestCase
     
     # Test valid key settings
     ((("\0".."\x1f").to_a+("\x80".."\xff").to_a).collect{|x|"#{x}  "} +
-      [nil, 1, '', 'x', 'x'*256]+ApeItem::BAD_KEYS.to_a).each{|x|assert_raises(ApeTagError){ai.key=x}}
-    ("\x20".."\x7f").to_a.collect{|x|"#{x}  "}+ApeItem::BAD_KEYS.to_a.collect{|x|"#{x}  "} +
+      [nil, 1, '', 'x', 'x'*256, 'id3', 'tag', 'oggs', 'mp+']).each{|x|assert_raises(ApeTagError){ai.key=x}}
+    ("\x20".."\x7f").to_a.collect{|x|"#{x}  "}+['id3', 'tag', 'oggs', 'mp+'].collect{|x|"#{x}  "} +
       ['xx', 'x'*255].each{|x| assert_nothing_raised{ai.key=x}}
     
     # Test valid raw and string value for different settings
@@ -330,11 +329,10 @@ class ApeTagTest < Test::Unit::TestCase
     data[192] += 2
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
     
-    # Test updating with duplicate keys added 
-    assert_raises(ApeTagError){ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['album']='blah'}}
-    assert_raises(ApeTagError){ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['ALBUM']='blah'}}
-    # Test updating without duplicate keys added
-    assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album']='blah'}}
+    # Test updating works in case insensitive manner 
+    assert_equal ['blah'], ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['album']='blah'}['ALBUM']
+    assert_equal ['blah'], ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['ALBUM']='blah'}['album']
+    assert_equal ['blah'], ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['ALbUM']='blah'}['albuM']
     
     # Test updating an existing ApeItem via various array methods
     assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'] += ['blah']}}

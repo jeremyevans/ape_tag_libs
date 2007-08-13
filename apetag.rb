@@ -1,18 +1,18 @@
 #!/usr/bin/env ruby
 # This library implements a APEv2 parser/generator.
-# If called from the command line, it prints out the contents of the APEv2 tag for the given filename arguments.
+# If called from the command line, it prints out the contents of the APEv2 tag 
+# for the given filename arguments.
 #
-# ruby-apetag is a pure Ruby library for manipulating APEv2 (and ID3v1.1) tags.
+# ruby-apetag is a pure Ruby library for manipulating APEv2 tags.
 # It aims for standards compliance with the APE spec (1). APEv2 is the standard
 # tagging format for Musepack (.mpc) and Monkey's Audio files (.ape), and it can
-# also be used with mp3s as an alternative to the mess that is ID3v2.x
-# (technically, it can be used on any file type and is not limited to storing
-# just audio file metadata).
+# also be used with mp3s as an alternative to ID3v2.x (technically, it can be 
+# used on any file type and is not limited to storing just audio file metadata).
 #
 # The module is in written in pure Ruby, so it should be useable on all 
-# platforms that Ruby supports.  It has been tested on OpenBSD.  
+# platforms that Ruby supports.  It is developed and tested on OpenBSD.  
 # The minimum Ruby version required should be 1.8, but it has only been tested
-# on 1.8.4.  Modifying the code to work with previous version shouldn't be
+# on 1.8.4+.  Modifying the code to work with previous version shouldn't be
 # difficult, though there aren't any plans to do so.
 #
 # General Use:
@@ -20,8 +20,8 @@
 #  require 'apetag'
 #  a = ApeTag.new('file.mp3')
 #  a.exists? # if it already has an APEv2 tag
-#  a.raw # the raw APEv2+ID3v1.1 tag already on the file
-#  a.fields # a hash of fields, keys are strings, values are list of strings
+#  a.raw # the raw APEv2+ID3v1.1 tag string in the file
+#  a.fields # a CICPHash of fields, keys are strings, values are list of strings
 #  a.pretty_print # string suitable for pretty printing
 #  a.update{|fields| fields['Artist']='Test Artist'; fields.delete('Year')}
 #   # Update the tag with the added/changed/deleted fields
@@ -36,8 +36,8 @@
 # patch, please use Rubyforge (http://rubyforge.org/projects/apetag/).
 #
 # The most current source code can be accessed via anonymous SVN at 
-# svn://suven.no-ip.org/ruby-apetag/.  Note that the library isn't modified on a
-# regular basis, so it is unlikely to be different from the latest release.
+# svn://code.jeremyevans.net/ruby-apetag/.  Note that the library isn't modified
+# on a regular basis, so it is unlikely to be different from the latest release.
 #
 # (1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
 #
@@ -62,6 +62,7 @@
 # SOFTWARE.
 
 require 'set'
+require 'cicphash'
 
 # Error raised by the library
 class ApeTagError < StandardError
@@ -71,11 +72,10 @@ end
 # Because all items can contain a list of values, this is a subclass of Array.
 class ApeItem < Array
   MIN_SIZE = 11 # 4+4+2+1 (length, flags, minimum key length, key-value separator)
-  BAD_KEYS = Set.new(%w'id3 tag oggs mp+')
-  BAD_KEY_RE = Regexp.new("[\0-\x1f\x80-\xff]")
+  BAD_KEY_RE = /[\0-\x1f\x80-\xff]|\A(?:id3|tag|oggs|mp\+)\z/i
   ITEM_TYPES = %w'utf8 binary external reserved'
   
-  attr_reader :read_only, :ape_type, :key, :key_downcased
+  attr_reader :read_only, :ape_type, :key
   
   # Creates an APE tag with the appropriate key and value.
   # If value is a valid ApeItem, just updates the key.
@@ -129,7 +129,6 @@ class ApeItem < Array
   def key=(key)
     raise ApeTagError, "Invalid APE key" unless valid_key?(key)
     @key = key
-    @key_downcased = key.downcase
   end
   
   # The on disk representation of the entire ApeItem.
@@ -162,9 +161,9 @@ class ApeItem < Array
     ITEM_TYPES.include?(type)
   end
   
-  # Check if the given key is a valid APE key (string, 2 <= length <= 255, not in ApeItem::BAD_KEYS, not containing invalid characters).
+  # Check if the given key is a valid APE key (string, 2 <= length <= 255, not containing invalid characters or keys).
   def valid_key?(key)
-    key.is_a?(String) && key.length >= 2 && key.length <= 255 && !BAD_KEYS.include?(key.downcase) && key !~ BAD_KEY_RE
+    key.is_a?(String) && key.length >= 2 && key.length <= 255 && key !~ BAD_KEY_RE
   end
   
   # Check if the given read only flag is valid (boolean).
@@ -218,7 +217,7 @@ class ApeTag
     Polsk Punk, Beat, Christian Gangsta Rap, Heavy Metal, Black Metal, 
     Crossover, Contemporary Christian, Christian Rock, Merengue, Salsa, 
     Trash Meta, Anime, Jpop, Synthpop'.split(',').collect{|g| g.strip}
-  ID3_GENRES_HASH = Hash.new(255.chr)
+  ID3_GENRES_HASH = CICPHash.new(255.chr)
   ID3_GENRES.each_with_index{|g,i| ID3_GENRES_HASH[g] = i.chr }
   FILE_OBJ_METHODS = %w'close seek read pos write truncate'
   YEAR_RE = Regexp.new('\d{4}')
@@ -268,7 +267,7 @@ class ApeTag
     true
   end
   
-  # A hash of ApeItems found in the file, or an empty hash if the file
+  # A CICPHash of ApeItems found in the file, or an empty CICPHash if the file
   # doesn't have an APE tag.  Raises ApeTagError for corrupt tags.
   def fields
     @fields || access_file('rb'){get_fields}
@@ -277,7 +276,7 @@ class ApeTag
   # Pretty print tags, with one line per field, showing key and value.
   def pretty_print
     begin
-      fields.values.sort_by{|value| value.key_downcased}.collect{|value| "#{value.key}: #{value.join(', ')}"}.join("\n")
+      fields.values.sort_by{|value| value.key}.collect{|value| "#{value.key}: #{value.join(', ')}"}.join("\n")
     rescue ApeTagError
       "CORRUPT TAG!"
     rescue Errno::ENOENT, Errno::EINVAL
@@ -292,7 +291,7 @@ class ApeTag
     "#{tag_header}#{tag_data}#{tag_footer}#{id3}"
   end
   
-  # Yields a hash of ApeItems found in the file, or an empty hash if the file
+  # Yields a CICPHash of ApeItems found in the file, or an empty CICPHash if the file
   # doesn't have an APE tag.  This hash should be modified (not reassigned) inside
   # the block.  An APEv2+ID3v1.1 tag with the new fields will overwrite the previous
   # tag.  If the file doesn't have an APEv2 tag, one will be created and appended to it.
@@ -346,16 +345,14 @@ class ApeTag
     # if the file has no APE tag.
     def get_fields
       return @fields if @fields
-      return @fields = Hash.new unless has_tag
-      ape_items = Hash.new
-      ape_item_keys = Set.new
+      return @fields = CICPHash.new unless has_tag
+      ape_items = CICPHash.new
       offset = 0
       last_possible_item_start = tag_data.length - ApeItem::MIN_SIZE
       tag_item_count.times do
         raise ApeTagError, "End of tag reached but more items specified" if offset > last_possible_item_start
         item, offset = ApeItem.parse(tag_data, offset)
-        raise ApeTagError, "Multiple items with same key (#{item.key.inspect})" if ape_item_keys.include?(item.key_downcased)
-        ape_item_keys.add(item.key_downcased)
+        raise ApeTagError, "Multiple items with same key (#{item.key.inspect})" if ape_items.include?(item.key)
         ape_items[item.key] = item
       end
       raise ApeTagError, "Data remaining after specified number of items parsed" if offset != tag_data.length
@@ -415,12 +412,9 @@ class ApeTag
     # Turn fields hash from a hash of arbitrary objects to a hash of ApeItems
     # Check that multiple identical keys are not present.
     def normalize_fields
-      new_fields = Hash.new
-      new_fields_keys = Set.new
+      new_fields = CICPHash.new
       fields.each do |key, value|
-        new_fields[key] = value = ApeItem.create(key, value)
-        raise ApeTagError, "Multiple items with same key (#{value.key.inspect})" if new_fields_keys.include?(value.key_downcased)
-        new_fields_keys.add(value.key_downcased)
+        new_fields[key] = ApeItem.create(key, value)
       end
       @fields = new_fields
     end
@@ -445,21 +439,21 @@ class ApeTag
     # check_id3 is not set, an ID3 won't be added.
     def update_id3
       return if id3.length == 0 && (has_tag || check_id3 == false)
-      id3_fields = Hash.new('')
+      id3_fields = CICPHash.new('')
       id3_fields['genre'] = 255.chr
       fields.values.each do |value|
-        case value.key_downcased
-          when /\Atrack/
+        case value.key
+          when /\Atrack/i
             id3_fields['track'] = value.string_value.to_i
             id3_fields['track'] = 0 if id3_fields['track'] > 255
             id3_fields['track'] = id3_fields['track'].chr
-          when /\Agenre/
+          when /\Agenre/i
             id3_fields['genre'] = ID3_GENRES_HASH[value.first]
-          when /\Adate\z/
+          when /\Adate\z/i
             match = YEAR_RE.match(value.string_value)
             id3_fields['year'] = match[0] if match 
-          when /\A(title|artist|album|year|comment)\z/
-            id3_fields[value.key_downcased] = value.join(', ')
+          when /\A(title|artist|album|year|comment)\z/i
+            id3_fields[value.key] = value.join(', ')
         end
       end
       @id3 = ["TAG", id3_fields['title'], id3_fields['artist'], id3_fields['album'],
