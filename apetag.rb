@@ -406,7 +406,7 @@ class ApeTag
       return @id3 = '' if file_size < 128 || check_id3 == false
       file.seek(-128, IO::SEEK_END)
       data = file.read(128)
-      @id3 = data[0...3] == 'TAG' && data[125] == 0 ? data : ''
+      @id3 = data[0...3] == 'TAG' ? data : ''
     end
     
     # Turn fields hash from a hash of arbitrary objects to a hash of ApeItems

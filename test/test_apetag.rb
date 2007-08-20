@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require 'rubygems'
 require 'apetag'
 require 'stringio'
 require 'test/unit'
@@ -341,6 +342,9 @@ class ApeTagTest < Test::Unit::TestCase
     assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'].pop}}
     assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'].shift}}
     
+    # Test ID3v1.0 tag
+    assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG[0...-128] + EXAMPLE_APE_TAG[-128..-1].gsub("\0", " "))).update{|x| x}}
+
     # Test updating with invalid value
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| x['Album']="\xfe"}}
     
