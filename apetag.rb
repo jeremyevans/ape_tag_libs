@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# This library implements a APEv2 parser/generator.
+# This library implements a APEv2 reader/writer.
 # If called from the command line, it prints out the contents of the APEv2 tag 
 # for the given filename arguments.
 #
@@ -61,7 +61,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
 # SOFTWARE.
 
-require 'set'
 require 'cicphash'
 
 # Error raised by the library
@@ -249,8 +248,7 @@ class ApeTag
       @check_id3 = check_id3.nil? ? @@check_id3 : check_id3 
     else
       @filename = filename.to_s
-      @check_id3 = check_id3 unless check_id3.nil?
-      @check_id3 = !MP3_RE.match(@filename).nil? if @check_id3.nil?
+      @check_id3 = check_id3.nil? ? !MP3_RE.match(@filename).nil? : check_id3 
     end
   end
   
