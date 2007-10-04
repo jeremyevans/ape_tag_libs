@@ -1,0 +1,76 @@
+lua-ApeTag
+----------
+
+lua-ApeTag is a lua library for reading and writing APEv2 tags.  If called from
+the command line, it prints out the contents of the APEv2 tag for the given
+filename arguments.
+
+It aims for standards compliance with the APE spec (1). APEv2 is the standard
+tagging format for Musepack (.mpc) and Monkey's Audio files (.ape), and it can
+also be used with mp3s as an alternative to ID3v2.x (technically, it can be
+used on any file type and is not limited to storing just audio file metadata).
+
+The module is in written mostly in pure Lua.  It does require a small C
+extension because file truncation is not supported in the Lua standard library.
+It should be useable on all platforms that Lua supports, though the C file may
+need to be modified (it assumes ftruncate is found in unistd.h).  It is
+developed and tested on OpenBSD.  It has only been tested on Lua 5.1.1.  It
+includes a full unit test suite.
+
+(1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
+
+Installation
+------------
+
+First, you need to build the C extension:
+
+  make
+
+Second, you should probably run the unit tests:
+
+  make regress
+
+Finally, you should install it by copying apetag.lua and io_truncate.so to
+somewhere in Lua's path.  There isn't a make target for this.
+
+Example Usage
+-------------
+
+require('apetag')
+a = ApeTag:new('file.mp3')
+a:exists() # if it already has an APEv2 tag 
+a:raw() # the raw APEv2+ID3v1 tag string in the file
+a:fields() # a table of fields (type ApeFields), keys are strings, values are
+           # tables (type ApeItem).  You shouldn't pay attention to the keys. 
+           # Use value.key to get the real key.
+a:pretty_print() # string suitable for pretty printing
+a:update(function(fields) fields.Artist='Test Artist' fields.Year = nil end)
+  # Update the tag with the added/changed/deleted fields 
+  # Note that you should NOT do: 
+  #    a:update(function(fields) fields = {Artist='Test Artist'} end)
+  # OR: 
+  #    a:update(function(fields) return {Artist='Test Artist'} end) 
+  # You need to update/modify the fields given, not reassign it
+a:remove() # remove the APEv2 and ID3v1 tags.
+
+API Documentation
+-----------------
+
+The documentation for the library is in luadoc format.  You'll have to install
+luadoc and its dependencies to generate it.
+
+Bugs
+----
+
+If you find any bugs, would like additional documentation, or want to submit a
+patch, please use Sourceforge (http://sf.net/projects/pylibape/).
+
+The most current source code can be accessed via anonymous SVN at
+svn://code.jeremyevans.net/lua-ApeTag/.  Note that the library isn't modified
+on a regular basis, so it is unlikely to be different from the latest release.
+
+Changelog
+---------
+
+1.0.0
+- Initial Public Release
