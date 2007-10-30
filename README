@@ -1,0 +1,98 @@
+erl-ApeTag
+----------
+
+erl-ApeTag is a Erlang library for reading and writing APEv2 tags.
+
+It aims for standards compliance with the APE spec (1). APEv2 is the standard
+tagging format for Musepack (.mpc) and Monkey's Audio files (.ape), and it can
+also be used with mp3s as an alternative to ID3v2.x (technically, it can be
+used on any file type and is not limited to storing just audio file metadata).
+
+The module is in written in pure Erlang.  The minimum required version is
+Erlang 11b5, mostly because of the use of string:to_lower.  It is developed and
+tested on OpenBSD.  It includes a full unit test suite.
+
+(1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
+
+Installation
+------------
+
+First, you need to build the .beam emulator file:
+
+  make
+
+Second, you should probably run the unit tests:
+
+  make regress
+
+Finally, you should install it by copying apetag.beam to somewhere in Erlang's
+load path, and apetag.hrl to somewhere in Erlang's header path.  There isn't a
+make target for this.
+
+Example Usage
+-------------
+
+-include_lib("apetag.hrl").
+AT1 = apetag:get_tag_information("file.mp3"). # get basic information about tag
+apetag:raw(AT1). # the raw APEv2+ID3v1 tag string in the file
+AT2 = apetag:get_fields(AT1). # parse the tag body into individual items, which
+            # become available in AT2#apetag.fields
+            # keys are lowercase strings, values are records (#apeitem). 
+            # Use Value#apeitem.key to get the real key.
+apetag:pretty_print(AT3). # string suitable for pretty printing
+AT4 = apetag:update(AT3, fun(Fields) ->
+    apetag:add_apeitem("Artist", "Test Artist",  # Add item with key "Artist"
+        apetag:remove_apeitem("Year", Fields))   # Remove item with key "Year"
+end). # Update the tag using a function that returns a new set of fields, by
+      # modifying the current fields with add_apeitem and remove_apeitem.
+AT5 = apetag:remove(AT4). # remove the APEv2 and ID3v1 tags.
+
+API Documentation
+-----------------
+
+There is none really, other than the source.  However, here's a brief overview:
+
+new/1, new/2:
+    These aren't really needed unless you want to pass in the check_id3 flag to
+    new/2.  You can pass a string as a filename to the exported functions that
+    accept apetag records.
+
+get_fields/1, get_tag_information/1,  pretty_print/1, raw/1, remove/1:
+    These all take either an apetag record or a string as a filename.  raw
+    returns a binary, pretty_print returns a string, the others return an
+    apetag record.  get_tag_information populates everything in the apetag
+    record except for fields, get_fields populates everything.  Remove removes
+    the tag from the file.
+
+update/2
+    This takes either an apetag record or string as filename for the first
+    argument, and a function that accepts the existing fields and returns
+    modified fields to write back to the file.  It modifies the file and
+    returns an apetag record.
+
+add_apeitem/3, add_apeitem/4, add_apeitems/2, remove_apeitem/2,
+  remove_apeitems/2:
+    These all modify the fields, and should only be used within update/2.
+    add_apeitem(Key, Value, Fields) - adds item with Key and Value to Fields
+    add_apeitem(Key, Value, Flags, Fields) - adds item with Key, Value, and
+        Flags to Fields
+    add_apeitems([{Key1, Value1}, {Key2, Value2, Flag2}, ...], Fields) -
+        Use add_apeitem for multiple items at once, to save typing
+    remove_apeitem(Key, Fields) - Removes Key from Fields
+    remove_apeitem([Key1, Key2, ...], Fields) - Removes all keys from Fields
+
+Bugs
+----
+
+If you find any bugs, would like additional documentation, or want to submit a
+patch, please use Sourceforge (http://sf.net/projects/pylibape/).
+
+The most current source code can be accessed via anonymous SVN at
+svn://code.jeremyevans.net/erl-ApeTag/.  Note that the library isn't modified
+on a regular basis, so it is unlikely to be different from the latest release.
+
+Changelog
+---------
+
+1.0.0
+- Initial Public Release
