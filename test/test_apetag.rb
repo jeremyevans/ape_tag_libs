@@ -228,7 +228,7 @@ class ApeTagTest < Test::Unit::TestCase
     assert_equal "XYZ", ai.string_value
     
     # Test parsing of invalid UTF-8
-    data = "\012\0\0\0\07\0\0\0BlaH\0BlAh\0XYZ\0\xff"
+    data = "\012\0\0\0\0\0\0\0BlaH\0BlAh\0XYZ\0\xff"
     assert_raises(ApeTagError){ApeItem.parse(data, 0)}
   end
   
@@ -237,6 +237,16 @@ class ApeTagTest < Test::Unit::TestCase
     data = EMPTY_APE_TAG.dup
     # Test default case OK
     assert_nothing_raised{ApeTag.new(StringIO.new(data)).raw}
+
+    # Test read only tags work
+    data[20] = 1
+    assert_nothing_raised{ApeTag.new(StringIO.new(data)).raw}
+
+    # Test other flags values don't work
+    2.upto(255) do |i|
+      data[20] = i
+      assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
+    end
     
     # Test footer size less than minimum size (32)
     data[44] = 31
@@ -284,7 +294,7 @@ class ApeTagTest < Test::Unit::TestCase
     
     # Test unmatched header and footer item count, footer size wrong
     data = EXAMPLE_APE_TAG.dup
-    data[48] -=1
+    data[208-16] -=1
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
     
     # Test missing/corrupt header
@@ -330,7 +340,7 @@ class ApeTagTest < Test::Unit::TestCase
     data[192] += 2
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
     
-    # Test updating works in case insensitive manner 
+    # Test updating works in a case insensitive manner 
     assert_equal ['blah'], ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['album']='blah'}['ALBUM']
     assert_equal ['blah'], ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['ALBUM']='blah'}['album']
     assert_equal ['blah'], ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['ALbUM']='blah'}['albuM']
@@ -345,10 +355,10 @@ class ApeTagTest < Test::Unit::TestCase
     # Test ID3v1.0 tag
     assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG[0...-128] + EXAMPLE_APE_TAG[-128..-1].gsub("\0", " "))).update{|x| x}}
 
-    # Test updating with invalid value
+    # Test updating with an invalid value
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| x['Album']="\xfe"}}
     
-    # Test updating with invalid key
+    # Test updating with an invalid key
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| x['x']=""}}
     
     # Test updating with too many items 
@@ -358,7 +368,7 @@ class ApeTagTest < Test::Unit::TestCase
     
     # Test updating with too large a tag
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| x['xx']=' '*8118}}
-    # Test updating with just enough tag
+    # Test updating with a just large enough tag
     assert_nothing_raised{ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| x['xx']=' '*8117}}
   end
   

@@ -188,8 +188,8 @@ end
 class ApeTag
   MAX_SIZE = 8192
   MAX_ITEM_COUNT = 64
-  HEADER_FLAGS = "\x00\x00\x00\xA0"
-  FOOTER_FLAGS = "\x00\x00\x00\x80"
+  HEADER_FLAGS = "\x00\x00\xA0"
+  FOOTER_FLAGS = "\x00\x00\x80"
   PREAMBLE = "APETAGEX\xD0\x07\x00\x00"
   RECOMMENDED_KEYS = %w'Title Artist Album Year Comment Genre Track Subtitle
     Publisher Conductor Composer Copyright Publicationright File EAN/UPC ISBN
@@ -366,7 +366,7 @@ class ApeTag
       end
       file.seek(-32-id3.length, IO::SEEK_END)
       tag_footer = file.read(32)
-      unless tag_footer[0...12] == PREAMBLE && tag_footer[20...24] == FOOTER_FLAGS
+      unless tag_footer[0...12] == PREAMBLE && tag_footer[21...24] == FOOTER_FLAGS && (tag_footer[20...21] == "\x00" || tag_footer[20...21] == "\x01")
         @has_tag = false
         @tag_start = file_size - id3.length
         return
@@ -383,9 +383,9 @@ class ApeTag
       @tag_start=file.pos
       @tag_header=file.read(32)
       @tag_data=file.read(tag_size-64)
-      raise ApeTagError, "Missing header" unless tag_header[0...12] == PREAMBLE && tag_header[20...24] == HEADER_FLAGS
-      raise ApeTagError, "Header and footer size does match" unless tag_size == tag_header[12...16].unpack('V')[0] + 32
-      raise ApeTagError, "Header and footer item count does match" unless tag_item_count == tag_header[16...20].unpack('V')[0]
+      raise ApeTagError, "Missing header" unless tag_header[0...12] == PREAMBLE && tag_header[21...24] == HEADER_FLAGS && (tag_header[20...21] == "\x00" || tag_header[20...21] == "\x01")
+      raise ApeTagError, "Header and footer size does not match" unless tag_size == tag_header[12...16].unpack('V')[0] + 32
+      raise ApeTagError, "Header and footer item count does not match" unless tag_item_count == tag_header[16...20].unpack('V')[0]
       @has_tag = true
     end
     
@@ -426,8 +426,8 @@ class ApeTag
       @tag_size = tag_data.length + 64
       base_start = "#{PREAMBLE}#{[tag_size-32, tag_item_count].pack('VV')}"
       base_end = "\0"*8
-      @tag_header = "#{base_start}#{HEADER_FLAGS}#{base_end}"
-      @tag_footer = "#{base_start}#{FOOTER_FLAGS}#{base_end}"
+      @tag_header = "#{base_start}\x00#{HEADER_FLAGS}#{base_end}"
+      @tag_footer = "#{base_start}\x00#{FOOTER_FLAGS}#{base_end}"
       raise ApeTagError, "Updated tag has too many items (#{tag_item_count})" if tag_item_count > MAX_ITEM_COUNT
       raise ApeTagError, "Updated tag too large (#{tag_size})" if tag_size > MAX_SIZE
     end
