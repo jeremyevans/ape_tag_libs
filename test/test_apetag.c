@@ -424,6 +424,7 @@ int test_bad_tags(void) {
     FILE* example1;
     char* empty_raw;
     char* example1_raw;
+    char c;
     int i;
     
     #define OPEN_FILE(FILE, RAW, FILENAME) \
@@ -453,8 +454,30 @@ int test_bad_tags(void) {
     
     /* Open files check good parse */
     OPEN_FILE(empty, empty_raw, "empty_ape_id3.tag");
+    CHECK_PARSE(empty, 0);
     OPEN_FILE(example1, example1_raw, "example1_id3.tag");
-    
+    CHECK_PARSE(example1, 0);
+
+    /* Check works with read only flag, but not other flags */
+    WRITE_BYTES(empty, 20, "\1", 1);
+    CHECK_PARSE(empty, 0);
+    for(c=255;c>1;c--) {
+        WRITE_BYTES(empty, 20, &c, 1);
+        CHECK_PARSE(empty, -3);
+    } 
+    WRITE_BYTES(empty, 20, "\1", 1);
+    WRITE_BYTES(empty, 52, "\1", 1);
+    CHECK_PARSE(empty, 0);
+    for(c=255;c>1;c--) {
+        WRITE_BYTES(empty, 52, &c, 1);
+        CHECK_PARSE(empty, -3);
+        WRITE_BYTES(empty, 20, &c, 1);
+        CHECK_PARSE(empty, -3);
+    } 
+    WRITE_BYTES(empty, 20, "\1", 1);
+    WRITE_BYTES(empty, 52, "\1", 1);
+    CHECK_PARSE(empty, 0);
+
     /* Test footer size < minimum size*/
     WRITE_BYTES(empty, 44, "\37", 1);
     CHECK_PARSE(empty, -3);

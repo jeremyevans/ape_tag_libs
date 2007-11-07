@@ -56,4 +56,5 @@ item in the tag if the tag exists.
 6 Subversion
 ============
 
-Public access to the subversion repository can be found at svn://suven.no-ip.org/libapetag.
+Public access to the subversion repository can be found at 
+svn://code.jeremyevans.net/libapetag.
