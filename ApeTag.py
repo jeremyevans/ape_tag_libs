@@ -117,8 +117,8 @@ _filelikeattrs = 'flush read seek tell truncate write'.split()
 _badapeitemkeys = 'id3 tag oggs mp+'.split()
 _badapeitemkeychars = ''.join([chr(x) for x in range(32) + range(128,256)])
 _apeitemtypes = 'utf8 binary external reserved'.split()
-_apeheaderflags = "\x00\x00\x00\xA0"
-_apefooterflags = "\x00\x00\x00\x80"
+_apeheaderflags = "\x00\x00\xA0"
+_apefooterflags = "\x00\x00\x80"
 _apepreamble = "APETAGEX\xD0\x07\x00\x00"
 _id3tagformat = 'TAG%(title)s%(artist)s%(album)s%(year)s%(comment)s' \
                 '\x00%(track)s%(genre)s'
@@ -244,7 +244,8 @@ def _ape(fil, action, callback = None, callbackkwargs = {}, updateid3 = False):
     tagstart = None
     filesize, id3data, data = _getfilesizeandid3andapefooter(fil)
 
-    if _apepreamble != data[:12] or _apefooterflags != data[20:24]:
+    if _apepreamble != data[:12] or _apefooterflags != data[21:24] or \
+       (data[20] != '\0' and data[20] != '\1'):
         if action in _tagmustexistcommands:
             raise TagError, "Nonexistant or corrupt tag, can't %s" % action
         elif action == "delete":
@@ -262,7 +263,8 @@ def _ape(fil, action, callback = None, callbackkwargs = {}, updateid3 = False):
         fil.seek(-apesize - len(id3data), 2)
         tagstart = fil.tell()
         data = fil.read(apesize)
-        if _apepreamble != data[:12] or _apeheaderflags != data[20:24]:
+        if _apepreamble != data[:12] or _apeheaderflags != data[21:24] or \
+           (data[20] != '\0' and data[20] != '\1'):
             raise TagError, 'Nonexistent or corrupt tag, missing tag header'
         if apesize != _unpack("<i",data[12:16])[0] + 32:
             raise TagError, 'Corrupt tag, header and footer sizes do not match'
@@ -474,8 +476,8 @@ def _makeapev2tag(apeitems):
     apesize = _pack("<i",reduce(_apelengthreduce, apeentries, 32))
     numitems = _pack("<i",len(apeentries))
     headerfooter = _apepreamble + apesize + numitems
-    apeentries.insert(0, headerfooter + _apeheaderflags + "\x00" * 8)
-    apeentries.append(headerfooter + _apefooterflags + "\x00" * 8)
+    apeentries.insert(0, headerfooter + '\0' + _apeheaderflags + "\x00" * 8)
+    apeentries.append(headerfooter + '\0' + _apefooterflags + "\x00" * 8)
     return "".join(apeentries)
 
 def _makeid3tag(fields):
