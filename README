@@ -31,14 +31,18 @@ If you find any bugs, would like additional documentation, or want to submit a
 patch, please use Sourceforge (http://sourceforge.net/projects/pylibape/).
 
 The most current source code can be accessed via anonymous SVN at 
-svn://suven.no-ip.org/py-ApeTag/.  Note that the library isn't modified on a
+svn://code.jeremyevans.net/py-ApeTag/.  Note that the library isn't modified on a
 regular basis, so it is unlikely to be different from the latest release.
 
 Thank you for downloading this library. I hope you find it useful. 
 
 Changelog:
+1.2 - 2007-11-06
+- Raise error if APE footer flags wrong, instead of assuming no tag exists in 
+  file
+
 1.1 - 2007-11-06
-- Allow use of read only flag on tag itself
+- Allow use of read only flag on APE tag itself
 
 1.0 - 2007-01-13
 - Replace manual test files with automated unittest-based test suite

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from distutils.core import setup
 setup(name="py-ApeTag",
-      version="1.1",
+      version="1.2",
       description="A pure Python library for manipulating APEv2 and ID3v1 tags",
       author="Jeremy Evans",
       author_email="code@jeremyevans.net",

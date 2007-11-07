@@ -292,13 +292,15 @@ class TestApeTag(unittest.TestCase):
         
     def test_bad_tags(self):
         # Test read only tag flag works
-        ro_tag = rc(EMPTY_APE_TAG, 20, 1)
+        ro_tag = rc(rc(EMPTY_APE_TAG, 20, 1, False), 52, 1)
         ro_tag.seek(0)
         ro_tag = ro_tag.read()
-        self.assertEqual(''.join(ApeTag.getrawtags(rc(EMPTY_APE_TAG, 20, 1))), ro_tag)
+        self.assertEqual(''.join(ApeTag.getrawtags(rc(rc(EMPTY_APE_TAG, 20, 1, False), 52, 1))), ro_tag)
         # Test bad tag flags
         for i in range(2,256):
             self.assertRaises(ApeTag.TagError, ApeTag.getrawtags, rc(EMPTY_APE_TAG, 20, i))
+            self.assertRaises(ApeTag.TagError, ApeTag.getrawtags, rc(EMPTY_APE_TAG, 52, i))
+            self.assertRaises(ApeTag.TagError, ApeTag.getrawtags, rc(rc(EMPTY_APE_TAG, 20, i, False), 52, i))
 
         # Test footer size less than minimum size (32)
         self.assertRaises(ApeTag.TagError, ApeTag.getrawtags, rc(EMPTY_APE_TAG, 44, 31))

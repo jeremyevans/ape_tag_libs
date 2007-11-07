@@ -107,7 +107,7 @@ from struct import pack as _pack, unpack as _unpack
 
 # Variable definitions
 
-__version__ = '1.1'
+__version__ = '1.2'
 _maxapesize = 8192
 _commands = '''create update replace delete getfields getrawtag getnewrawtag
   hastag'''.split()
@@ -244,14 +244,16 @@ def _ape(fil, action, callback = None, callbackkwargs = {}, updateid3 = False):
     tagstart = None
     filesize, id3data, data = _getfilesizeandid3andapefooter(fil)
 
-    if _apepreamble != data[:12] or _apefooterflags != data[21:24] or \
-       (data[20] != '\0' and data[20] != '\1'):
+    if _apepreamble != data[:12]:
         if action in _tagmustexistcommands:
             raise TagError, "Nonexistant or corrupt tag, can't %s" % action
         elif action == "delete":
             return 0
         data = ''
         tagstart = filesize - len(id3data)
+    elif _apefooterflags != data[21:24] or \
+        (data[20] != '\0' and data[20] != '\1'):
+            raise TagError, "Bad tag footer flags"
     else:
         # file has a valid APE footer
         apesize = _unpack("<i",data[12:16])[0] + 32
