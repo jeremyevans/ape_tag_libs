@@ -366,11 +366,12 @@ class ApeTag
       end
       file.seek(-32-id3.length, IO::SEEK_END)
       tag_footer = file.read(32)
-      unless tag_footer[0...12] == PREAMBLE && tag_footer[21...24] == FOOTER_FLAGS && (tag_footer[20...21] == "\x00" || tag_footer[20...21] == "\x01")
+      unless tag_footer[0...12] == PREAMBLE 
         @has_tag = false
         @tag_start = file_size - id3.length
         return
       end
+      raise ApeTagError, "Tag has bad footer flags" unless tag_footer[21...24] == FOOTER_FLAGS && (tag_footer[20...21] == "\x00" || tag_footer[20...21] == "\x01")
       @tag_footer = tag_footer
       @tag_size, @tag_item_count = tag_footer[12...20].unpack('VV')
       @tag_size += 32

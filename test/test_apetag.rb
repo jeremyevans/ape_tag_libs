@@ -247,6 +247,13 @@ class ApeTagTest < Test::Unit::TestCase
       data[20] = i
       assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     end
+    data[20] = 1
+    2.upto(255) do |i|
+      data[52] = i
+      assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
+      data[20] = i
+      assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
+    end
     
     # Test footer size less than minimum size (32)
     data[44] = 31
