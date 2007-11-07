@@ -107,7 +107,7 @@ from struct import pack as _pack, unpack as _unpack
 
 # Variable definitions
 
-__version__ = '1.0'
+__version__ = '1.1'
 _maxapesize = 8192
 _commands = '''create update replace delete getfields getrawtag getnewrawtag
   hastag'''.split()
