@@ -94,5 +94,9 @@ on a regular basis, so it is unlikely to be different from the latest release.
 Changelog
 ---------
 
+1.0.1
+- Allow use of read only flag on tag itself
+- Make any bad footer flags an error instead of assuming no tag exists
+
 1.0.0
 - Initial Public Release

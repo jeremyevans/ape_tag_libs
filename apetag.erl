@@ -3,8 +3,8 @@
 -export([new_apeitem/3, raw_apeitem/1, validate_apeitem/1, parse_apeitem/2]). % For testing internals
 -include_lib("apetag.hrl").
 -define(APE_PREAMBLE, <<"APETAGEX",208,7,0,0>>).
--define(APE_HEADER_FLAGS, <<0,0,0,160>>).
--define(APE_FOOTER_FLAGS, <<0,0,0,128>>).
+-define(APE_HEADER_FLAGS, <<0,0,160>>).
+-define(APE_FOOTER_FLAGS, <<0,0,128>>).
 -define(APE_YEAR_RE, "[0-9][0-9][0-9][0-9]").
 -define(ELSE, true).
 
@@ -49,9 +49,11 @@ get_ape_information(ApeTag) when is_record(ApeTag, apetag) ->
     if  FileSize >= ID3Len + 64 ->
         {ok, _Pos} = file:position(ApeTag#apetag.file, {eof, -32-ID3Len}),
         {ok, Footer} = file:read(ApeTag#apetag.file, 32),
-        <<FooterPreamble:12/binary, FooterSize:4/little-unit:8, FooterItemCount:4/little-unit:8, FooterFlags:4/binary, _/binary>> = Footer,
-        if ?APE_PREAMBLE == FooterPreamble, ?APE_FOOTER_FLAGS == FooterFlags ->
-            if FooterSize < 32 -> erlang:error("Tag size smaller than minimum size");
+        <<FooterPreamble:12/binary, FooterSize:4/little-unit:8, FooterItemCount:4/little-unit:8, ROFFlag:1/binary, FooterFlags:3/binary, _/binary>> = Footer,
+        if ?APE_PREAMBLE == FooterPreamble ->
+            if ?APE_FOOTER_FLAGS /= FooterFlags -> erlang:error("Tag footer flags incorrect");
+               ROFFlag /= <<0>>, ROFFlag /= <<1>> -> erlang:error("Tag footer flags incorrect");
+               FooterSize < 32 -> erlang:error("Tag size smaller than minimum size");
                FooterSize + ID3Len + 32 > FileSize -> erlang:error("Tag size larger than possible");
                FooterSize + 32 > ?APE_MAX_SIZE -> erlang:error("Tag size larger than APE_MAX_SIZE");
                FooterItemCount > ?APE_MAX_ITEM_COUNT -> erlang:error("Tag item count larger than APE_MAX_ITEM_COUNT");
@@ -60,10 +62,11 @@ get_ape_information(ApeTag) when is_record(ApeTag, apetag) ->
             end,
             {ok, _} = file:position(ApeTag#apetag.file, {eof, -32-FooterSize-ID3Len}),
             {ok, Header} = file:read(ApeTag#apetag.file, 32),
-            <<HeaderPreamble:12/binary, HeaderSize:4/little-unit:8, HeaderItemCount:4/little-unit:8, HeaderFlags:4/binary, _/binary>> = Header,
+            <<HeaderPreamble:12/binary, HeaderSize:4/little-unit:8, HeaderItemCount:4/little-unit:8, ROHFlag:1/binary, HeaderFlags:3/binary, _/binary>> = Header,
             {ok, Data} = file:read(ApeTag#apetag.file, FooterSize - 32),
             if not (?APE_PREAMBLE == HeaderPreamble) -> erlang:error("Missing header preamble");
                not (?APE_HEADER_FLAGS == HeaderFlags) -> erlang:error("Missing header flags");
+               ROHFlag /= <<0>>, ROHFlag /= <<1>> -> erlang:error("Tag footer flags incorrect");
                not (FooterSize == HeaderSize) -> erlang:error("Header and footer size do not match");
                not (FooterItemCount == HeaderItemCount) -> erlang:error("Header and footer item count do not match");
             ?ELSE -> nil
@@ -277,7 +280,7 @@ update_ape(ApeTag) when is_record(ApeTag, apetag) ->
         nil
     end,
     Base = list_to_binary([?APE_PREAMBLE, <<(TagSize-32):4/little-unit:8,ItemCount:4/little-unit:8>>]),
-    ApeTag#apetag{tag_item_count=ItemCount, tag_data=TagData, tag_size=TagSize, tag_header=(list_to_binary([Base, ?APE_HEADER_FLAGS, "\0\0\0\0\0\0\0\0"])), tag_footer=(list_to_binary([Base, ?APE_FOOTER_FLAGS, "\0\0\0\0\0\0\0\0"]))}.
+    ApeTag#apetag{tag_item_count=ItemCount, tag_data=TagData, tag_size=TagSize, tag_header=(list_to_binary([Base, "\0", ?APE_HEADER_FLAGS, "\0\0\0\0\0\0\0\0"])), tag_footer=(list_to_binary([Base, "\0", ?APE_FOOTER_FLAGS, "\0\0\0\0\0\0\0\0"]))}.
 
 update_id3(ApeTag) when is_record(ApeTag, apetag) ->
     if not ApeTag#apetag.check_id3 ->
