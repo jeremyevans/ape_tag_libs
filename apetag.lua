@@ -257,8 +257,8 @@ end
 ApeTag = {
     MAX_SIZE=8192, 
     MAX_ITEM_COUNT=64, 
-    HEADER_FLAGS = "\0\0\0\160",
-    FOOTER_FLAGS = "\0\0\0\128",
+    HEADER_FLAGS = "\0\0\160",
+    FOOTER_FLAGS = "\0\0\128",
     PREAMBLE = "APETAGEX\208\7\0\0",
     RECOMMENDED_KEYS = {'Title', 'Artist', 'Album', 'Year', 'Comment', 'Genre',
         'Track', 'Subtitle', 'Publisher', 'Conductor', 'Composer', 'Copyright',
@@ -482,11 +482,14 @@ function ApeTag:get_tag_information()
     end
     self.file:seek('end', -32-id3len)
     local tag_footer = self.file:read(32)
-    if string.sub(tag_footer, 1, 12) ~= self.PREAMBLE or string.sub(tag_footer, 21, 24) ~= self.FOOTER_FLAGS then
+    if string.sub(tag_footer, 1, 12) ~= self.PREAMBLE then
         self.file:seek('set', 0)
         self._has_tag = false
         self._tag_start = file_size - id3len
         return
+    end
+    if string.sub(tag_footer, 22, 24) ~= self.FOOTER_FLAGS or (string.sub(tag_footer, 21, 21) ~= "\0" and string.sub(tag_footer, 21, 21) ~= "\1") then
+        error('Tag footer flags incorrect')
     end
     self._tag_footer = tag_footer
     self._tag_size, self._tag_item_count = string.unpack(true, '44', string.sub(tag_footer, 13, 20))
@@ -509,7 +512,7 @@ function ApeTag:get_tag_information()
     self._tag_start = self.file:seek('end', -self._tag_size - id3len)
     self._tag_header = self.file:read(32)
     self._tag_data = self.file:read(self._tag_size - 64)
-    if string.sub(self._tag_header, 1, 12) ~= self.PREAMBLE or string.sub(self._tag_header, 21, 24) ~= self.HEADER_FLAGS then
+    if string.sub(self._tag_header, 1, 12) ~= self.PREAMBLE or string.sub(self._tag_header, 22, 24) ~= self.HEADER_FLAGS or (string.sub(self._tag_header, 21, 21) ~= "\0" and string.sub(self._tag_header, 21, 21) ~= "\1") then
         error('Missing header')
     end
     local x = string.unpack(true, '4', string.sub(self._tag_header, 13, 16)) + 32
@@ -568,8 +571,8 @@ function ApeTag:update_ape()
     self._tag_data = table.concat(items)
     self._tag_size = string.len(self._tag_data) + 64
     local base_start = self.PREAMBLE .. string.pack(true, '44', self._tag_size - 32, item_count)
-    self._tag_header = base_start .. self.HEADER_FLAGS .. '\0\0\0\0\0\0\0\0'
-    self._tag_footer = base_start .. self.FOOTER_FLAGS .. '\0\0\0\0\0\0\0\0'
+    self._tag_header = base_start .. '\0' .. self.HEADER_FLAGS .. '\0\0\0\0\0\0\0\0'
+    self._tag_footer = base_start .. '\0' .. self.FOOTER_FLAGS .. '\0\0\0\0\0\0\0\0'
     if item_count > self.MAX_ITEM_COUNT then
         error('Updated tag has too many items')
     end

@@ -373,6 +373,17 @@ end
 function TestApeTag.test_bad_tags()
     -- Test default case OK
     assert_no_error(function() ApeTag:new{file=write_tag_file(EMPTY_APE_TAG)}:raw() end)
+
+    -- Test read only tags work
+    assert_no_error(function() ApeTag:new{file=write_tag_file(EMPTY_APE_TAG, {{at=20, write='\1'}})}:raw() end)
+    assert_no_error(function() ApeTag:new{file=write_tag_file(EMPTY_APE_TAG, {{at=52, write='\1'}})}:raw() end)
+
+    -- Test other flag values don't work
+    for i=2,255 do
+        assert_error(function() ApeTag:new{file=write_tag_file(EMPTY_APE_TAG, {{at=20, write=string.char(i)}})}:raw() end)
+        assert_error(function() ApeTag:new{file=write_tag_file(EMPTY_APE_TAG, {{at=52, write=string.char(i)}})}:raw() end)
+        assert_error(function() ApeTag:new{file=write_tag_file(EMPTY_APE_TAG, {{at=20, write=string.char(i)}, {at=52, write=string.char(i)}})}:raw() end)
+    end
     
     -- Test footer size less than minimum size (32)
     assert_error(function() ApeTag:new{file=write_tag_file(EMPTY_APE_TAG, {{at=44, write='\31'}})}:raw() end)
