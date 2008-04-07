@@ -8,7 +8,7 @@ Table of Contents
 3 Installation
 4 API
 5 apeinfo
-6 Subversion
+6 Source Control
 
 1 Introduction
 ===============
@@ -53,8 +53,8 @@ apeinfo is a short C program that gives an example using the library.  It just
 analyzes the files given on the command line and outputs the contents of each
 item in the tag if the tag exists.
 
-6 Subversion
-============
+6 Source Control
+================
 
-Public access to the subversion repository can be found at 
-svn://code.jeremyevans.net/libapetag.
+Public access to the source repository can be found at 
+http://github.com/jeremyevans/ape_tag_libs/tree/master.

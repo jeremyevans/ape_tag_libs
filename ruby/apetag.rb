@@ -35,9 +35,10 @@
 # If you find any bugs, would like additional documentation, or want to submit a
 # patch, please use Rubyforge (http://rubyforge.org/projects/apetag/).
 #
-# The most current source code can be accessed via anonymous SVN at 
-# svn://code.jeremyevans.net/ruby-apetag/.  Note that the library isn't modified
-# on a regular basis, so it is unlikely to be different from the latest release.
+# The most current source code can be accessed via github
+# (http://github.com/jeremyevans/ape_tag_libs/tree/master).  Note that the 
+# library isn't modified on a regular basis, so it is unlikely to be different
+# from the latest release.
 #
 # (1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
 #
