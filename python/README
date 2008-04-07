@@ -1,0 +1,130 @@
+py-ApeTag (formally pylibape/py-apev2tag) is a pure Python library for
+manipulating both APEv2 and ID3v1 tags.  It aims for standards compliance with
+the APE spec (http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification). 
+APE is the standard tagging format for Musepack (.mpc) and Monkey's Audio files
+(.ape), and it can also be used with mp3s as an alternative to the mess that is
+ID3v2.x (technically, it can be used on any file type and is not limited to
+storing just audio file metadata).
+
+The module is in written in pure Python, so it should be useable on all 
+platforms that Python supports.  It has been tested on Windows and OpenBSD.  
+The minimum python version required should be 2.2, since the code uses
+list comprehensions (testing has only been done on 2.4).  Modifying the code to
+work with Python 2.0 shouldn't be difficult, though there aren't any plans to
+do so.
+
+The library is complete, but it hasn't been widely used, so there may still be
+some bugs in it.  I haven't found any bugs in my normal use of it that I
+haven't already fixed, though.
+
+The public functions should be named obviously.  There are functions for
+creating, replacing, updating, and deleting APE and ID3 tags both separately
+and together.  There are also functions for getting the fields and the raw
+string for the tags, as well as checking for existence of tags.  There are also
+advanced modify functions that take callback functions allowing complete
+manipulation of the tags.  Public function arguments, return values, and
+various notes are stored in the module docstring.
+
+To run the tests for the library, run python test_ApeTag.py.
+
+If you find any bugs, would like additional documentation, or want to submit a
+patch, please use Sourceforge (http://sourceforge.net/projects/pylibape/).
+
+The most current source code can be accessed via anonymous SVN at 
+svn://code.jeremyevans.net/py-ApeTag/.  Note that the library isn't modified on a
+regular basis, so it is unlikely to be different from the latest release.
+
+Thank you for downloading this library. I hope you find it useful. 
+
+Changelog:
+1.2 - 2007-11-06
+- Raise error if APE footer flags wrong, instead of assuming no tag exists in 
+  file
+
+1.1 - 2007-11-06
+- Allow use of read only flag on APE tag itself
+
+1.0 - 2007-01-13
+- Replace manual test files with automated unittest-based test suite
+- Ensure UTF-8 encoding for tag items marked "external"
+- Check for matching header and footer tag sizes and item counts
+- Return boolean for hastags
+- Join values with commas when creating ID3 tags from APE fields, instead of 
+  taking the first value
+- Work with small file sizes (including zero byte files)
+- In updatetags, make removefields case insensitive when removing fields
+  from the ID3 tag
+- Fix createid3 being defined the same as updateid3, and thus giving errors on
+  files without ID3 tags
+- Make APEv2 Date field correspond to ID3v1 year field if it is an integer
+- Add shebang line for running library directly
+
+0.12 - 2005-09-03
+- Convert the the library to use callback functions internally for modifying
+  tags
+- New has* functions to check for the existence of tags
+- New print* functions for pretty printing tag fields
+- New modify* functions that allow for user defined callbacks
+- Ability to call the library on the command line with filenames (prints the 
+  tag fields for each file)
+- Fix bugs in id3 tagging when both tags are modified simultaneously
+- Small performance improvements offsetting the speed reduction due to callback
+  functions
+
+0.11 - 2005-04-02
+- Add getrawtags and gettagfields public functions that return a tuple of 
+  strings and dicts, respectively for the APE and ID3 tags.  This results in a
+  substantial speedup compared to calling the functions for the APE and ID3 
+  tags separately.
+- Add ability to specify type and readonly flag for ApeItems on initialization
+- Only use unicode for utf8 ApeItems; binary, external, and reserved items use
+  regular strings.
+
+0.10 - 2005-03-21
+- Better automated conversion from APE fields to ID3 fields in functions that
+  modify both tags
+- Update the ID3 and APE tags at the same time if modifying both tags (instead 
+  of opening and closing the file twice)
+
+0.9 - 2005-03-20
+- Rename module from apev2tag to ApeTag
+- Remove apev2tag and id3tag functions, the helper functions that debuted in
+  0.8 are now the public interface to the library
+- Significant internal changes, most notably error handling during APE tag
+  parsing (fixing a possible denial of service caused by a malicious tag) and
+  automated closing of files opened by the library
+- Return values for the APE create, update, replace, and getfields functions
+  have changed, they now returns of dict with ApeItem (a list subclass with
+  unicode strings) values, instead of the previous dict with values that could
+  be strings, unicode strings, could be lists, or dicts.
+- Easier benchmarking in speedtest, defaults to test all functions
+- Added ability to read, create, and modify the read only tag flag.
+- Added ability to modify the maximum size of APE tags (default still 8K)
+
+0.8 - 2005-03-13
+- Helper functions such as createtags, deletetags, getrawapev2, getid3fields,
+  etc. added so you don't have to call id3tag and apev2tag directly with the
+  appropriate action.
+- You can now pass a filename instead of a file-like object to any of the
+  public functions.
+- Revised tests removing much of the duplicative code
+- Line endings for all files converted to LF (was a mix of LF and CRLF before)
+  
+0.7 - 2005-02-05
+- Entire code base refactored, resulting in major performance enhancements in
+  parsing and writing APEv2 tags (over twice as fast as 0.6)
+- Code made simpler, more modular, and less duplicative
+- Internal functions changed to private functions
+- TagError class simplified, now raised similar to other exceptions
+- Private module variables added (acting as constants)
+- Import of string removed (hasn't been necessary since 0.5)
+
+0.6 - 2004-07-17
+- Rename module from pylibape to apev2tag
+- Rename functions from ape and id3 to apev2tag and id3tag
+- Instead of searching through the last 8K of the file, use the information in
+  the APEv2 tag footer to locate the rest of the tag
+- Minor fixes elsewhere
+
+0.5 - 2004-02-14
+- Initial public release
