@@ -35,8 +35,10 @@
 # If you find any bugs, would like additional documentation, or want to submit a
 # patch, please use Rubyforge (http://rubyforge.org/projects/apetag/).
 #
+# The RDoc for the project is available at http://apetag.rubyforge.org.
+#
 # The most current source code can be accessed via github
-# (http://github.com/jeremyevans/ape_tag_libs/tree/master).  Note that the 
+# (http://github.com/jeremyevans/ape_tag_libs).  Note that the 
 # library isn't modified on a regular basis, so it is unlikely to be different
 # from the latest release.
 #
