@@ -1,0 +1,78 @@
+clj-apetag
+----------
+
+clj-apetag is a clojure library for reading and writing APEv2 tags.  
+
+It aims for standards compliance with the APE spec (1). APEv2 is the standard
+tagging format for Musepack (.mpc) and Monkey's Audio files (.ape), and it can
+also be used with mp3s as an alternative to ID3v2.x (technically, it can be
+used on any file type and is not limited to storing just audio file metadata).
+
+The module is in written mostly in pure clojure, and the library only requires
+clojure-core (the specs require test-is from clojure-contrib). It has been
+tested with clojure-1.0 on JDK 1.7.0, and may call Java functions that do
+not exist in earlier versions of Java.
+
+(1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
+
+Installation
+------------
+
+You should just copy the apetag.clj file to the appropriate place in your
+classpath.
+
+Running the specs requires that both apetag.clj and 
+clojure.contrib.test-is are in the class path.
+
+Example Usage
+-------------
+
+(require 'apetag)
+(apetag/exists? "file.mp3")    # whether it already has an APEv2 tag 
+(apetag/raw "file.mp3")        # the raw APEv2+ID3v1 tag string in the file
+(apetag/print-tag "file.mp3")  # string suitable for pretty printing
+(apetag/remove-tag "file.mp3") # remove the APEv2 and ID3v1 tags.
+(apetag/items "file.mp3")
+  # A map of items.  Keys are strings and
+  # values are lists of strings.
+(apetag/full-items "file.mp3")
+  # A map of items including item metadata.
+  # Keys are lowercase strings and values are maps with the following keys:
+  # * :key - The actual case of the item key (String)
+  # * :read-only - Whether the item's read-only flag is set (true/false)
+  # * :type - The type of the item (utf8/binary/external/reserved)
+  # * :values - The item's values (List of Strings)
+(apetag/update function "file.mp3")
+  # Update the tag using a callback function.
+  # The function is passed two arguments, an opaque object (internal tag data)
+  # and the items map (same as would be provided by apetag/items).
+  # There are 3 functions that can be called inside the callback function
+  # to modify the tag:
+  # * apetag/add-item - Takes the opaque tag object as the first argument,
+  #   a key argument, a values argument, and optional type and read-only flag
+  #   arguments.
+  # * apetag/add-items - Takes the opaque tag object as the first argument,
+  #   and a map of item keys and values as the second argument.
+  # * apetag/remove-items - Takes the opaque tag object as the first argument,
+  #   with the remaining arguments being item keys to remove from the tag.
+  # All three of these functions return a modified opaque tag object.
+  # The callback function itself should return a modified opaque tag object
+  # which will be used to construct the new tag.
+  # Callback Function Examples:
+  # * (fn [at items] (apetag/add-item at "Artist" "Test Artist"))
+  # * (fn [at items] (apetag/add-item at "Artist" "Test Artist" "binary"))
+  # * (fn [at items] (apetag/add-item at "Artist" "Test Artist" "external" true))
+  # * (fn [at items] (apetag/add-items at {"Artist" "Test Artist", "Album" "Test Album}))
+  # * (fn [at items] (apetag/remove-items at "Artist" "Album"))
+
+Source
+----
+
+The most current source code can be accessed via github
+(http://github.com/jeremyevans/ape_tag_libs).
+
+Author
+------
+
+Jeremy Evans
+code@jeremyevans.net
