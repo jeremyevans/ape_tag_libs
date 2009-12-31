@@ -9,9 +9,8 @@ also be used with mp3s as an alternative to ID3v2.x (technically, it can be
 used on any file type and is not limited to storing just audio file metadata).
 
 The module is in written mostly in pure clojure, and the library only requires
-clojure-core (the specs require test-is from clojure-contrib). It has been
-tested with clojure-1.0 on JDK 1.7.0, and may call Java functions that do
-not exist in earlier versions of Java.
+clojure-core. It has been tested with clojure-1.1.0 on JDK 1.7.0, and may call
+Java functions that do not exist in earlier versions of Java.
 
 (1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
 
@@ -21,8 +20,7 @@ Installation
 You should just copy the apetag.clj file to the appropriate place in your
 classpath.
 
-Running the specs requires that both apetag.clj and 
-clojure.contrib.test-is are in the class path.
+Running the specs requires that apetag.clj is in the class path.
 
 Example Usage
 -------------
@@ -69,10 +67,9 @@ Source
 ----
 
 The most current source code can be accessed via github
-(http://github.com/jeremyevans/ape_tag_libs).
+(http://github.com/jeremyevans/ape_tag_libs/tree/master/clojure/).
 
 Author
 ------
 
-Jeremy Evans
-code@jeremyevans.net
+Jeremy Evans (code@jeremyevans.net)
