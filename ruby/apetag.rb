@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# encoding: ascii
 # This library implements a APEv2 reader/writer.
 # If called from the command line, it prints out the contents of the APEv2 tag 
 # for the given filename arguments.
@@ -104,7 +105,11 @@ class ApeItem < Array
     key_end = data.index("\0", offset += 8)
     raise ApeTagError, "Missing key-value separator at offset #{offset}" unless key_end
     raise ApeTagError, "Invalid item length at offset #{offset}" if (next_item_start=length + key_end + 1) > data.length
-    item = ApeItem.new(data[offset...key_end], data[(key_end+1)...next_item_start].split("\0"))
+    begin
+      item = ApeItem.new(data[offset...key_end], data[(key_end+1)...next_item_start].split("\0"))
+    rescue ArgumentError =>e
+      raise ApeTagError, "ArgumentError: #{e.message}"
+    end
     item.read_only = flags & 1 > 0
     item.ape_type = ITEM_TYPES[flags/2]
     return [item, next_item_start]
@@ -165,7 +170,7 @@ class ApeItem < Array
   
   # Check if the given key is a valid APE key (string, 2 <= length <= 255, not containing invalid characters or keys).
   def valid_key?(key)
-    key.is_a?(String) && key.length >= 2 && key.length <= 255 && key !~ BAD_KEY_RE
+    key.is_a?(String) && key.length >= 2 && key.length <= 255 && (key !~ BAD_KEY_RE rescue false)
   end
   
   # Check if the given read only flag is valid (boolean).

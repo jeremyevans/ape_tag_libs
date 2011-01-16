@@ -7,10 +7,23 @@ require 'test/unit'
 EMPTY_APE_TAG = "APETAGEX\320\a\0\0 \0\0\0\0\0\0\0\0\0\0\240\0\0\0\0\0\0\0\0APETAGEX\320\a\0\0 \0\0\0\0\0\0\0\0\0\0\200\0\0\0\0\0\0\0\0TAG\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\377"
 EXAMPLE_APE_TAG = "APETAGEX\xd0\x07\x00\x00\xb0\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\xa0\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00Track\x001\x04\x00\x00\x00\x00\x00\x00\x00Date\x002007\t\x00\x00\x00\x00\x00\x00\x00Comment\x00XXXX-0000\x0b\x00\x00\x00\x00\x00\x00\x00Title\x00Love Cheese\x0b\x00\x00\x00\x00\x00\x00\x00Artist\x00Test Artist\x16\x00\x00\x00\x00\x00\x00\x00Album\x00Test Album\x00Other AlbumAPETAGEX\xd0\x07\x00\x00\xb0\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00TAGLove Cheese\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Artist\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Album, Other Album\x00\x00\x00\x00\x00\x00\x002007XXXX-0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\xff"
 EXAMPLE_APE_TAG2 = "APETAGEX\xd0\x07\x00\x00\x99\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\xa0\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00Blah\x00Blah\x04\x00\x00\x00\x00\x00\x00\x00Date\x002007\t\x00\x00\x00\x00\x00\x00\x00Comment\x00XXXX-0000\x0b\x00\x00\x00\x00\x00\x00\x00Artist\x00Test Artist\x16\x00\x00\x00\x00\x00\x00\x00Album\x00Test Album\x00Other AlbumAPETAGEX\xd0\x07\x00\x00\x99\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00TAG\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Artist\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Album, Other Album\x00\x00\x00\x00\x00\x00\x002007XXXX-0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff"
+[EMPTY_APE_TAG, EXAMPLE_APE_TAG, EXAMPLE_APE_TAG2].each{|x| x.force_encoding('binary')} if RUBY_VERSION >= '1.9.0'
 EMPTY_APE_ONLY_TAG, EXAMPLE_APE_ONLY_TAG, EXAMPLE_APE_ONLY_TAG2 = [EMPTY_APE_TAG, EXAMPLE_APE_TAG, EXAMPLE_APE_TAG2].collect{|x|x[0...-128]}
 EXAMPLE_APE_FIELDS = {"Track"=>["1"], "Comment"=>["XXXX-0000"], "Album"=>["Test Album", "Other Album"], "Title"=>["Love Cheese"], "Artist"=>["Test Artist"], "Date"=>["2007"]}
 EXAMPLE_APE_FIELDS2 = {"Blah"=>["Blah"], "Comment"=>["XXXX-0000"], "Album"=>["Test Album", "Other Album"], "Artist"=>["Test Artist"], "Date"=>["2007"]}
 EXAMPLE_APE_TAG_PRETTY_PRINT = "Album: Test Album, Other Album\nArtist: Test Artist\nComment: XXXX-0000\nDate: 2007\nTitle: Love Cheese\nTrack: 1"
+
+class String
+  if RUBY_VERSION > '1.9.0'
+    def binary
+      force_encoding('binary')
+    end
+  else
+    def binary
+      self
+    end
+  end
+end
 
 class ApeTagTest < Test::Unit::TestCase
   def get_ape_tag(f, check_id3)
@@ -169,17 +182,11 @@ class ApeTagTest < Test::Unit::TestCase
     assert_equal 1, ac.length
     assert_equal 'Blah', ac.string_value
     
-    # Test create works with random object (Hash in this case)
-    ac = ApeItem.create('Blah', 'xfe'=>132)
-    assert_equal ApeItem, ac.class
-    assert_equal 1, ac.length
-    assert_equal 'xfe132', ac.string_value
-    
     # Test create works with array of mixed objects
-    ac = ApeItem.create('Blah', ['sadf', 'adsfas', 11, {'xfe'=>132}])
+    ac = ApeItem.create('Blah', ['sadf', 'adsfas', 11])
     assert_equal ApeItem, ac.class
-    assert_equal 4, ac.length
-    assert_equal "sadf\0adsfas\00011\0xfe132", ac.string_value
+    assert_equal 3, ac.length
+    assert_equal "sadf\0adsfas\00011", ac.string_value
   end
   
   # Test ApeItem.parse
@@ -204,25 +211,25 @@ class ApeTagTest < Test::Unit::TestCase
     assert_raises(ApeTagError){ApeItem.parse(data, 1)}
     
     # Test parsing with bad/good flags
-    data[4] = 8
+    data[4,1] = 8.chr
     assert_raises(ApeTagError){ApeItem.parse(data, 0)}
-    data[4] = 0
+    data[4,1] = 0.chr
     assert_nothing_raised{ApeItem.parse(data, 0)}
     
     # Test parsing with length longer than string
-    data[0] = 9
+    data[0,1] = 9.chr
     assert_raises(ApeTagError){ApeItem.parse(data, 0)}
     
     # Test parsing with length shorter than string gives valid ApeItem
     # Of course, the next item will probably be parsed incorrectly
-    data[0] = 3
+    data[0,1] = 3.chr
     assert_nothing_raised{ai, offset = ApeItem.parse(data, 0)}
     assert_equal 16, offset
     assert_equal "BlaH", ai.key
     assert_equal "BlA", ai.string_value
     
     # Test parsing gets correct key end
-    data[12] = '3'
+    data[12,1] = "3"
     assert_nothing_raised{ai, offset = ApeItem.parse(data, 0)}
     assert_equal "BlaH3BlAh", ai.key
     assert_equal "XYZ", ai.string_value
@@ -239,41 +246,41 @@ class ApeTagTest < Test::Unit::TestCase
     assert_nothing_raised{ApeTag.new(StringIO.new(data)).raw}
 
     # Test read only tags work
-    data[20] = 1
+    data[20,1] = 1.chr
     assert_nothing_raised{ApeTag.new(StringIO.new(data)).raw}
 
     # Test other flags values don't work
     2.upto(255) do |i|
-      data[20] = i
+      data[20,1] = i.chr
       assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     end
-    data[20] = 1
+    data[20,1] = 1.chr
     2.upto(255) do |i|
-      data[52] = i
+      data[52,1] = i.chr
       assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
-      data[20] = i
+      data[20,1] = i.chr
       assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     end
     
     # Test footer size less than minimum size (32)
-    data[44] = 31
+    data[44,1] = 31.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
-    data[44] = 0
+    data[44,1] = 0.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
     # Test tag size > 8192, when both larger than file and smaller than file
-    data[44] = 225
-    data[45] = 31
+    data[44,1] = 225.chr
+    data[45,1] = 31.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(' '*8192+data)).raw}
     
     data = EMPTY_APE_TAG.dup
     # Test unmatching header and footer tag size, with footer size wrong
-    data[44] = 33
+    data[44,1] = 33.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
     # Test matching header and footer but size to large for file
-    data[12] = 33
+    data[12,1] = 33.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
     # Test that header and footer size isn't too large for file, but doesn't
@@ -282,51 +289,51 @@ class ApeTagTest < Test::Unit::TestCase
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
     # Test unmatching header and footer tag size, with header size wrong
-    data[45] = 32
+    data[45,1] = 32.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
     data = EMPTY_APE_TAG.dup
     # Test item count greater than maximum (64)
-    data[48] = 65
+    data[48,1] = 65.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
     # Test item count greater than possible given tag size
-    data[48] = 1
+    data[48,1] = 1.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
     # Test unmatched header and footer item count, header size wrong
-    data[48] = 0
-    data[16] = 1
+    data[48,1] = 0.chr
+    data[16,1] = 1.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
     # Test unmatched header and footer item count, footer size wrong
     data = EXAMPLE_APE_TAG.dup
-    data[208-16] -=1
+    data[208-16] = 5.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
     
     # Test missing/corrupt header
     data = EMPTY_APE_TAG.dup
-    data[0] = 0
+    data[0,1] = 0.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
     
     # Test parsing bad first item size
     data = EXAMPLE_APE_TAG.dup
-    data[32] +=1
+    data[32,1] = 2.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
     
     # Test parsing bad first item invalid key
     data = EXAMPLE_APE_TAG.dup
-    data[40] = 0
+    data[40,1] = 0.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
     
     # Test parsing bad first item key end
     data = EXAMPLE_APE_TAG.dup
-    data[45] = 1
+    data[45,1] = 1.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
     
     # Test parsing bad second item length too long
     data = EXAMPLE_APE_TAG.dup
-    data[47] = 255
+    data[47,1] = 255.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
 
     # Test parsing case insensitive duplicate keys 
@@ -340,11 +347,11 @@ class ApeTagTest < Test::Unit::TestCase
     
     # Test parsing incorrect item counts
     data = EXAMPLE_APE_TAG.dup
-    data[16] -= 1
-    data[192] -= 1
+    data[16,1] = 5.chr
+    data[192,1] = 5.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
-    data[16] += 2
-    data[192] += 2
+    data[16,1] = 7.chr
+    data[192,1] = 7.chr
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).fields}
     
     # Test updating works in a case insensitive manner 
