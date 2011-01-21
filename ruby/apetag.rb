@@ -11,10 +11,8 @@
 # used on any file type and is not limited to storing just audio file metadata).
 #
 # The module is in written in pure Ruby, so it should be useable on all 
-# platforms that Ruby supports.  It is developed and tested on OpenBSD.  
-# The minimum Ruby version required should be 1.8, but it has only been tested
-# on 1.8.4+.  Modifying the code to work with previous version shouldn't be
-# difficult, though there aren't any plans to do so.
+# platforms that Ruby supports.  It is developed and tested on OpenBSD
+# with ruby 1.8 and ruby 1.9.
 #
 # General Use:
 #
@@ -44,26 +42,6 @@
 # from the latest release.
 #
 # (1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
-#
-# Copyright (c) 2007 Jeremy Evans
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy 
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights 
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-# copies of the Software, and to permit persons to whom the Software is 
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in 
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
-# SOFTWARE.
 
 require 'cicphash'
 
