@@ -2,3 +2,4 @@ rdoc
 python/*.pyc
 python/test_ApeTag.html
 ruby/*.gem
+*.rbc
