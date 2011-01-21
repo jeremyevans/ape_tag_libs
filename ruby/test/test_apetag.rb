@@ -445,4 +445,32 @@ class ApeTagTest < Test::Unit::TestCase
     assert_equal 0, get_size(filename)
     File.delete(filename)
   end
+
+  if RUBY_VERSION > '1.9.0'
+    def test_apeitem_encoding
+      ApeTag.new(StringIO.new(EXAMPLE_APE_TAG)).fields.each do |k, vs|
+        assert_equal 'US-ASCII', k.encoding.name
+        assert_equal 'US-ASCII', vs.key.encoding.name
+        vs.each{|v| assert_equal 'UTF-8', v.encoding.name}
+      end
+    end
+
+    def test_item_and_key_encoding
+      filename = 'test.apetag'
+      File.new(filename,'wb').close
+      utf8_key = File.read('test/utf-8.key', :mode=>'rb:UTF-8')
+      utf8_values = File.read('test/utf-8.values', :mode=>'rb:UTF-8')
+      utf16_key = File.read('test/utf-16be.key', :mode=>'rb:UTF-16BE')
+      utf16_values = File.read('test/utf-16be.values', :mode=>'rb:UTF-16BE')
+      latin1_values = File.read('test/latin1.values', :mode=>'rb:ISO-8859-1')
+      ApeTag.new(filename).update do |f|
+        f[utf16_key] = utf16_values.split('\n'.force_encoding('UTF-16BE'))
+        f['foo'] = latin1_values.split('\n'.force_encoding('ISO-8859-1'))
+      end
+      f = ApeTag.new(filename).fields
+      assert_equal utf8_values.split('\n'.force_encoding('UTF-8')), f[utf8_key]
+      assert_equal utf8_values.split('\n'.force_encoding('UTF-8')), f['foo']
+      File.delete(filename)
+    end
+  end
 end

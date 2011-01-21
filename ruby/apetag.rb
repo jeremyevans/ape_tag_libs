@@ -106,7 +106,7 @@ class ApeItem < Array
     raise ApeTagError, "Missing key-value separator at offset #{offset}" unless key_end
     raise ApeTagError, "Invalid item length at offset #{offset}" if (next_item_start=length + key_end + 1) > data.length
     begin
-      item = ApeItem.new(data[offset...key_end], data[(key_end+1)...next_item_start].split("\0"))
+      item = ApeItem.new_from_parse(data[offset...key_end], data[(key_end+1)...next_item_start].split("\0"))
     rescue ArgumentError =>e
       raise ApeTagError, "ArgumentError: #{e.message}"
     end
@@ -135,16 +135,17 @@ class ApeItem < Array
   # Set key if valid, otherwise raise ApeTagError.
   def key=(key)
     raise ApeTagError, "Invalid APE key" unless valid_key?(key)
-    @key = key
+    @key = encoded_key(key)
   end
-  
+
   # The on disk representation of the entire ApeItem.
   # Raise ApeTagError if ApeItem is invalid.
   def raw
     raise ApeTagError, "Invalid key, value, APE type, or Read-Only Flag" unless valid? 
     flags = ITEM_TYPES.index(ape_type) * 2 + (read_only ? 1 : 0)
-    sv = string_value
-    "#{[sv.length, flags].pack('VN')}#{key}\0#{sv}"
+    k = RUBY_VERSION >= '1.9' ? key.dup.force_encoding('BINARY') : key
+    sv = RUBY_VERSION >= '1.9' ? string_value.dup.force_encoding('BINARY') : string_value
+    "#{[sv.length, flags].pack('VN')}#{k}\0#{sv}"
   end
   
   # Set read only flag if valid, otherwise raise ApeTagError.
@@ -170,7 +171,9 @@ class ApeItem < Array
   
   # Check if the given key is a valid APE key (string, 2 <= length <= 255, not containing invalid characters or keys).
   def valid_key?(key)
-    key.is_a?(String) && key.length >= 2 && key.length <= 255 && (key !~ BAD_KEY_RE rescue false)
+    return false unless key.is_a?(String)
+    return false unless key = encoded_key(key)
+    key.length >= 2 && key.length <= 255 && (key !~ BAD_KEY_RE rescue false)
   end
   
   # Check if the given read only flag is valid (boolean).
@@ -181,11 +184,49 @@ class ApeItem < Array
   # Check if the string value is valid UTF-8.
   def valid_value?
     begin
+      if RUBY_VERSION >= '1.9'
+        begin
+          map!{|v| v.to_s.encode('UTF-8')}
+        rescue EncodingError
+          return false
+        end
+      end
       string_value.unpack('U*') if ape_type == 'utf8' || ape_type == 'external'
     rescue ArgumentError
       false
     else
       true
+    end
+  end
+
+  if RUBY_VERSION >= '1.9.0'
+    def self.new_from_parse(key, value)
+      new(key.force_encoding('US-ASCII'), value.map{|v| v.to_s.force_encoding('UTF-8')})
+    end
+
+    def encoded_key(key)
+      begin
+        key.encode('US-ASCII')
+      rescue EncodingError
+        return false
+      end
+    end
+
+    def normalize_encodings
+      map!{|v| v.to_s.encode('UTF-8')}
+      self
+    end
+  else
+    def self.new_from_parse(key, value)
+      new(key, value)
+    end
+
+    def encoded_key(key)
+      key
+    end
+
+    def normalize_encodings
+      self
     end
   end
 end
@@ -421,7 +462,7 @@ class ApeTag
     def normalize_fields
       new_fields = CICPHash.new
       fields.each do |key, value|
-        new_fields[key] = ApeItem.create(key, value)
+        new_fields[key] = ApeItem.create(key, value).normalize_encodings
       end
       @fields = new_fields
     end
