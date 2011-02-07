@@ -1,0 +1,70 @@
+perl-apetag
+----------
+
+perl-apetag is a perl library for reading and writing APEv2 tags.  
+
+It aims for standards compliance with the APE spec (1). APEv2 is the standard
+tagging format for Musepack (.mpc) and Monkey's Audio files (.ape), and it can
+also be used with mp3s as an alternative to ID3v2.x (technically, it can be
+used on any file type and is not limited to storing just audio file metadata).
+
+The module is in written in pure perl, and is tested on perl 5.12.2. As it
+uses autodie, it will probably not work for perl versions less than 5.10.
+
+(1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
+
+Installation
+------------
+
+Just like a typical perl CPAN module:
+
+perl Makefile.PL
+make
+make test
+make install
+
+Example Usage
+-------------
+
+use ApeTag;
+my $at = ApeTag->new("file.mp3")
+$at->has_tag;    # whether it already has an APEv2 tag 
+$at->has_id3;    # whether it already has an ID3v1 tag 
+$at->remove_tag; # remove the APEv2 and ID3v1 tags.
+$at->fields;
+  # Reference to hash where keys are APE item keys and values are
+  # references to arrays of APE item values.
+$at->items;
+  # Reference to array of ApeTag::ApeItem objects.  These objects
+  # have the following methods that can be used to get information
+  # about the item: key, values, type, and read_only.
+$at->remove_field('key');
+  # Remove the field with the given key (case-insensitive).
+$at->add_field('key', 'value1', ...);
+  # Add a new field with the key and values.
+$at->add_item(read_only, type, 'key', 'value1', ...);
+  # Add a new field with the given read_only status, type, key, and values.
+$ap->update;
+  # Write the changes to the file.
+
+Source
+------
+
+The most current source code can be accessed via github
+(http://github.com/jeremyevans/ape_tag_libs/tree/master/perl/).
+
+Notes
+-----
+
+ExtUtils::MakeMaker doesn't seem to like symlinks, which are used in
+the source repository so that only a single copy of the test suite
+files are needed.  Because of this, building from the source
+repository can cause harmless errors when run under *nix platforms,
+but may not work at all on non-*nix platforms.  However, the files
+produced by make dist on a *nix platform can be installed on a
+non-*nix platform without error.
+
+Author
+------
+
+Jeremy Evans <code@jeremyevans.net>
