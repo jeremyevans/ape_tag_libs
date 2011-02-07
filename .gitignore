@@ -3,3 +3,8 @@ python/*.pyc
 python/test_ApeTag.html
 ruby/*.gem
 *.rbc
+perl/ApeTag-*
+perl/Makefile
+perl/Makefile.old
+perl/blib/
+perl/pm_to_blib
