@@ -1,0 +1,16 @@
+This repository contains various APEv2 tag reader/writer libraries
+that I've created for different languages.  It serves two purposes:
+
+1) The best way to learn a language is to actually start programming
+in it.  Creating an APEv2 reader/writer library is something that
+requires you get get your hands dirty in the language, without taking
+too much time.
+
+2) Making sure an APEv2 library is available for more programming
+languages.  I think the ID3v2.x tagging standards for mp3s are
+terrible and that APEv2 is much simpler and easier.  Hopefully with
+easy API access to APEv2 tags, more programs will start offering
+APEv2 tagging as an alternative to ID3v2.  Also, APEv2 is the
+tagging standard used in many of the fringe audio formats, so
+users of those formats will be able to use these libraries to
+access metadata in the programming language of their choice.
