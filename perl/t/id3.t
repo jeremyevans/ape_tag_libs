@@ -55,6 +55,18 @@ is(compare(fn("good-simple-4.tag"), fn('test.tag')), 0, 'id3 tag updated correct
 
 copy(fn("missing-ok.tag"), fn('test.tag'));
 $tag = at('test.tag', 1);
+$tag->add_field('Track', '1');
+$tag->add_field('Genre', 'Game');
+$tag->add_field('Year', '1999');
+$tag->add_field('Title', 'Test Title');
+$tag->add_field('Artist', 'Test Artist');
+$tag->add_field('Album', 'Test Album');
+$tag->add_field('Comment', 'Test Comment');
+$tag->update;
+is(compare(fn("good-simple-4-uc.tag"), fn('test.tag')), 0, 'id3 tag updated correctly with fields');
+
+copy(fn("missing-ok.tag"), fn('test.tag'));
+$tag = at('test.tag', 1);
 $tag->add_field('track', '1');
 $tag->add_field('genre', 'Game');
 $tag->add_field('date', '12/31/1999');
