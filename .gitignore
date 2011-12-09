@@ -8,3 +8,4 @@ perl/Makefile
 perl/Makefile.old
 perl/blib/
 perl/pm_to_blib
+haskell/doc

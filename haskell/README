@@ -1,0 +1,77 @@
+hs-ApeTag
+----------
+
+hs-ApeTag is a haskell library for reading and writing APEv2 tags.  
+
+It aims for standards compliance with the APE spec (1). APEv2 is the standard
+tagging format for Musepack (.mpc) and Monkey's Audio files (.ape), and it can
+also be used with mp3s as an alternative to ID3v2.x (technically, it can be
+used on any file type and is not limited to storing just audio file metadata).
+
+The module is in written in pure haskell, and is tested on ghc 7.0.4.
+
+(1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
+
+Example Usage
+-------------
+
+import ApeTag
+
+fileHasAPE "file.mp3"
+  # whether file already has an APEv2 tag
+  # see also: fileHasID3, handleHasAPE, handleHasID3
+
+removeFromFile "file.mp3"
+  # remove the APEv2 and ID3v1 tags from the file
+  # see also: removeFromHandle
+
+fromFile "file.mp3"
+  # An ApeTag, which is a Data.Map of lowercase item key Strings to ApeItems.
+  # ApeItem is data type with the following entries:
+  # * itemKey - The actual case of the item key (String)
+  # * itemValues - The item's values (List of Strings)
+  # * itemReadOnly - Whether the item's read-only flag is set (True/False)
+  # * itemFlags - The type of the item (FlagUTF8, FlagBinary, FlagExternal,
+  #               FlagReserved)
+  # see also: fromHandle, fromString
+
+kvMapFromTag tag
+  # Takes an ApeTag, returns a Data.Map of key Strings to a List of value
+  # Strings.
+
+kv1MapFromTag tag
+  # Takes an ApeTag, returns a Data.Map of key Strings to a single value
+  # String (multiple values are joined with ", ").
+
+apeItemKV1 "Key" "Value"
+  # Creates an ApeItem with a key, single value, not read-only, in UTF-8.
+
+apeItemKV "Key" ["Value1", "Value2"]
+  # Creates an ApeItem with a key, multiple values, not read-only, in UTF-8.
+
+apeItem "Key" ["Value1", "Value2"] FlagBinary True
+  # Creates an ApeItem with a key, multiple values, read-only, in binary.
+
+addApeItem tag item
+  # Takes an ApeTag and an ApeItem, returns a new ApeTag with that
+  # item included.
+
+removeApeItem tag "Key"
+  # Takes an ApeTag and key string, returns a new ApeTag with the
+  # related item removed.
+
+toFile tag
+  # Takes an ApeTag, writes it to the given file.  Any existing ID3/APE
+  # tag will be removed, and the new tag will be written.
+  # see also: toFileWithID3, toHandle, toHandleWithID3
+
+Source
+------
+
+The most current source code can be accessed via github
+(http://github.com/jeremyevans/ape_tag_libs/tree/master/haskell/).
+
+Author
+------
+
+Jeremy Evans <code@jeremyevans.net>
