@@ -245,7 +245,7 @@ int ApeTag_add_field(ApeTag *tag, ApeItem *item) {
     
     /* Create the database if it doesn't already exist */
     if(tag->fields == NULL) {
-        if((tag->fields = dbopen(NULL, O_RDWR, 0777, DB_HASH, NULL)) == NULL) {
+        if((tag->fields = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
             tag->error = "dbopen";
             return -1;
         }
@@ -1197,7 +1197,7 @@ int ApeTag__load_ID3_GENRES(ApeTag* tag) {
     if(ID3_GENRES != NULL) {
         return 0;
     }
-    if((ID3_GENRES = dbopen(NULL, O_RDWR, 0777, DB_HASH, NULL)) == NULL) {
+    if((ID3_GENRES = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
         tag->error = "dbopen";
         return -1;
     }
