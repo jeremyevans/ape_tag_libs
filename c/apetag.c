@@ -182,12 +182,12 @@ int ApeTag_raw(ApeTag* tag, char** raw) {
         return -1;
     }
     if(tag->flags & APE_HAS_APE) {
-        bcopy(tag->tag_header, *raw, 32);
-        bcopy(tag->tag_data, *raw+32, tag->size-64);
-        bcopy(tag->tag_footer, *raw+tag->size-32, 32);
+        memcpy(*raw, tag->tag_header, 32);
+        memcpy(*raw+32, tag->tag_data, tag->size-64);
+        memcpy(*raw+tag->size-32, tag->tag_footer, 32);
     }
     if(tag->flags & APE_HAS_ID3 && !(tag->flags & APE_NO_ID3)) {
-        bcopy(tag->id3, *raw+tag->size, ID3_LENGTH(tag));
+        memcpy(*raw+tag->size, tag->id3, ID3_LENGTH(tag));
     }
     
     return 0;
@@ -477,8 +477,8 @@ static int ApeTag__get_tag_information(ApeTag* tag) {
         return -3;
     }
     
-    bcopy(tag->tag_footer+12, &tag->size, 4);
-    bcopy(tag->tag_footer+16, &tag->item_count, 4);
+    memcpy(&tag->size, tag->tag_footer+12, 4);
+    memcpy(&tag->item_count, tag->tag_footer+16, 4);
     tag->size = LE2H32(tag->size);
     tag->item_count = LE2H32(tag->item_count);
     tag->size += 32;
@@ -540,12 +540,12 @@ static int ApeTag__get_tag_information(ApeTag* tag) {
         tag->error = "missing APE header";
         return -3;
     }
-    bcopy(tag->tag_header+12, &header_check, 4);
+    memcpy(&header_check, tag->tag_header+12, 4);
     if(tag->size != LE2H32(header_check)+32) {
         tag->error = "header and footer size does not match";
         return -3;
     }
-    bcopy(tag->tag_header+16, &header_check, 4);
+    memcpy(&header_check, tag->tag_header+16, 4);
     if(tag->item_count != LE2H32(header_check)) {
         tag->error = "header and footer item count does not match";
         return -3;
@@ -616,8 +616,8 @@ static int ApeTag__parse_field(ApeTag* tag, u_int32_t* offset) {
         return -1;
     }
     
-    bcopy(data+(*offset), &item->size, 4);
-    bcopy(data+(*offset)+4, &item->flags, 4);
+    memcpy(&item->size, data+(*offset), 4);
+    memcpy(&item->flags, data+(*offset)+4, 4);
     item->size = LE2H32(item->size);
     item->flags = LE2H32(item->flags);
     item->key = NULL;
@@ -658,8 +658,8 @@ static int ApeTag__parse_field(ApeTag* tag, u_int32_t* offset) {
         ret = -1;
         goto parse_error;
     }
-    bcopy(key_start, item->key, key_length);
-    bcopy(value_start, item->value, item->size);
+    memcpy(item->key, key_start, key_length);
+    memcpy(item->value, value_start, item->size);
     
     /* Add item to the database */
     if((ret = ApeTag_add_field(tag, item)) != 0) {
@@ -704,8 +704,8 @@ static int ApeTag__update_id3(ApeTag* tag) {
         tag->error = "malloc";
         return -1;
     }
-    bcopy("TAG", tag->id3, 3);
-    bzero(tag->id3+3, 124);
+    memcpy(tag->id3, "TAG", 3);
+    memset(tag->id3+3, 0, 124);
     *(tag->id3+127) = '\377';
     
     if(tag->fields == NULL) {
@@ -724,7 +724,7 @@ static int ApeTag__update_id3(ApeTag* tag) {
             item = *(ApeItem **)(value_dbt.data); \
             size = (item->size < LENGTH ? item->size : LENGTH); \
             end = tag->id3 + OFFSET + size; \
-            bcopy(item->value, tag->id3 + OFFSET, size); \
+            memcpy(tag->id3 + OFFSET, item->value, size); \
             for(c=tag->id3 + OFFSET; c < end; c++) { \
                 if(*c == '\0') { \
                     *c = ','; \
@@ -866,10 +866,10 @@ static int ApeTag__update_ape(ApeTag* tag) {
         key_size = (u_int32_t)strlen(items[i]->key) + 1;
         size = H2LE32(items[i]->size);
         flags = H2LE32(items[i]->flags);
-        bcopy(&size, c, 4);
-        bcopy(&flags, c+=4, 4);
-        bcopy(items[i]->key, c+=4, key_size);
-        bcopy(items[i]->value, c+=key_size, items[i]->size);
+        memcpy(c, &size, 4);
+        memcpy(c+=4, &flags, 4);
+        memcpy(c+=4, items[i]->key, key_size);
+        memcpy(c+=key_size, items[i]->value, items[i]->size);
         c += items[i]->size;
     }
     if((u_int32_t)(c - tag->tag_data) != tag_size - 64) {
@@ -894,18 +894,18 @@ static int ApeTag__update_ape(ApeTag* tag) {
     /* Update the internal tag header and footer strings */
     tag_size = H2LE32(tag_size - 32);
     num_fields = H2LE32(num_fields);
-    bcopy(APE_PREAMBLE, tag->tag_header, 12);
-    bcopy(APE_PREAMBLE, tag->tag_footer, 12);
-    bcopy(&tag_size, tag->tag_header+12, 4);
-    bcopy(&tag_size, tag->tag_footer+12, 4);
-    bcopy(&num_fields, tag->tag_header+16, 4);
-    bcopy(&num_fields, tag->tag_footer+16, 4);
+    memcpy(tag->tag_header, APE_PREAMBLE, 12);
+    memcpy(tag->tag_footer, APE_PREAMBLE, 12);
+    memcpy(tag->tag_header+12, &tag_size, 4);
+    memcpy(tag->tag_footer+12, &tag_size, 4);
+    memcpy(tag->tag_header+16, &num_fields, 4);
+    memcpy(tag->tag_footer+16, &num_fields,  4);
     *(tag->tag_header+20) = '\0';
     *(tag->tag_footer+20) = '\0';
-    bcopy(APE_HEADER_FLAGS, tag->tag_header+21, 4);
-    bcopy(APE_FOOTER_FLAGS, tag->tag_footer+21, 4);
-    bzero(tag->tag_header+24, 8);
-    bzero(tag->tag_footer+24, 8);
+    memcpy(tag->tag_header+21, APE_HEADER_FLAGS, 4);
+    memcpy(tag->tag_footer+21, APE_FOOTER_FLAGS, 4);
+    memset(tag->tag_header+24, 0, 8);
+    memset(tag->tag_footer+24, 0, 8);
     
     ret = 0;
     
@@ -1001,7 +1001,7 @@ static char* ApeTag__strcasecpy(char* src, unsigned char size) {
         return NULL;
     }
     
-    bcopy(src, dest, (unsigned long)size);
+    memcpy(dest, src, (unsigned long)size);
     for(i=0; i < size; i++) {
         if(*(dest+i) >= 'A' && *(dest+i) <= 'Z') {
             *(dest+i) |= 0x20;
