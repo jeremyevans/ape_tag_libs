@@ -43,8 +43,7 @@ INCDIR=${BASEDIR}/include
 all:  ${ARFILENAME} ${SOFILENAME} symlinks ${APEINFO}
 
 clean:
-	-rm apetag.o ${ARFILENAME} ${SOFILENAME} ${APEINFO} ${SONAME} \
-	    lib${LIB}.so test/test_apetag
+	-rm -f apetag.o ${ARFILENAME} ${APEINFO} lib${LIB}.so* test/test_apetag
 
 install: all install-symlinks
 	${INSTALL} -o root -g bin -m 444 ${ARFILENAME} ${SOFILENAME} ${LIBDIR}
