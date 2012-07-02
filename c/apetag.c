@@ -51,6 +51,24 @@
 
 DB* ID3_GENRES = NULL;
 
+/* Private function prototypes */
+
+static int ApeTag__get_tag_information(ApeTag* tag);
+static int ApeTag__parse_fields(ApeTag* tag);
+static int ApeTag__parse_field(ApeTag* tag, u_int32_t* offset);
+static int ApeTag__update_id3(ApeTag* tag);
+static int ApeTag__update_ape(ApeTag* tag);
+static int ApeTag__write_tag(ApeTag* tag);
+
+static void ApeItem__free(ApeItem** item);
+static char* ApeTag__strcasecpy(char* src, unsigned char size);
+static unsigned char ApeItem__parse_track(u_int32_t size, char* value);
+static int ApeItem__check_validity(ApeTag* tag, ApeItem* item);
+static int ApeTag__check_valid_utf8(unsigned char* utf8_string, u_int32_t size);
+static int ApeItem__compare(const void* a, const void* b);
+static int ApeTag__lookup_genre(ApeTag* tag, DBT* key_dbt, char* genre_id);
+static int ApeTag__load_ID3_GENRES(ApeTag* tag);
+
 /* Public Functions */
 
 ApeTag* ApeTag_new(FILE *file, u_int32_t flags) {
@@ -366,7 +384,7 @@ Parses the header and footer of the tag to get information about it.
 
 Returns 0 on success, <0 on error;
 */
-int ApeTag__get_tag_information(ApeTag* tag) {
+static int ApeTag__get_tag_information(ApeTag* tag) {
     int id3_length = 0;
     u_int32_t header_check;
     long file_size = 0;
@@ -538,7 +556,7 @@ Parses all fields from the tag and puts them in the database.
 
 Returns 0 on success, <0 on error.
 */
-int ApeTag__parse_fields(ApeTag* tag) {
+static int ApeTag__parse_fields(ApeTag* tag) {
     u_int32_t i;
     u_int32_t offset = 0;
     int ret =0;
@@ -578,7 +596,7 @@ tag's data.
 
 Returns 0 on success, <0 on error.
 */
-int ApeTag__parse_field(ApeTag* tag, u_int32_t* offset) {
+static int ApeTag__parse_field(ApeTag* tag, u_int32_t* offset) {
     char* data = tag->tag_data;
     char* value_start = NULL;
     char* key_start = data+(*offset)+8;
@@ -659,7 +677,7 @@ previous id3 tag, it overwrites it completely.
 
 Returns 0 on success, <0 on error.
 */
-int ApeTag__update_id3(ApeTag* tag) {
+static int ApeTag__update_id3(ApeTag* tag) {
     ApeItem* item;
     char* c;
     char* end;
@@ -760,7 +778,7 @@ Updates the internal ape tag strings using the value for the database.
 
 Returns 0 on success, <0 on error.
 */
-int ApeTag__update_ape(ApeTag* tag) {
+static int ApeTag__update_ape(ApeTag* tag) {
     u_int32_t i = 0;
     u_int32_t key_size;
     char* c;
@@ -897,7 +915,7 @@ Writes the tag to the file using the internal tag strings.
 
 Returns 0 on success, <0 on error.
 */
-int ApeTag__write_tag(ApeTag* tag) {
+static int ApeTag__write_tag(ApeTag* tag) {
     assert(tag != NULL);
     assert(tag->tag_header != NULL);
     assert(tag->tag_data != NULL);
@@ -941,7 +959,7 @@ int ApeTag__write_tag(ApeTag* tag) {
 /*
 Frees an ApeItem and it's key and value, given a pointer to a pointer to it.
 */
-void ApeItem__free(ApeItem** item) {
+static void ApeItem__free(ApeItem** item) {
     assert(item != NULL);
     if(*item == NULL) {
         return;
@@ -965,7 +983,7 @@ The caller is responsible for freeing the returned pointer.
 
 Returns pointer to copy on success, NULL pointer on error.
 */
-char* ApeTag__strcasecpy(char* src, unsigned char size) {
+static char* ApeTag__strcasecpy(char* src, unsigned char size) {
     unsigned char i;
     char* dest;
     
@@ -992,7 +1010,7 @@ a character pointer.  If the character pointer is a string between "0" and
 
 Returns unsigned char.
 */
-unsigned char ApeItem__parse_track(u_int32_t size, char* value) {
+static unsigned char ApeItem__parse_track(u_int32_t size, char* value) {
     assert(value != NULL);
     
     if(size != 0 && size < 4) {
@@ -1029,7 +1047,7 @@ Checks the given ApeItem for validity (checking flags, key, and value).
 
 Returns 0 if valid, <0 otherwise.
 */
-int ApeItem__check_validity(ApeTag* tag, ApeItem* item) {
+static int ApeItem__check_validity(ApeTag* tag, ApeItem* item) {
     unsigned long key_length;
     char* key_end;
     char* c;
@@ -1085,7 +1103,7 @@ Checks the given UTF8 string for validity.
 
 Returns 0 if valid, -1 if not.
 */
-int ApeTag__check_valid_utf8(unsigned char* utf8_string, u_int32_t size) {
+static int ApeTag__check_valid_utf8(unsigned char* utf8_string, u_int32_t size) {
     unsigned char* utf_last_char;
     unsigned char* c = utf8_string;
     
@@ -1133,7 +1151,7 @@ key.
 Returns -1 or 1.  Could possibly return 0 if the database has been manually
 modified (don't do that!).
 */
-int ApeItem__compare(const void* a, const void* b) {
+static int ApeItem__compare(const void* a, const void* b) {
     const ApeItem* ai_a = *(const ApeItem_CP*)a;
     const ApeItem* ai_b = *(const ApeItem_CP*)b;
     u_int32_t size_a;
@@ -1157,7 +1175,7 @@ be null terminated, as the entries in the genre database are not.
 
 Returns 0 on success, -1 on error;
 */
-int ApeTag__lookup_genre(ApeTag* tag, DBT* key_dbt, char* genre_id) {
+static int ApeTag__lookup_genre(ApeTag* tag, DBT* key_dbt, char* genre_id) {
     int ret = 0;
     DBT value_dbt;
     value_dbt.data = NULL;
@@ -1188,7 +1206,7 @@ Winamp extensions).
 
 Returns 0 on success, -1 on error.
 */
-int ApeTag__load_ID3_GENRES(ApeTag* tag) {
+static int ApeTag__load_ID3_GENRES(ApeTag* tag) {
     INIT_DBT;
     value_dbt.size = 1;
     

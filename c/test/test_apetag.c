@@ -1,11 +1,10 @@
-#include <apetag.h>
+#include <apetag.c>
 #include <err.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 int assertions = 0;
-extern DB* ID3_GENRES;
 
 #define CHECK(RESULT) assertions++; if(!(RESULT)) { return __LINE__; }
 

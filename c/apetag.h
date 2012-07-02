@@ -86,22 +86,4 @@ int ApeTag_add_field(ApeTag* tag, ApeItem* item);
 int ApeTag_remove_field(ApeTag* tag, char* key);
 int ApeTag_clear_fields(ApeTag* tag);
 
-/* Private functions */
-
-int ApeTag__get_tag_information(ApeTag* tag);
-int ApeTag__parse_fields(ApeTag* tag);
-int ApeTag__parse_field(ApeTag* tag, u_int32_t* offset);
-int ApeTag__update_id3(ApeTag* tag);
-int ApeTag__update_ape(ApeTag* tag);
-int ApeTag__write_tag(ApeTag* tag);
-
-void ApeItem__free(ApeItem** item);
-char* ApeTag__strcasecpy(char* src, unsigned char size);
-unsigned char ApeItem__parse_track(u_int32_t size, char* value);
-int ApeItem__check_validity(ApeTag* tag, ApeItem* item);
-int ApeTag__check_valid_utf8(unsigned char* utf8_string, u_int32_t size);
-int ApeItem__compare(const void* a, const void* b);
-int ApeTag__lookup_genre(ApeTag* tag, DBT* key_dbt, char* genre_id);
-int ApeTag__load_ID3_GENRES(ApeTag* tag);
-
 #endif /* !_APETAG_H_ */
