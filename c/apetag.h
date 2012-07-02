@@ -68,7 +68,7 @@ typedef struct {
     u_int32_t size;       /* On disk size in bytes */
     u_int32_t item_count; /* On disk item count */
     u_int32_t num_fields; /* In database item count */
-    long offset;          /* Start of tag in file */
+    off_t offset;          /* Start of tag in file */
 } ApeTag;
 
 /* Public functions */

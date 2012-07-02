@@ -154,7 +154,7 @@ int ApeTag_remove(ApeTag* tag) {
         tag->error = "fflush";
         return ret;
     }
-    if((ret = ftruncate(fileno(tag->file), (off_t)tag->offset)) == -1) {
+    if((ret = ftruncate(fileno(tag->file), tag->offset)) == -1) {
         tag->error = "ftruncate";
         return ret;
     }
@@ -391,7 +391,7 @@ Returns 0 on success, <0 on error;
 static int ApeTag__get_tag_information(ApeTag* tag) {
     int id3_length = 0;
     u_int32_t header_check;
-    long file_size = 0;
+    off_t file_size = 0;
     assert(tag != NULL);
     
     /* Get file size */
@@ -399,7 +399,7 @@ static int ApeTag__get_tag_information(ApeTag* tag) {
         tag->error = "fseek";
         return -1;
     }
-    if((file_size = ftell(tag->file)) == -1) {
+    if((file_size = ftello(tag->file)) == -1) {
         tag->error = "ftell";
         return -1;
     } 
@@ -492,7 +492,7 @@ static int ApeTag__get_tag_information(ApeTag* tag) {
         tag->error = "tag larger than maximum possible size";
         return -3;
     }
-    if(tag->size + (u_int32_t)id3_length > (unsigned long)file_size) {
+    if(tag->size + (off_t)id3_length > file_size) {
         tag->error = "tag larger than possible size";
         return -3;
     }
@@ -508,7 +508,7 @@ static int ApeTag__get_tag_information(ApeTag* tag) {
         tag->error = "fseek";
         return -1;
     }
-    if((tag->offset = ftell(tag->file)) == -1) {
+    if((tag->offset = ftello(tag->file)) == -1) {
         tag->error = "ftell";
         return -1;
     }
@@ -925,7 +925,7 @@ static int ApeTag__write_tag(ApeTag* tag) {
     assert(tag->tag_data != NULL);
     assert(tag->tag_footer != NULL);
     
-    if(fseek(tag->file, tag->offset, SEEK_SET) == -1) {
+    if(fseeko(tag->file, tag->offset, SEEK_SET) == -1) {
         tag->error = "fseek";
         return -1;
     }
@@ -954,7 +954,7 @@ static int ApeTag__write_tag(ApeTag* tag) {
         tag->error = "fflush";
         return -1;
     }
-    if(ftruncate(fileno(tag->file), (off_t)((unsigned long)tag->offset + TAG_LENGTH(tag))) == -1) {
+    if(ftruncate(fileno(tag->file), (tag->offset + TAG_LENGTH(tag))) == -1) {
         tag->error = "ftruncate";
         return -1;
     }
