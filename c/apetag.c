@@ -150,6 +150,10 @@ int ApeTag_remove(ApeTag* tag) {
     if(!(tag->flags & APE_HAS_APE)) {
         return 1;
     }
+    if((ret = fflush(tag->file)) != 0) {
+        tag->error = "fflush";
+        return ret;
+    }
     if((ret = ftruncate(fileno(tag->file), (off_t)tag->offset)) == -1) {
         tag->error = "ftruncate";
         return ret;
@@ -946,6 +950,10 @@ static int ApeTag__write_tag(ApeTag* tag) {
         tag->flags |= APE_HAS_ID3;
     }
 
+    if(fflush(tag->file) != 0) {
+        tag->error = "fflush";
+        return -1;
+    }
     if(ftruncate(fileno(tag->file), (off_t)((unsigned long)tag->offset + TAG_LENGTH(tag))) == -1) {
         tag->error = "ftruncate";
         return -1;
