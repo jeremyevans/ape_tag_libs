@@ -335,7 +335,7 @@ int ApeTag_remove_field(ApeTag tag, const char* key) {
         return 1;
     }
     
-    /* Apetag keys are case insensitive but case preserving */
+    /* ApeTag keys are case insensitive but case preserving */
     if((key_dbt.data = ApeTag__strcasecpy(key, (unsigned char)key_dbt.size)) == NULL)  {
         tag->error = "malloc";
         return -1;
@@ -851,14 +851,15 @@ static int ApeTag__update_ape(ApeTag tag) {
         return -3;
     }
     
+    /* Get the array of items */
     if((ret = ApeTag__get_fields(tag, &items)) < 0) {
         return ret;
     }
     
-    /* Sort them */
+    /* Sort the items */
     qsort(items, num_fields, sizeof(ApeItem *), ApeItem__compare);
 
-    /* Check all of them for validity and update the total size of the tag*/
+    /* Check all of the items for validity and update the total size of the tag*/
     for(i=0; i < num_fields; i++) {
         if(ApeItem__check_validity(tag, items[i]) != 0) {
             ret = -3;
@@ -1198,8 +1199,9 @@ static int ApeItem__compare(const void* a, const void* b) {
 
 /*
 Looks up a genre for the correct ID3 genre code.  The genre string is passed
-in a DBT, and pointer to the genre code is passed.  The genre string should not
-be null terminated, as the entries in the genre database are not.
+in as the ApeItem's value, and pointer to the genre code is passed.  The ApeItem's
+size should not include a terminator for the value, as the entries in the genre
+database are not terminated.
 
 Returns 0 on success, -1 on error;
 */
@@ -1233,11 +1235,15 @@ static int ApeTag__lookup_genre(ApeTag tag, ApeItem* item, char* genre_id) {
 
 /*
 Loads the ID3_GENRES global database with all 148 ID3 genres (including the 
-Winamp extensions).
+Winamp extensions).  This has a possible race condition in multi-threaded
+code, since it modifies a global variable, but the worst case scenario is
+minor memory leakage, and the window for the race condition is very small,
+since it can only occur if ID3_GENRES has not yet been initialized.
 
 Returns 0 on success, -1 on error.
 */
 static int ApeTag__load_ID3_GENRES(ApeTag tag) {
+    DB* genres;
     INIT_DBT;
     value_dbt.size = 1;
     
@@ -1246,7 +1252,7 @@ static int ApeTag__load_ID3_GENRES(ApeTag tag) {
     if(ID3_GENRES != NULL) {
         return 0;
     }
-    if((ID3_GENRES = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
+    if((ID3_GENRES = genres = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
         tag->error = "dbopen";
         return -1;
     }
@@ -1255,7 +1261,7 @@ static int ApeTag__load_ID3_GENRES(ApeTag tag) {
         key_dbt.data = GENRE; \
         key_dbt.size = LENGTH; \
         value_dbt.data = VALUE; \
-        if(ID3_GENRES->put(ID3_GENRES, &key_dbt, &value_dbt, 0) == -1) { \
+        if(genres->put(genres, &key_dbt, &value_dbt, 0) == -1) { \
             tag->error = "db->put"; \
             goto load_genres_error; \
         }
@@ -1414,18 +1420,29 @@ static int ApeTag__load_ID3_GENRES(ApeTag tag) {
     return 0;
     
     load_genres_error:
-    if(ID3_GENRES != NULL){
-        if(ID3_GENRES->close(ID3_GENRES) == -1) {
+    if(genres != NULL){
+        if(genres->close(genres) == -1) {
             tag->error = "db->close";
         }
-        ID3_GENRES = NULL;
+        genres = NULL;
     }
     return -1;
 }
 
+/* 
+Update the passed in **item pointer to point to a ApeItem* for the matching
+item in the database.
+
+The caller is expected to have checked that tag->fields is not NULL.
+
+Returns -1 on error, 1 if the item was not in the database, and 0 if the
+item was not in the database.
+*/
 static int ApeTag__get_field(ApeTag tag, const char *key, ApeItem **item) {
     int ret = 0;
     INIT_DBT
+
+    *item = NULL;
 
     key_dbt.size = strlen(key) + 1; 
     if ((key_dbt.data = ApeTag__strcasecpy(key, (unsigned char)key_dbt.size)) == NULL) {
@@ -1446,6 +1463,13 @@ static int ApeTag__get_field(ApeTag tag, const char *key, ApeItem **item) {
     return ret;
 }
 
+/* 
+Update the passed in ***items pointer to point to a new array of ApeItem*
+pointers, which the caller is responsible for freeing.
+
+Returns <0 on error, 1 if the tag has no items, and 0 if the
+array was set sucessfully.
+*/
 static int ApeTag__get_fields(ApeTag tag, ApeItem ***items) {
     if(tag->num_fields > 0) {
         int i = 0;
