@@ -15,6 +15,10 @@
     value_dbt.data = NULL; \
     value_dbt.size = 0;
 
+/* True minimum values */
+#define APE_MINIMUM_TAG_SIZE   64
+#define APE_ITEM_MINIMUM_SIZE  11
+
 /* Determine endianness */
 #ifndef IS_BIG_ENDIAN
 #ifdef _BYTE_ORDER
@@ -49,7 +53,9 @@
 
 /* Global Variables */
 
-DB* ID3_GENRES = NULL;
+static DB* ID3_GENRES = NULL;
+static u_int32_t APE_MAXIMUM_TAG_SIZE = 8192;
+static u_int32_t APE_MAXIMUM_ITEM_COUNT = 64;
 
 /* Private function prototypes */
 
@@ -379,6 +385,14 @@ int ApeTag_clear_fields(ApeTag* tag) {
     tag->flags &= ~APE_CHECKED_FIELDS;
     tag->num_fields = 0;
     return ret;
+}
+
+void ApeTag_set_max_size(u_int32_t size) {
+  APE_MAXIMUM_TAG_SIZE = size;
+}
+
+void ApeTag_set_max_item_count(u_int32_t item_count) {
+  APE_MAXIMUM_ITEM_COUNT = item_count;
 }
 
 /* Private Functions */

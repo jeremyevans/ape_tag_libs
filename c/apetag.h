@@ -18,14 +18,6 @@
 #define APE_HAS_ID3            1 << 4
 #define APE_NO_ID3             1 << 5
 
-/* Artificial limits -- recommended but can be increased */
-#define APE_MAXIMUM_TAG_SIZE   8192
-#define APE_MAXIMUM_ITEM_COUNT 64
-
-/* True minimum values */
-#define APE_MINIMUM_TAG_SIZE   64
-#define APE_ITEM_MINIMUM_SIZE  11
-
 #define APE_ITEM_READ_FLAGS    1
 #define APE_ITEM_READ_WRITE    0
 #define APE_ITEM_READ_ONLY     1
@@ -85,5 +77,8 @@ int ApeTag_update(ApeTag* tag);
 int ApeTag_add_field(ApeTag* tag, ApeItem* item);
 int ApeTag_remove_field(ApeTag* tag, char* key);
 int ApeTag_clear_fields(ApeTag* tag);
+
+void ApeTag_set_max_size(u_int32_t size);
+void ApeTag_set_max_item_count(u_int32_t item_count);
 
 #endif /* !_APETAG_H_ */
