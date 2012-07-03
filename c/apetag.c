@@ -75,7 +75,7 @@ static int ApeTag__update_ape(ApeTag* tag);
 static int ApeTag__write_tag(ApeTag* tag);
 
 static void ApeItem__free(ApeItem** item);
-static char* ApeTag__strcasecpy(char* src, unsigned char size);
+static char* ApeTag__strcasecpy(const char* src, unsigned char size);
 static unsigned char ApeItem__parse_track(uint32_t size, char* value);
 static int ApeItem__check_validity(ApeTag* tag, ApeItem* item);
 static int ApeTag__check_valid_utf8(unsigned char* utf8_string, uint32_t size);
@@ -313,7 +313,7 @@ int ApeTag_add_field(ApeTag *tag, ApeItem *item) {
     return ret;
 }
 
-int ApeTag_remove_field(ApeTag* tag, char* key) {
+int ApeTag_remove_field(ApeTag* tag, const char* key) {
     int ret = 0;
     INIT_DBT;
     key_dbt.size = strlen(key) + 1;
@@ -1013,7 +1013,7 @@ The caller is responsible for freeing the returned pointer.
 
 Returns pointer to copy on success, NULL pointer on error.
 */
-static char* ApeTag__strcasecpy(char* src, unsigned char size) {
+static char* ApeTag__strcasecpy(const char* src, unsigned char size) {
     unsigned char i;
     char* dest;
     

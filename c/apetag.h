@@ -66,7 +66,7 @@ int ApeTag_parse(ApeTag* tag);
 int ApeTag_update(ApeTag* tag);
 
 int ApeTag_add_field(ApeTag* tag, ApeItem* item);
-int ApeTag_remove_field(ApeTag* tag, char* key);
+int ApeTag_remove_field(ApeTag* tag, const char* key);
 int ApeTag_clear_fields(ApeTag* tag);
 
 void ApeTag_set_max_size(uint32_t size);
