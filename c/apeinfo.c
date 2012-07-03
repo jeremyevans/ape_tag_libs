@@ -2,9 +2,10 @@
 #include <err.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 int ApeInfo_process(char *);
-void ApeTag_print(ApeTag* tag);
+void ApeTag_print(ApeTag tag);
 void ApeItem_print(ApeItem* item);
 
 /* Process all files on the command line */
@@ -31,7 +32,7 @@ int ApeInfo_process(char* filename) {
     int ret;
     int status;
     FILE* file;
-    ApeTag* tag = NULL;
+    ApeTag tag = NULL;
     
     if((file = fopen(filename, "r")) == NULL) {
         warn("%s", filename);
@@ -53,13 +54,13 @@ int ApeInfo_process(char* filename) {
         ret = 1;
         goto apeinfo_process_error;
     } else if(status == -3) {
-        warnx("%s", tag->error);
+        warnx("%s", ApeTag_error(tag));
         ret = 1;
         goto apeinfo_process_error;
     }
     
-    if(tag->flags & APE_HAS_APE) {
-        printf("%s (%i fields):\n", filename, tag->item_count);
+    if(ApeTag_exists(tag)) {
+        printf("%s (%i fields):\n", filename, ApeTag_item_count(tag));
         ApeTag_print(tag);
     } else {
         printf("%s: no ape tag\n\n", filename);
@@ -79,19 +80,23 @@ int ApeInfo_process(char* filename) {
 }
 
 /* Prints all items in the tag, one per line. */
-void ApeTag_print(ApeTag* tag) {
-    DBT key_dbt, value_dbt;
+void ApeTag_print(ApeTag tag) {
+    int i;
+    ApeItem **items = NULL;
     
     assert(tag != NULL);
-    
-    if(tag->fields != NULL) {
-        if(tag->fields->seq(tag->fields, &key_dbt, &value_dbt, R_FIRST) == 0) {
-            ApeItem_print(*(ApeItem **)(value_dbt.data));
-            while(tag->fields->seq(tag->fields, &key_dbt, &value_dbt, R_NEXT) == 0) {
-                ApeItem_print(*(ApeItem **)(value_dbt.data));
-            }
+
+    if ((i = ApeTag_get_fields(tag, &items)) < 0) {
+       printf("Error getting fields: %s", ApeTag_error(tag));
+    } else if (i == 0) {
+        int item_count = ApeTag_item_count(tag);
+
+        for (; i < item_count; i++) {
+            ApeItem_print(items[i]);
         }
     }
+
+    free(items);
     printf("\n");
 }
 

@@ -73,7 +73,7 @@ int run_tests(void) {
 }
 
 int test_ApeTag_new_free(void) {
-    ApeTag* tag;
+    ApeTag tag;
     FILE* file;
     
     CHECK(file = fopen("example1.tag", "r+"));
@@ -91,7 +91,7 @@ int test_ApeTag_new_free(void) {
 }
 
 int test_ApeTag_exists(void) {
-    ApeTag* tag;
+    ApeTag tag;
     FILE* file;
     
     #define TEST_EXIST(FILENAME, EXIST) \
@@ -114,7 +114,7 @@ int test_ApeTag_exists(void) {
 }
 
 int test_ApeTag_remove(void) {
-    ApeTag* tag;
+    ApeTag tag;
     FILE* file;
     
     #define TEST_REMOVE(FILENAME, EXIST) \
@@ -140,7 +140,7 @@ int test_ApeTag_remove(void) {
 }
 
 int test_ApeTag_raw(void) {
-    ApeTag* tag;
+    ApeTag tag;
     FILE* file;
     char* raw_tag = NULL;
     char* file_contents = NULL;
@@ -167,7 +167,7 @@ int test_ApeTag_raw(void) {
 }
 
 int test_ApeTag_parse(void) {
-    ApeTag* tag;
+    ApeTag tag;
     FILE* file;
     DBT key_dbt, value_dbt;
     
@@ -212,7 +212,7 @@ int test_ApeTag_parse(void) {
 }
 
 int test_ApeTag_update(void) {
-    ApeTag* tag;
+    ApeTag tag;
     ApeItem* item;
     FILE* file;
     char* before;
@@ -293,7 +293,7 @@ int test_ApeTag_update(void) {
 }
 
 int test_ApeTag_filesizes(void) {
-    ApeTag* tag;
+    ApeTag tag;
     FILE* file;
     int i;
     
@@ -333,7 +333,7 @@ int test_ApeTag_filesizes(void) {
 
 int test_ApeItem_validity(void) {
     FILE* file;
-    ApeTag* tag;
+    ApeTag tag;
     ApeItem item;
     unsigned char i;
     
@@ -418,7 +418,7 @@ int test_ApeItem_validity(void) {
 }
 
 int test_bad_tags(void) {
-    ApeTag* tag;
+    ApeTag tag;
     FILE* empty;
     FILE* example1;
     char* empty_raw;
@@ -574,7 +574,7 @@ int test_bad_tags(void) {
 }
 
 int test_ApeTag_add_remove_clear_fields_update(void) {
-    ApeTag* tag;
+    ApeTag tag;
     FILE* file;
     ApeItem* item;
     int i;
@@ -658,7 +658,7 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
 }
 
 int test_no_id3(void) {
-    ApeTag* tag;
+    ApeTag tag;
     FILE* file;
     char* file_contents;
     char* raw;
@@ -684,7 +684,7 @@ int test_no_id3(void) {
             CHECK(0 == ApeTag_parse(tag)); \
             CHECK(0 == ApeTag_update(tag)); \
             CHECK(0 == fseek(file, 0, SEEK_END)); \
-            CHECK(tag->size == (uint32_t)ftell(file)); \
+            CHECK(tag->size == (u_int32_t)ftell(file)); \
             CHECK(0 == fseek(file, 0, SEEK_SET)); \
             CHECK(tag->size == fread(raw, 1, tag->size, file)); \
             CHECK(0 == bcmp(file_contents, raw, tag->size)); \
@@ -781,14 +781,15 @@ int test_ApeItem__compare(void) {
 }
 
 int test_ApeTag__lookup_genre(void) {
-    ApeTag tag;
-    DBT key_dbt;
+    struct sApeTag tag;
+    ApeItem item;
     char genre_id;
 
     #define LOOKUP_GENRE(GENRE, LENGTH, VALUE) \
-        key_dbt.data = GENRE; \
-        key_dbt.size = LENGTH; \
-        CHECK(ApeTag__lookup_genre(&tag, &key_dbt, &genre_id) == 0); \
+        memset(&item, 0, sizeof(ApeItem)); \
+        item.value = GENRE; \
+        item.size = LENGTH; \
+        CHECK(ApeTag__lookup_genre(&tag, &item, &genre_id) == 0); \
         CHECK(VALUE == genre_id);
     
     LOOKUP_GENRE("Blues", 5, '\0');
