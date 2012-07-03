@@ -528,13 +528,13 @@ static int ApeTag__get_tag_information(ApeTag tag) {
         tag->error = "fread";
         return -2;
     }
-    if(bcmp(APE_PREAMBLE, tag->tag_footer, 12)) {
+    if(memcmp(APE_PREAMBLE, tag->tag_footer, 12)) {
         tag->flags &= ~APE_HAS_APE;
         tag->offset = file_size - id3_length;
         tag->flags |= APE_CHECKED_OFFSET | APE_CHECKED_APE;
         return 0;
     }
-    if(bcmp(APE_FOOTER_FLAGS, tag->tag_footer+21, 3) || \
+    if(memcmp(APE_FOOTER_FLAGS, tag->tag_footer+21, 3) || \
        ((char)*(tag->tag_footer+20) != '\0' && \
        (char)*(tag->tag_footer+20) != '\1')) {
         tag->error = "bad tag footer flags";
@@ -599,7 +599,7 @@ static int ApeTag__get_tag_information(ApeTag tag) {
     }
     
     /* Check tag header for validity */
-    if(bcmp(APE_PREAMBLE, tag->tag_header, 12) || bcmp(APE_HEADER_FLAGS, tag->tag_header+21, 3) \
+    if(memcmp(APE_PREAMBLE, tag->tag_header, 12) || memcmp(APE_HEADER_FLAGS, tag->tag_header+21, 3) \
       || ((char)*(tag->tag_header+20) != '\0' && (char)*(tag->tag_header+20) != '\1')) {
         tag->error = "missing APE header";
         return -3;

@@ -150,7 +150,7 @@ int test_ApeTag_raw(void) {
         CHECK(tag = ApeTag_new(file, 0)); \
         CHECK(file_contents = (char *)malloc(SIZE)); \
         CHECK(SIZE == fread(file_contents, 1, SIZE, file)); \
-        CHECK(ApeTag_raw(tag, &raw_tag) == 0 && bcmp(file_contents, raw_tag, SIZE) == 0);
+        CHECK(ApeTag_raw(tag, &raw_tag) == 0 && memcmp(file_contents, raw_tag, SIZE) == 0);
     
     TEST_RAW("empty_ape.tag", 64);
     TEST_RAW("empty_ape_id3.tag", 192);
@@ -180,7 +180,7 @@ int test_ApeTag_parse(void) {
         key_dbt.data = FIELD; \
         key_dbt.size = KEY_LENGTH; \
         CHECK(tag->fields->get(tag->fields, &key_dbt, &value_dbt, 0) == 0); \
-        CHECK(bcmp(VALUE, (*(ApeItem **)(value_dbt.data))->value, VALUE_LENGTH) == 0); \
+        CHECK(memcmp(VALUE, (*(ApeItem **)(value_dbt.data))->value, VALUE_LENGTH) == 0); \
     
     TEST_PARSE("empty_ape.tag", 0);
     TEST_PARSE("empty_ape_id3.tag", 0);
@@ -239,7 +239,7 @@ int test_ApeTag_update(void) {
         CHECK(fseek(file, 0, SEEK_SET) == 0); \
         CHECK(after = (char *)malloc(tag->size+ID3)); \
         CHECK(tag->size+ID3 == fread(after, 1, tag->size+ID3, file)); \
-        CHECK(bcmp(CHANGED ? empty_ape_id3 : before, after, tag->size+ID3) == 0);
+        CHECK(memcmp(CHANGED ? empty_ape_id3 : before, after, tag->size+ID3) == 0);
         
     #define ADD_FIELD(KEY, VALUE, SIZE) \
         item = (ApeItem *)malloc(sizeof(ApeItem)); \
@@ -247,8 +247,8 @@ int test_ApeTag_update(void) {
         item->flags = 0; \
         item->key = (char *)malloc(strlen(KEY)+1); \
         item->value = (char *)malloc(SIZE); \
-        bcopy(KEY, item->key, strlen(KEY)+1); \
-        bcopy(VALUE, item->value, SIZE); \
+        memcpy(item->key, KEY, strlen(KEY)+1); \
+        memcpy(item->value, VALUE, SIZE); \
         CHECK(ApeTag_add_field(tag, item) == 0);
         
     #define CHECK_TAG(POINTER, SIZE) \
@@ -256,7 +256,7 @@ int test_ApeTag_update(void) {
         CHECK(fseek(file, 0, SEEK_SET) == 0); \
         CHECK(after = (char *)malloc(SIZE)); \
         CHECK(SIZE == fread(after, 1, SIZE, file)); \
-        CHECK(bcmp(POINTER, after, SIZE) == 0);
+        CHECK(memcmp(POINTER, after, SIZE) == 0);
     
     RAW_TAGS(empty_ape_id3, "empty_ape_id3.tag", 192);
     RAW_TAGS(example1_id3, "example1_id3.tag", 336);
@@ -371,7 +371,7 @@ int test_ApeItem_validity(void) {
     item.key="ID3";
     CHECK_VALIDITY(-3);
     item.key=(char *)malloc(260);
-    bcopy("TAGS", item.key, 5);
+    memcpy(item.key, "TAGS", 5);
     CHECK_VALIDITY(0);
     for(i=0; i < 0x20; i++) {
         *(item.key+3) = (char)i;
@@ -382,12 +382,12 @@ int test_ApeItem_validity(void) {
         CHECK_VALIDITY(-3);
     }
     for(i=0; i<9; i++) {
-        bcopy("qwertyuiopasdfghjklzxcvbnm", item.key+(26*i), 27);
+        memcpy(item.key+(26*i), "qwertyuiopasdfghjklzxcvbnm", 27);
         CHECK_VALIDITY(0);
     }
-    bcopy("qwertyuiopasdfghjklzxcvbnm", item.key+234, 21);
+    memcpy(item.key+234, "qwertyuiopasdfghjklzxcvbnm", 21);
     CHECK_VALIDITY(0);
-    bcopy("qwertyuiopasdfghjklzxcvbnm", item.key+235, 21);
+    memcpy(item.key+235, "qwertyuiopasdfghjklzxcvbnm", 21);
     CHECK_VALIDITY(-3);
     item.key="ID32";
     CHECK_VALIDITY(0);
@@ -591,8 +591,8 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
     item->flags = 0;
     CHECK(item->key = (char *)malloc(6));
     CHECK(item->value = (char *)malloc(5));
-    bcopy("ALBUM", item->key, 6);
-    bcopy("VALUE", item->value, 5);
+    memcpy(item->key, "ALBUM", 6);
+    memcpy(item->value, "VALUE", 5);
     CHECK(ApeTag_add_field(tag, item) == 0);
     CHECK(ApeTag_remove_field(tag, "track") == 1);
     CHECK(ApeTag_clear_fields(tag) == 0);
@@ -609,10 +609,10 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
     CHECK(item->value = (char *)malloc(5));
     item->size = 5;
     item->flags = 0;
-    bcopy("ALBUM", item->key, 6);
-    bcopy("VALUE", item->value, 5);
+    memcpy(item->key, "ALBUM", 6);
+    memcpy(item->value,"VALUE",  5);
     CHECK(ApeTag_add_field(tag, item) == -3);
-    bcopy("album", item->key, 6);
+    memcpy(item->key, "album", 6);
     CHECK(ApeTag_add_field(tag, item) == -3);
     
     /* Check adding more fields than allowed */
@@ -644,9 +644,9 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
     CHECK(item->value = (char *)malloc(8112));
     item->size = 8112;
     item->flags = 0;
-    bcopy("Too Big!", item->key, 9);
+    memcpy(item->key, "Too Big!", 9);
     for(i=0; i < 507; i++) {
-        bcopy("0123456789abcdef", item->value+i*16, 16);
+        memcpy(item->value+i*16, "0123456789abcdef", 16);
     }
     CHECK(ApeTag_add_field(tag, item) == 0);
     CHECK(ApeTag_update(tag) == -3);
@@ -680,14 +680,14 @@ int test_no_id3(void) {
             CHECK(raw = (char*)malloc(tag->size)); \
             CHECK(tag->size == fread(file_contents, 1, tag->size, file)); \
             CHECK(0 == ApeTag_raw(tag, &raw)); \
-            CHECK(0 == bcmp(file_contents, raw, tag->size)); \
+            CHECK(0 == memcmp(file_contents, raw, tag->size)); \
             CHECK(0 == ApeTag_parse(tag)); \
             CHECK(0 == ApeTag_update(tag)); \
             CHECK(0 == fseek(file, 0, SEEK_END)); \
             CHECK(tag->size == (u_int32_t)ftell(file)); \
             CHECK(0 == fseek(file, 0, SEEK_SET)); \
             CHECK(tag->size == fread(raw, 1, tag->size, file)); \
-            CHECK(0 == bcmp(file_contents, raw, tag->size)); \
+            CHECK(0 == memcmp(file_contents, raw, tag->size)); \
         }
         
     TEST_INFO_NO_ID3("empty_ape.tag", APE_HAS_APE, APE_HAS_APE);
@@ -732,7 +732,7 @@ int test_ApeItem__parse_track(void) {
     CHECK(ApeItem__parse_track(1, "a") == 0)
     
     for(i=0; i<10; i++) {
-        bzero(s, 4);
+        memset(s, 0, 4);
         s[0] = '0' + i;
         CHECK(i == ApeItem__parse_track(1, s));
         for(j=0; j<10; j++) {
