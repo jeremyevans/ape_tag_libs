@@ -28,14 +28,6 @@
 #define APE_ITEM_EXTERNAL      4
 #define APE_ITEM_RESERVED      6
 
-#define APE_PREAMBLE "APETAGEX\320\07\0\0"
-#define APE_HEADER_FLAGS "\0\0\240"
-#define APE_FOOTER_FLAGS "\0\0\200"
-
-#define ID3_LENGTH(TAG) (uint32_t)(((TAG->flags & APE_HAS_ID3) && \
-                                    !(TAG->flags & APE_NO_ID3)) ? 128 : 0)
-#define TAG_LENGTH(TAG) (tag->size + ID3_LENGTH(TAG))
-
 /* Structures */
 
 typedef struct {
