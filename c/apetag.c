@@ -40,10 +40,10 @@
 /* From OpenBSD */
 #ifdef IS_BIG_ENDIAN
 #define SWAPEND32(x) \
-    (u_int32_t)(((u_int32_t)(x) & 0xff) << 24 | \
-    ((u_int32_t)(x) & 0xff00) << 8 | \
-    ((u_int32_t)(x) & 0xff0000) >> 8 | \
-    ((u_int32_t)(x) & 0xff000000) >> 24)
+    (uint32_t)(((uint32_t)(x) & 0xff) << 24 | \
+    ((uint32_t)(x) & 0xff00) << 8 | \
+    ((uint32_t)(x) & 0xff0000) >> 8 | \
+    ((uint32_t)(x) & 0xff000000) >> 24)
 #define H2LE32(X) SWAPEND32(X) 
 #define LE2H32(X) SWAPEND32(X) 
 #else
@@ -54,30 +54,30 @@
 /* Global Variables */
 
 static DB* ID3_GENRES = NULL;
-static u_int32_t APE_MAXIMUM_TAG_SIZE = 8192;
-static u_int32_t APE_MAXIMUM_ITEM_COUNT = 64;
+static uint32_t APE_MAXIMUM_TAG_SIZE = 8192;
+static uint32_t APE_MAXIMUM_ITEM_COUNT = 64;
 
 /* Private function prototypes */
 
 static int ApeTag__get_tag_information(ApeTag* tag);
 static int ApeTag__parse_fields(ApeTag* tag);
-static int ApeTag__parse_field(ApeTag* tag, u_int32_t* offset);
+static int ApeTag__parse_field(ApeTag* tag, uint32_t* offset);
 static int ApeTag__update_id3(ApeTag* tag);
 static int ApeTag__update_ape(ApeTag* tag);
 static int ApeTag__write_tag(ApeTag* tag);
 
 static void ApeItem__free(ApeItem** item);
 static char* ApeTag__strcasecpy(char* src, unsigned char size);
-static unsigned char ApeItem__parse_track(u_int32_t size, char* value);
+static unsigned char ApeItem__parse_track(uint32_t size, char* value);
 static int ApeItem__check_validity(ApeTag* tag, ApeItem* item);
-static int ApeTag__check_valid_utf8(unsigned char* utf8_string, u_int32_t size);
+static int ApeTag__check_valid_utf8(unsigned char* utf8_string, uint32_t size);
 static int ApeItem__compare(const void* a, const void* b);
 static int ApeTag__lookup_genre(ApeTag* tag, DBT* key_dbt, char* genre_id);
 static int ApeTag__load_ID3_GENRES(ApeTag* tag);
 
 /* Public Functions */
 
-ApeTag* ApeTag_new(FILE *file, u_int32_t flags) {
+ApeTag* ApeTag_new(FILE *file, uint32_t flags) {
     ApeTag* tag;
     
     assert(file != NULL);
@@ -171,7 +171,7 @@ int ApeTag_remove(ApeTag* tag) {
 
 int ApeTag_raw(ApeTag* tag, char** raw) {    
     int ret = 0;
-    u_int32_t raw_size; 
+    uint32_t raw_size; 
     
     assert(tag != NULL);
     assert(raw != NULL);
@@ -387,11 +387,11 @@ int ApeTag_clear_fields(ApeTag* tag) {
     return ret;
 }
 
-void ApeTag_set_max_size(u_int32_t size) {
+void ApeTag_set_max_size(uint32_t size) {
   APE_MAXIMUM_TAG_SIZE = size;
 }
 
-void ApeTag_set_max_item_count(u_int32_t item_count) {
+void ApeTag_set_max_item_count(uint32_t item_count) {
   APE_MAXIMUM_ITEM_COUNT = item_count;
 }
 
@@ -404,7 +404,7 @@ Returns 0 on success, <0 on error;
 */
 static int ApeTag__get_tag_information(ApeTag* tag) {
     int id3_length = 0;
-    u_int32_t header_check;
+    uint32_t header_check;
     off_t file_size = 0;
     assert(tag != NULL);
     
@@ -575,10 +575,10 @@ Parses all fields from the tag and puts them in the database.
 Returns 0 on success, <0 on error.
 */
 static int ApeTag__parse_fields(ApeTag* tag) {
-    u_int32_t i;
-    u_int32_t offset = 0;
+    uint32_t i;
+    uint32_t offset = 0;
     int ret =0;
-    u_int32_t last_possible_offset = tag->size - APE_MINIMUM_TAG_SIZE - 
+    uint32_t last_possible_offset = tag->size - APE_MINIMUM_TAG_SIZE - 
                                APE_ITEM_MINIMUM_SIZE;
     
     assert(tag != NULL);
@@ -614,12 +614,12 @@ tag's data.
 
 Returns 0 on success, <0 on error.
 */
-static int ApeTag__parse_field(ApeTag* tag, u_int32_t* offset) {
+static int ApeTag__parse_field(ApeTag* tag, uint32_t* offset) {
     char* data = tag->tag_data;
     char* value_start = NULL;
     char* key_start = data+(*offset)+8;
-    u_int32_t data_size = tag->size - APE_MINIMUM_TAG_SIZE;
-    u_int32_t key_length;
+    uint32_t data_size = tag->size - APE_MINIMUM_TAG_SIZE;
+    uint32_t key_length;
     int ret = 0;
     ApeItem* item = NULL;
     
@@ -653,7 +653,7 @@ static int ApeTag__parse_field(ApeTag* tag, u_int32_t* offset) {
         goto parse_error;
     }
     value_start++;
-    key_length = (u_int32_t)(value_start - key_start);
+    key_length = (uint32_t)(value_start - key_start);
     *offset += 8 + key_length + item->size;
     if(*offset > data_size) {
         tag->error = "invalid item length (longer than remaining data)";
@@ -700,7 +700,7 @@ static int ApeTag__update_id3(ApeTag* tag) {
     char* c;
     char* end;
     int ret = 0;
-    u_int32_t size;
+    uint32_t size;
     INIT_DBT;
     
     assert (tag != NULL);
@@ -756,11 +756,11 @@ static int ApeTag__update_id3(ApeTag* tag) {
     track - 126, 1
     genre - 127, 1
     */
-    APE_FIELD_TO_ID3_FIELD(title, 6, 30, (u_int32_t)3);
-    APE_FIELD_TO_ID3_FIELD(artist, 7, 30, (u_int32_t)33);
-    APE_FIELD_TO_ID3_FIELD(album, 6, 30, (u_int32_t)63);
-    APE_FIELD_TO_ID3_FIELD(year, 5, 4, (u_int32_t)93);
-    APE_FIELD_TO_ID3_FIELD(comment, 8, 28, (u_int32_t)97);
+    APE_FIELD_TO_ID3_FIELD(title, 6, 30, (uint32_t)3);
+    APE_FIELD_TO_ID3_FIELD(artist, 7, 30, (uint32_t)33);
+    APE_FIELD_TO_ID3_FIELD(album, 6, 30, (uint32_t)63);
+    APE_FIELD_TO_ID3_FIELD(year, 5, 4, (uint32_t)93);
+    APE_FIELD_TO_ID3_FIELD(comment, 8, 28, (uint32_t)97);
     
     #undef APE_FIELD_TO_ID3_FIELD
     
@@ -797,14 +797,14 @@ Updates the internal ape tag strings using the value for the database.
 Returns 0 on success, <0 on error.
 */
 static int ApeTag__update_ape(ApeTag* tag) {
-    u_int32_t i = 0;
-    u_int32_t key_size;
+    uint32_t i = 0;
+    uint32_t key_size;
     char* c;
     int ret = 0;
-    u_int32_t size;
-    u_int32_t flags;
-    u_int32_t tag_size = 64 + 9 * tag->num_fields;
-    u_int32_t num_fields = tag->num_fields;
+    uint32_t size;
+    uint32_t flags;
+    uint32_t tag_size = 64 + 9 * tag->num_fields;
+    uint32_t num_fields = tag->num_fields;
     ApeItem** items;
     INIT_DBT;
     
@@ -858,7 +858,7 @@ static int ApeTag__update_ape(ApeTag* tag) {
             ret = -3;
             goto update_ape_error;
         }
-        tag_size += items[i]->size + (u_int32_t)strlen(items[i]->key);
+        tag_size += items[i]->size + (uint32_t)strlen(items[i]->key);
     }
     
     /* Check that the total size of the tag is ok */
@@ -877,7 +877,7 @@ static int ApeTag__update_ape(ApeTag* tag) {
         goto update_ape_error;
     }
     for(i=0, c=tag->tag_data; i < num_fields; i++) {
-        key_size = (u_int32_t)strlen(items[i]->key) + 1;
+        key_size = (uint32_t)strlen(items[i]->key) + 1;
         size = H2LE32(items[i]->size);
         flags = H2LE32(items[i]->flags);
         memcpy(c, &size, 4);
@@ -886,7 +886,7 @@ static int ApeTag__update_ape(ApeTag* tag) {
         memcpy(c+=key_size, items[i]->value, items[i]->size);
         c += items[i]->size;
     }
-    if((u_int32_t)(c - tag->tag_data) != tag_size - 64) {
+    if((uint32_t)(c - tag->tag_data) != tag_size - 64) {
         tag->error = "internal inconsistancy in creating new tag data";
         ret = -3;
         goto update_ape_error;
@@ -1032,7 +1032,7 @@ a character pointer.  If the character pointer is a string between "0" and
 
 Returns unsigned char.
 */
-static unsigned char ApeItem__parse_track(u_int32_t size, char* value) {
+static unsigned char ApeItem__parse_track(uint32_t size, char* value) {
     assert(value != NULL);
     
     if(size != 0 && size < 4) {
@@ -1125,7 +1125,7 @@ Checks the given UTF8 string for validity.
 
 Returns 0 if valid, -1 if not.
 */
-static int ApeTag__check_valid_utf8(unsigned char* utf8_string, u_int32_t size) {
+static int ApeTag__check_valid_utf8(unsigned char* utf8_string, uint32_t size) {
     unsigned char* utf_last_char;
     unsigned char* c = utf8_string;
     
@@ -1176,11 +1176,11 @@ modified (don't do that!).
 static int ApeItem__compare(const void* a, const void* b) {
     const ApeItem* ai_a = *(const ApeItem* const *)a;
     const ApeItem* ai_b = *(const ApeItem* const *)b;
-    u_int32_t size_a;
-    u_int32_t size_b;
+    uint32_t size_a;
+    uint32_t size_b;
     
-    size_a = ai_a->size + (u_int32_t)strlen(ai_a->key);
-    size_b = ai_b->size + (u_int32_t)strlen(ai_b->key);
+    size_a = ai_a->size + (uint32_t)strlen(ai_a->key);
+    size_b = ai_b->size + (uint32_t)strlen(ai_b->key);
     if(size_a < size_b) {
         return -1;
     }

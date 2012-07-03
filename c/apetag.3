@@ -5,7 +5,7 @@
 .SH SYNOPSIS
 .B #include <apetag.h>
 .P
-.B ApeTag* ApeTag_new(FILE* file, u_int32_t flags);
+.B ApeTag* ApeTag_new(FILE* file, uint32_t flags);
 .P
 .B int ApeTag_free(ApeTag* tag);
 .P
@@ -92,10 +92,10 @@ typedef struct {
     char* tag_footer;     /* Tag footer data */
     char* id3;            /* ID3 data, if any */
     char* error;          /* String for last error */
-    u_int32_t flags;      /* Internal tag flags */
-    u_int32_t size;       /* On disk size in bytes */
-    u_int32_t item_count; /* On disk item count */
-    u_int32_t num_fields; /* In database item count */
+    uint32_t flags;      /* Internal tag flags */
+    uint32_t size;       /* On disk size in bytes */
+    uint32_t item_count; /* On disk item count */
+    uint32_t num_fields; /* In database item count */
     long offset;          /* Start of tag in file */
 .br
 } ApeTag;
@@ -115,8 +115,8 @@ where
 is defined as:
 .P
 typedef struct {
-    u_int32_t size;        /* Size of the value */
-    u_int32_t flags;       /* Flags on the item */
+    uint32_t size;        /* Size of the value */
+    uint32_t flags;       /* Flags on the item */
     char* key;             /* NULL-terminated string */
     char* value;           /* Unterminated string */
 .br
@@ -134,7 +134,7 @@ as all must be stored on the heap.  A pointer to the item is then passed
 to 
 .BR ApeTag_add_field .
 .SS FUNCTIONS
-.B ApeTag* ApeTag_new(FILE* file, u_int32_t flags);
+.B ApeTag* ApeTag_new(FILE* file, uint32_t flags);
 .P
 For a given
 .I file

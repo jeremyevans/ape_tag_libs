@@ -32,15 +32,15 @@
 #define APE_HEADER_FLAGS "\0\0\240"
 #define APE_FOOTER_FLAGS "\0\0\200"
 
-#define ID3_LENGTH(TAG) (u_int32_t)(((TAG->flags & APE_HAS_ID3) && \
+#define ID3_LENGTH(TAG) (uint32_t)(((TAG->flags & APE_HAS_ID3) && \
                                     !(TAG->flags & APE_NO_ID3)) ? 128 : 0)
 #define TAG_LENGTH(TAG) (tag->size + ID3_LENGTH(TAG))
 
 /* Structures */
 
 typedef struct {
-    u_int32_t size;        /* Size of the value */
-    u_int32_t flags;       /* Flags on the item */
+    uint32_t size;        /* Size of the value */
+    uint32_t flags;       /* Flags on the item */
     char* key;             /* NULL-terminated string */
     char* value;           /* Unterminated string */
 } ApeItem;
@@ -55,16 +55,16 @@ typedef struct {
     char* tag_footer;     /* Tag footer data */
     char* id3;            /* ID3 data, if any */
     char* error;          /* String for last error */
-    u_int32_t flags;      /* Internal tag flags */
-    u_int32_t size;       /* On disk size in bytes */
-    u_int32_t item_count; /* On disk item count */
-    u_int32_t num_fields; /* In database item count */
+    uint32_t flags;      /* Internal tag flags */
+    uint32_t size;       /* On disk size in bytes */
+    uint32_t item_count; /* On disk item count */
+    uint32_t num_fields; /* In database item count */
     off_t offset;          /* Start of tag in file */
 } ApeTag;
 
 /* Public functions */
 
-ApeTag* ApeTag_new(FILE* file, u_int32_t flags);
+ApeTag* ApeTag_new(FILE* file, uint32_t flags);
 int ApeTag_free(ApeTag* tag);
 
 int ApeTag_exists(ApeTag* tag);
@@ -77,7 +77,7 @@ int ApeTag_add_field(ApeTag* tag, ApeItem* item);
 int ApeTag_remove_field(ApeTag* tag, char* key);
 int ApeTag_clear_fields(ApeTag* tag);
 
-void ApeTag_set_max_size(u_int32_t size);
-void ApeTag_set_max_item_count(u_int32_t item_count);
+void ApeTag_set_max_size(uint32_t size);
+void ApeTag_set_max_item_count(uint32_t item_count);
 
 #endif /* !_APETAG_H_ */

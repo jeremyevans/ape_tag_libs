@@ -684,7 +684,7 @@ int test_no_id3(void) {
             CHECK(0 == ApeTag_parse(tag)); \
             CHECK(0 == ApeTag_update(tag)); \
             CHECK(0 == fseek(file, 0, SEEK_END)); \
-            CHECK(tag->size == (u_int32_t)ftell(file)); \
+            CHECK(tag->size == (uint32_t)ftell(file)); \
             CHECK(0 == fseek(file, 0, SEEK_SET)); \
             CHECK(tag->size == fread(raw, 1, tag->size, file)); \
             CHECK(0 == bcmp(file_contents, raw, tag->size)); \
