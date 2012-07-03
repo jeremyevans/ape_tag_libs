@@ -44,7 +44,6 @@ typedef struct {
     char* key;             /* NULL-terminated string */
     char* value;           /* Unterminated string */
 } ApeItem;
-typedef const ApeItem* ApeItem_CP; /* Only needed to avoid cast warnings */
 
 typedef struct {
     FILE* file;           /* file containing tag */

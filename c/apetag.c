@@ -1174,8 +1174,8 @@ Returns -1 or 1.  Could possibly return 0 if the database has been manually
 modified (don't do that!).
 */
 static int ApeItem__compare(const void* a, const void* b) {
-    const ApeItem* ai_a = *(const ApeItem_CP*)a;
-    const ApeItem* ai_b = *(const ApeItem_CP*)b;
+    const ApeItem* ai_a = *(const ApeItem* const *)a;
+    const ApeItem* ai_b = *(const ApeItem* const *)b;
     u_int32_t size_a;
     u_int32_t size_b;
     

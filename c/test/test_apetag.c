@@ -758,7 +758,7 @@ int test_ApeItem__parse_track(void) {
 
 int test_ApeItem__compare(void) {
     ApeItem a, b;
-    ApeItem_CP pa = &a, pb = &b;
+    const ApeItem *pa = &a, *pb = &b;
     
     a.size = 0;
     b.size = 0;
