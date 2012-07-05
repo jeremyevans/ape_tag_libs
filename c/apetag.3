@@ -23,6 +23,8 @@
 .P
 .B int ApeTag_add_item(ApeTag tag, ApeItem *item);
 .P
+.B int ApeTag_replace_item(ApeTag tag, ApeItem *item);
+.P
 .B int ApeTag_remove_item(ApeTag tag, const char *key);
 .P
 .B int ApeTag_clear_items(ApeTag tag);
@@ -257,6 +259,17 @@ or
 .BR ApeTag_remove_item .
 .P
 Returns 0 on success, <0 on error.
+.P
+.B int ApeTag_replace_item(ApeTag tag, ApeItem *item);
+.P
+If an item with the matching key does not already exist in the tag,
+this is the same as
+.BR ApeTag_add_item .
+Otherwise, if the item already exists, remove the existing item
+and replace it with the given item.
+.P
+Returns 0 on success if the item doesn't exist, 1 on success if it already
+existed, <0 on error.
 .P
 .B int ApeTag_remove_item(ApeTag tag, const char *key);
 .P

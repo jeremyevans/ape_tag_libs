@@ -671,8 +671,42 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     CHECK(items[0]->flags == 0);
     CHECK(strcmp(items[0]->key, "ALBUM") == 0);
     CHECK(memcmp(items[0]->value, "VALUE", 5) == 0);
+    free(items);
+
+    CHECK(item = (ApeItem *)malloc(sizeof(ApeItem)));
+    item->size = 3;
+    item->flags = 0;
+    CHECK(item->key = (char *)malloc(6));
+    CHECK(item->value = (char *)malloc(5));
+    memcpy(item->key, "ALBUM", 6);
+    memcpy(item->value, "FOO", 3);
+
+    CHECK(ApeTag_add_item(tag, item) == -3);
+    CHECK(ApeTag_replace_item(tag, item) == 1);
+    CHECK(ApeTag_get_item(tag, "album", &check_item) == 0);
+    CHECK(check_item->size == 3);
+    CHECK(check_item->flags == 0);
+    CHECK(strcmp(check_item->key, "ALBUM") == 0);
+    CHECK(memcmp(check_item->value, "FOO", 3) == 0);
 
     CHECK(ApeTag_remove_item(tag, "track") == 1);
+    CHECK(ApeTag_remove_item(tag, "album") == 0);
+
+    CHECK(item = (ApeItem *)malloc(sizeof(ApeItem)));
+    item->size = 3;
+    item->flags = 0;
+    CHECK(item->key = (char *)malloc(6));
+    CHECK(item->value = (char *)malloc(5));
+    memcpy(item->key, "ALBUM", 6);
+    memcpy(item->value, "FOO", 3);
+
+    CHECK(ApeTag_replace_item(tag, item) == 0);
+    CHECK(ApeTag_get_item(tag, "album", &check_item) == 0);
+    CHECK(check_item->size == 3);
+    CHECK(check_item->flags == 0);
+    CHECK(strcmp(check_item->key, "ALBUM") == 0);
+    CHECK(memcmp(check_item->value, "FOO", 3) == 0);
+
     CHECK(ApeTag_clear_items(tag) == 0);
     CHECK(ApeTag_parse(tag) == 0);
     

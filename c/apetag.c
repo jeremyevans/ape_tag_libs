@@ -329,6 +329,23 @@ int ApeTag_add_item(ApeTag tag, ApeItem *item) {
     return ret;
 }
 
+int ApeTag_replace_item(ApeTag tag, ApeItem *item) {
+    int existed = 0;
+    APETAG_ACCESSOR_CHECK
+    
+    if((ret = ApeTag_remove_item(tag, item->key)) < 0) {
+        return ret;
+    } else if (ret == 0) {
+        existed = 1;
+    }
+
+    if((ret = ApeTag_add_item(tag, item)) < 0) {
+        return ret;
+    }
+    
+    return existed;
+}
+
 int ApeTag_remove_item(ApeTag tag, const char *key) {
     APETAG_ACCESSOR_CHECK_DBT
 

@@ -47,6 +47,7 @@ int ApeTag_raw(ApeTag tag, char **raw, uint32_t *raw_size);
 int ApeTag_parse(ApeTag tag);
 
 int ApeTag_add_item(ApeTag tag, ApeItem *item);
+int ApeTag_replace_item(ApeTag tag, ApeItem *item);
 int ApeTag_remove_item(ApeTag tag, const char *key);
 int ApeTag_clear_items(ApeTag tag);
 int ApeTag_update(ApeTag tag);
