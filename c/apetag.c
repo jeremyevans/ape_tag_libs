@@ -440,6 +440,10 @@ uint32_t ApeTag_item_count(ApeTag tag) {
     return tag->num_fields;
 }
 
+uint32_t ApeTag_file_item_count(ApeTag tag) {
+    return tag->item_count;
+}
+
 const char* ApeTag_error(ApeTag tag){
     return tag->error;
 }

@@ -55,6 +55,7 @@ int ApeTag_get_field(ApeTag tag, const char *key, ApeItem **item);
 int ApeTag_get_fields(ApeTag tag, ApeItem ***items, uint32_t* item_count);
 uint32_t ApeTag_size(ApeTag tag);
 uint32_t ApeTag_item_count(ApeTag tag);
+uint32_t ApeTag_file_item_count(ApeTag tag);
 const char* ApeTag_error(ApeTag tag);
 
 /* Override default (very strict) limits */
