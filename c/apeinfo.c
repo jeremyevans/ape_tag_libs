@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 int ApeInfo_process(char *);
-void ApeTag_print(ApeTag tag);
+void ApeTag_print(struct ApeTag *tag);
 void ApeItem_print(ApeItem *item);
 
 /* Process all files on the command line */
@@ -32,7 +32,7 @@ int ApeInfo_process(char *filename) {
     int ret;
     int status;
     FILE *file;
-    ApeTag tag = NULL;
+    struct ApeTag *tag = NULL;
     
     if((file = fopen(filename, "r")) == NULL) {
         warn("%s", filename);
@@ -80,7 +80,7 @@ int ApeInfo_process(char *filename) {
 }
 
 /* Prints all items in the tag, one per line. */
-void ApeTag_print(ApeTag tag) {
+void ApeTag_print(struct ApeTag *tag) {
     int i;
     uint32_t item_count;
     ApeItem **items = NULL;

@@ -77,7 +77,7 @@ int run_tests(void) {
 }
 
 int test_ApeTag_new_free(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *file;
     
     CHECK(file = fopen("example1.tag", "r+"));
@@ -95,7 +95,7 @@ int test_ApeTag_new_free(void) {
 }
 
 int test_ApeTag_exists(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *file;
     
     #define TEST_EXIST(FILENAME, EXIST) \
@@ -118,7 +118,7 @@ int test_ApeTag_exists(void) {
 }
 
 int test_ApeTag_exists_id3(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *file;
     
     #define TEST_EXIST(FILENAME, EXIST) \
@@ -141,7 +141,7 @@ int test_ApeTag_exists_id3(void) {
 }
 
 int test_ApeTag_maximums(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *file;
     
     #define TEST_EXIST(FILENAME, EXIST) \
@@ -167,7 +167,7 @@ int test_ApeTag_maximums(void) {
 }
 
 int test_ApeTag_remove(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *file;
     
     #define TEST_REMOVE(FILENAME, EXIST) \
@@ -193,7 +193,7 @@ int test_ApeTag_remove(void) {
 }
 
 int test_ApeTag_raw(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *file;
     char *raw_tag = NULL;
     char *file_contents = NULL;
@@ -221,7 +221,7 @@ int test_ApeTag_raw(void) {
 }
 
 int test_ApeTag_parse(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *file;
     DBT key_dbt, value_dbt;
     
@@ -266,7 +266,7 @@ int test_ApeTag_parse(void) {
 }
 
 int test_ApeTag_update(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     ApeItem *item;
     FILE *file;
     char *before;
@@ -347,7 +347,7 @@ int test_ApeTag_update(void) {
 }
 
 int test_ApeTag_filesizes(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *file;
     int i;
     
@@ -388,7 +388,7 @@ int test_ApeTag_filesizes(void) {
 
 int test_ApeItem_validity(void) {
     FILE *file;
-    ApeTag tag;
+    struct ApeTag *tag;
     ApeItem item;
     unsigned char i;
     
@@ -473,7 +473,7 @@ int test_ApeItem_validity(void) {
 }
 
 int test_bad_tags(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *empty;
     FILE *example1;
     char *empty_raw;
@@ -630,7 +630,7 @@ int test_bad_tags(void) {
 }
 
 int test_ApeTag_add_remove_clear_items_update(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *file;
     ApeItem *item;
     ApeItem *check_item;
@@ -772,7 +772,7 @@ int test_ApeTag_add_remove_clear_items_update(void) {
 }
 
 int test_no_id3(void) {
-    ApeTag tag;
+    struct ApeTag *tag;
     FILE *file;
     char *file_contents;
     char *raw;
@@ -896,7 +896,7 @@ int test_ApeItem__compare(void) {
 }
 
 int test_ApeTag__lookup_genre(void) {
-    struct sApeTag tag;
+    struct ApeTag tag;
     ApeItem item;
     char genre_id;
 

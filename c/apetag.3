@@ -5,39 +5,39 @@
 .SH SYNOPSIS
 .B #include <apetag.h>
 .P
-.B ApeTag ApeTag_new(FILE *file, uint32_t flags);
+.B struct ApeTag * ApeTag_new(FILE *file, uint32_t flags);
 .P
-.B int ApeTag_free(ApeTag tag);
+.B int ApeTag_free(struct ApeTag *tag);
 .P
-.B int ApeTag_exists(ApeTag tag);
+.B int ApeTag_exists(struct ApeTag *tag);
 .P
-.B int ApeTag_exists_id3(ApeTag tag);
+.B int ApeTag_exists_id3(struct ApeTag *tag);
 .P
-.B int ApeTag_remove(ApeTag tag);
+.B int ApeTag_remove(struct ApeTag *tag);
 .P
-.B int ApeTag_raw(ApeTag tag, char **raw, uint32_t *raw_size);
+.B int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size);
 .P
-.B int ApeTag_parse(ApeTag tag);
+.B int ApeTag_parse(struct ApeTag *tag);
 .P
-.B int ApeTag_update(ApeTag tag);
+.B int ApeTag_update(struct ApeTag *tag);
 .P
-.B int ApeTag_add_item(ApeTag tag, ApeItem *item);
+.B int ApeTag_add_item(struct ApeTag *tag, ApeItem *item);
 .P
-.B int ApeTag_replace_item(ApeTag tag, ApeItem *item);
+.B int ApeTag_replace_item(struct ApeTag *tag, ApeItem *item);
 .P
-.B int ApeTag_remove_item(ApeTag tag, const char *key);
+.B int ApeTag_remove_item(struct ApeTag *tag, const char *key);
 .P
-.B int ApeTag_clear_items(ApeTag tag);
+.B int ApeTag_clear_items(struct ApeTag *tag);
 .P
-.B int ApeTag_get_item(ApeTag tag, const char *key, ApeItem **item);
+.B int ApeTag_get_item(struct ApeTag *tag, const char *key, ApeItem **item);
 .P
-.B int ApeTag_get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count);
+.B int ApeTag_get_items(struct ApeTag *tag, ApeItem ***items, uint32_t *item_count);
 .P
-.B uint32_t ApeTag_size(ApeTag tag);
+.B uint32_t ApeTag_size(struct ApeTag *tag);
 .P
-.B uint32_t ApeTag_item_count(ApeTag tag);
+.B uint32_t ApeTag_item_count(struct ApeTag *tag);
 .P
-.B const char * ApeTag_error(ApeTag tag);
+.B const char * ApeTag_error(struct ApeTag *tag);
 .P
 .B void ApeTag_set_max_size(uint32_t size);
 .P
@@ -63,7 +63,7 @@ see
 .I tag->error
 for function name.
 .IP \(bu 4
--3: ApeTag consistancy error, see
+-3: internal tag/item consistancy error, see
 .I tag->error
 for reason.
 .IP \(bu 2
@@ -86,21 +86,19 @@ using two C structures:
 .P
 #include <apetag.h>
 .P
-struct sApeTag;
+struct ApeTag;
 .br
-typedef struct sApeTag ApeTag;
 .P
 Almost all functions in the library accept an 
-.I ApeTag
+.I struct ApeTag *
 as the first argument.
 .I ApeTag
-is a pointer to an opaque structure used by the library.
+is an opaque structure used by the library.
 It is created using
 .BR "ApeTag_new" .
-.IR ApeTag s
-contain multiple
+Each tag can contain multiple
 .IR ApeItem s,
-one for each item in the tag.
+one for each item (key/value) in the tag.
 .I ApeItem
 is defined as:
 .P
@@ -124,7 +122,7 @@ as all must be stored on the heap.  A pointer to the item can then be passed to
 .BR ApeTag_add_item 
 to add the item to the tag.
 .SS FUNCTIONS
-.B ApeTag ApeTag_new(FILE *file, uint32_t flags);
+.B struct ApeTag * ApeTag_new(FILE *file, uint32_t flags);
 .P
 Returns a new
 .IR ApeTag
@@ -141,19 +139,17 @@ Returns a valid
 .I ApeTag
 if successful; otherwise a null pointer is returned.
 .P
-.B int ApeTag_free(ApeTag tag);
+.B int ApeTag_free(struct ApeTag *tag);
 .P
-Frees all data associated with an 
-.IR ApeTag ,
+Frees all data associated with the
+.IR tag ,
 except for the file pointer.
 This includes freeing all related 
 .IR ApeItem s
-and their keys and
-values.
+and their keys and values.
 Since you pass the file pointer to 
 .BR ApeTag_new ,
-you are expected to free it
-yourself.
+you are expected to free it yourself.
 .P
 Returns 0 if successful, and -1 if there were errors.
 Note that you can't call
@@ -162,7 +158,7 @@ on error, as the
 .I tag
 has already been freed.
 .P
-.B int ApeTag_exists(ApeTag tag);
+.B int ApeTag_exists(struct ApeTag *tag);
 .P
 Checks if the file associated with 
 .I tag
@@ -170,7 +166,7 @@ already contains a valid APE tag.
 .P
 Returns 1 if an APE tag exists, 0 if it does not, <0 on error.  
 .P
-.B int ApeTag_exists_id3(ApeTag tag);
+.B int ApeTag_exists_id3(struct ApeTag *tag);
 .P
 Checks if the file associated with 
 .I tag
@@ -178,7 +174,7 @@ already contains a valid ID3v1 tag.
 .P
 Returns 1 if an ID3v1 tag exists, 0 if it does not, <0 on error.  
 .P
-.B int ApeTag_remove(ApeTag tag);
+.B int ApeTag_remove(struct ApeTag *tag);
 .P
 Removes the APE tag from the file associated with 
 .IR tag ,
@@ -190,7 +186,7 @@ of removing a tag if the header or footer of the tag is corrupt.
 Returns 1 if the tag doesn't exist, 0 if it does exist and the tag was
 removed successfully, <0 on error. 
 .P
-.B int ApeTag_raw(ApeTag tag, char **raw, uint32_t *raw_size);
+.B int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size);
 .P
 Sets
 .IR *raw
@@ -205,7 +201,7 @@ freeing
 .P
 Returns 0 on success, <0 on error.
 .P
-.B int ApeTag_parse(ApeTag tag);
+.B int ApeTag_parse(struct ApeTag *tag);
 .P
 Parses the tag to get the actual items.  This should be called before
 .BR ApeTag_add_item
@@ -220,7 +216,7 @@ manually with each item already in the tag.
 .P
 Returns 0 on success, <0 on error.
 .P
-.B int ApeTag_update(ApeTag tag);
+.B int ApeTag_update(struct ApeTag *tag);
 .P
 Writes the new tag data (what
 .BR ApeTag_raw
@@ -241,7 +237,7 @@ tag but doesn't have an ID3v1 tag.
 .P
 Returns 0 on success, <0 on error.
 .P
-.B int ApeTag_add_item(ApeTag tag, ApeItem *item);
+.B int ApeTag_add_item(struct ApeTag *tag, ApeItem *item);
 .P
 Adds a item to the tag.
 The item cannot already exist in the tag, otherwise it will return
@@ -260,7 +256,7 @@ or
 .P
 Returns 0 on success, <0 on error.
 .P
-.B int ApeTag_replace_item(ApeTag tag, ApeItem *item);
+.B int ApeTag_replace_item(struct ApeTag *tag, ApeItem *item);
 .P
 If an item with the matching key does not already exist in the tag,
 this is the same as
@@ -271,19 +267,19 @@ and replace it with the given item.
 Returns 0 on success if the item doesn't exist, 1 on success if it already
 existed, <0 on error.
 .P
-.B int ApeTag_remove_item(ApeTag tag, const char *key);
+.B int ApeTag_remove_item(struct ApeTag *tag, const char *key);
 .P
 Removes the item with a matching key from the tag.
 .P
 Returns 0 on success, 1 if the item did not exist in the tag, <0 on error.
 .P
-.B int ApeTag_clear_items(ApeTag tag);
+.B int ApeTag_clear_items(struct ApeTag *tag);
 .P
 Frees all items stored in the tag.
 .P
 Returns 0 on success, -1 on error.
 .P
-.B int ApeTag_get_item(ApeTag tag, const char *key, ApeItem **item);
+.B int ApeTag_get_item(struct ApeTag *tag, const char *key, ApeItem **item);
 .P
 Sets
 .BR *item
@@ -293,7 +289,7 @@ if such an item exists in the tag.
 .P
 Returns 0 on success, 1 if the item did not exist in the tag, <0 on error.
 .P
-.B int ApeTag_get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count);
+.B int ApeTag_get_items(struct ApeTag *tag, ApeItem ***items, uint32_t *item_count);
 .P
 Sets
 .BR *items
@@ -305,7 +301,7 @@ in the order they are stored in the file.
 .P
 Returns 0 on success, 1 if the tag has no items, <0 on error.
 .P
-.B uint32_t ApeTag_size(ApeTag tag);
+.B uint32_t ApeTag_size(struct ApeTag *tag);
 .P
 Returns the current size of the tag in the file, if a tag exists.
 .BR ApeTag_exists
@@ -314,7 +310,7 @@ Note this does not reflect the size of the tag that will be written to file
 if you've modified the tag's items.
 This also does not include the size of the any ID3v1 tag.
 .P
-.B uint32_t ApeTag_item_count(ApeTag tag);
+.B uint32_t ApeTag_item_count(struct ApeTag *tag);
 .P
 Returns the current number of items in the tag.
 .BR ApeTag_exists
@@ -325,14 +321,14 @@ This reflects the count after items have been added or removed using
 and
 .BR ApeTag_remove_item .
 .P
-.B uint32_t ApeTag_file_item_count(ApeTag tag);
+.B uint32_t ApeTag_file_item_count(struct ApeTag *tag);
 .P
 Returns the current number of items in the tag in the file.
 .BR ApeTag_exists
 should be called before calling this method.
 This does not reflect changes made by adding or removing items.
 .P
-.B const char * ApeTag_error(ApeTag tag);
+.B const char * ApeTag_error(struct ApeTag *tag);
 .P
 Returns a pointer to the last error message.
 This pointer should not be freed by the user.

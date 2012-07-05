@@ -103,7 +103,7 @@ static uint32_t APE_MAXIMUM_ITEM_COUNT = 64;
 
 /* Private Structure */
 
-struct sApeTag {
+struct ApeTag {
     FILE *file;           /* file containing tag */
     DB *items;           /* DB_HASH format database */
                           /* Keys are NULL-terminated */
@@ -122,35 +122,35 @@ struct sApeTag {
 
 /* Private function prototypes */
 
-static int ApeTag__get_tag_information(ApeTag tag);
-static int ApeTag__parse_items(ApeTag tag);
-static int ApeTag__parse_item(ApeTag tag, uint32_t *offset);
-static int ApeTag__update_id3(ApeTag tag);
-static int ApeTag__update_ape(ApeTag tag);
-static int ApeTag__write_tag(ApeTag tag);
-static int ApeTag__get_item(ApeTag tag, const char *key, ApeItem **items);
-static int ApeTag__get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count);
+static int ApeTag__get_tag_information(struct ApeTag *tag);
+static int ApeTag__parse_items(struct ApeTag *tag);
+static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset);
+static int ApeTag__update_id3(struct ApeTag *tag);
+static int ApeTag__update_ape(struct ApeTag *tag);
+static int ApeTag__write_tag(struct ApeTag *tag);
+static int ApeTag__get_item(struct ApeTag *tag, const char *key, ApeItem **items);
+static int ApeTag__get_items(struct ApeTag *tag, ApeItem ***items, uint32_t *item_count);
 
 static void ApeItem__free(ApeItem **item);
 static char * ApeTag__strcasecpy(const char *src, unsigned char size);
 static unsigned char ApeItem__parse_track(uint32_t size, char *value);
-static int ApeItem__check_validity(ApeTag tag, ApeItem *item);
+static int ApeItem__check_validity(struct ApeTag *tag, ApeItem *item);
 static int ApeTag__check_valid_utf8(unsigned char *utf8_string, uint32_t size);
 static int ApeItem__compare(const void *a, const void *b);
-static int ApeTag__lookup_genre(ApeTag tag, ApeItem *item, char *genre_id);
-static int ApeTag__load_ID3_GENRES(ApeTag tag);
+static int ApeTag__lookup_genre(struct ApeTag *tag, ApeItem *item, char *genre_id);
+static int ApeTag__load_ID3_GENRES(struct ApeTag *tag);
 
 /* Public Functions */
 
-ApeTag ApeTag_new(FILE *file, uint32_t flags) {
-    ApeTag tag;
+struct ApeTag * ApeTag_new(FILE *file, uint32_t flags) {
+    struct ApeTag *tag;
     
     assert(file != NULL);
     
-    tag = (ApeTag)malloc(sizeof(struct sApeTag));
+    tag = (struct ApeTag *)malloc(sizeof(struct ApeTag));
 
     if(tag != NULL) {
-        memset(tag, 0, sizeof(struct sApeTag));
+        memset(tag, 0, sizeof(struct ApeTag));
         tag->file = file;
         tag->flags = flags | APE_DEFAULT_FLAGS;
     }
@@ -158,7 +158,7 @@ ApeTag ApeTag_new(FILE *file, uint32_t flags) {
     return tag;
 }
 
-int ApeTag_free(ApeTag tag) {
+int ApeTag_free(struct ApeTag *tag) {
     int ret = 0;
     
     if(tag == NULL) {
@@ -183,19 +183,19 @@ int ApeTag_free(ApeTag tag) {
     return ret;
 }
 
-int ApeTag_exists(ApeTag tag) {
+int ApeTag_exists(struct ApeTag *tag) {
     APETAG_ACCESSOR_CHECK
 
     return (tag->flags & APE_HAS_APE) > 0;
 }
 
-int ApeTag_exists_id3(ApeTag tag) {
+int ApeTag_exists_id3(struct ApeTag *tag) {
     APETAG_ACCESSOR_CHECK
 
     return (tag->flags & APE_HAS_ID3) > 0;
 }
 
-int ApeTag_remove(ApeTag tag) {
+int ApeTag_remove(struct ApeTag *tag) {
     APETAG_ACCESSOR_CHECK
     
     if(!(tag->flags & APE_HAS_APE)) {
@@ -214,7 +214,7 @@ int ApeTag_remove(ApeTag tag) {
     return 0;
 }
 
-int ApeTag_raw(ApeTag tag, char **raw_p, uint32_t *raw_size_p) {    
+int ApeTag_raw(struct ApeTag *tag, char **raw_p, uint32_t *raw_size_p) {    
     uint32_t raw_size; 
     char *raw; 
 
@@ -245,7 +245,7 @@ int ApeTag_raw(ApeTag tag, char **raw_p, uint32_t *raw_size_p) {
     return 0;
 }
 
-int ApeTag_parse(ApeTag tag) {
+int ApeTag_parse(struct ApeTag *tag) {
     APETAG_ACCESSOR_CHECK
 
     if((tag->flags & APE_HAS_APE) && !(tag->flags & APE_CHECKED_FIELDS)) {
@@ -257,7 +257,7 @@ int ApeTag_parse(ApeTag tag) {
     return 0;
 }
 
-int ApeTag_update(ApeTag tag) {
+int ApeTag_update(struct ApeTag *tag) {
     APETAG_ACCESSOR_CHECK
     
     if((ret = ApeTag__update_id3(tag)) != 0) {
@@ -273,7 +273,7 @@ int ApeTag_update(ApeTag tag) {
     return 0;
 }
 
-int ApeTag_add_item(ApeTag tag, ApeItem *item) {
+int ApeTag_add_item(struct ApeTag *tag, ApeItem *item) {
     APETAG_ACCESSOR_CHECK_DBT
 
     value_dbt.size = sizeof(ApeItem **);
@@ -329,7 +329,7 @@ int ApeTag_add_item(ApeTag tag, ApeItem *item) {
     return ret;
 }
 
-int ApeTag_replace_item(ApeTag tag, ApeItem *item) {
+int ApeTag_replace_item(struct ApeTag *tag, ApeItem *item) {
     int existed = 0;
     APETAG_ACCESSOR_CHECK
     
@@ -346,7 +346,7 @@ int ApeTag_replace_item(ApeTag tag, ApeItem *item) {
     return existed;
 }
 
-int ApeTag_remove_item(ApeTag tag, const char *key) {
+int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
     APETAG_ACCESSOR_CHECK_DBT
 
     assert(key != NULL);
@@ -357,7 +357,7 @@ int ApeTag_remove_item(ApeTag tag, const char *key) {
         return 1;
     }
     
-    /* ApeTag keys are case insensitive but case preserving */
+    /* APE item keys are case insensitive but case preserving */
     if((key_dbt.data = ApeTag__strcasecpy(key, (unsigned char)key_dbt.size)) == NULL)  {
         tag->error = "malloc";
         return -1;
@@ -390,7 +390,7 @@ int ApeTag_remove_item(ApeTag tag, const char *key) {
     return ret;
 }
 
-int ApeTag_clear_items(ApeTag tag) {
+int ApeTag_clear_items(struct ApeTag *tag) {
     int ret = 0;
     INIT_DBT;
     
@@ -420,7 +420,7 @@ int ApeTag_clear_items(ApeTag tag) {
     return ret;
 }
 
-int ApeTag_get_item(ApeTag tag, const char *key, ApeItem **item) {
+int ApeTag_get_item(struct ApeTag *tag, const char *key, ApeItem **item) {
     APETAG_ACCESSOR_CHECK
 
     assert(key != NULL);
@@ -433,7 +433,7 @@ int ApeTag_get_item(ApeTag tag, const char *key, ApeItem **item) {
     return ApeTag__get_item(tag, key, item);
 }
 
-int ApeTag_get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count) {
+int ApeTag_get_items(struct ApeTag *tag, ApeItem ***items, uint32_t *item_count) {
     APETAG_ACCESSOR_CHECK
 
     assert(items != NULL);
@@ -441,19 +441,19 @@ int ApeTag_get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count) {
     return ApeTag__get_items(tag, items, item_count);
 }
 
-uint32_t ApeTag_size(ApeTag tag) {
+uint32_t ApeTag_size(struct ApeTag *tag) {
     return tag->size;
 }
 
-uint32_t ApeTag_item_count(ApeTag tag) {
+uint32_t ApeTag_item_count(struct ApeTag *tag) {
     return tag->num_items;
 }
 
-uint32_t ApeTag_file_item_count(ApeTag tag) {
+uint32_t ApeTag_file_item_count(struct ApeTag *tag) {
     return tag->item_count;
 }
 
-const char * ApeTag_error(ApeTag tag){
+const char * ApeTag_error(struct ApeTag *tag){
     return tag->error;
 }
 
@@ -472,7 +472,7 @@ Parses the header and footer of the tag to get information about it.
 
 Returns 0 on success, <0 on error;
 */
-static int ApeTag__get_tag_information(ApeTag tag) {
+static int ApeTag__get_tag_information(struct ApeTag *tag) {
     int id3_length = 0;
     uint32_t header_check;
     off_t file_size = 0;
@@ -644,7 +644,7 @@ Parses all items from the tag and puts them in the database.
 
 Returns 0 on success, <0 on error.
 */
-static int ApeTag__parse_items(ApeTag tag) {
+static int ApeTag__parse_items(struct ApeTag *tag) {
     uint32_t i;
     uint32_t offset = 0;
     int ret =0;
@@ -684,7 +684,7 @@ tag's data.
 
 Returns 0 on success, <0 on error.
 */
-static int ApeTag__parse_item(ApeTag tag, uint32_t *offset) {
+static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset) {
     char *data = tag->tag_data;
     char *value_start = NULL;
     char *key_start = data+(*offset)+8;
@@ -765,7 +765,7 @@ previous id3 tag, it overwrites it completely.
 
 Returns 0 on success, <0 on error.
 */
-static int ApeTag__update_id3(ApeTag tag) {
+static int ApeTag__update_id3(struct ApeTag *tag) {
     ApeItem *item;
     char *c;
     char *end;
@@ -851,7 +851,7 @@ Updates the internal ape tag strings using the value for the database.
 
 Returns 0 on success, <0 on error.
 */
-static int ApeTag__update_ape(ApeTag tag) {
+static int ApeTag__update_ape(struct ApeTag *tag) {
     uint32_t i = 0;
     uint32_t key_size;
     char *c;
@@ -960,7 +960,7 @@ Writes the tag to the file using the internal tag strings.
 
 Returns 0 on success, <0 on error.
 */
-static int ApeTag__write_tag(ApeTag tag) {
+static int ApeTag__write_tag(struct ApeTag *tag) {
     assert(tag != NULL);
     assert(tag->tag_header != NULL);
     assert(tag->tag_data != NULL);
@@ -1096,7 +1096,7 @@ Checks the given ApeItem for validity (checking flags, key, and value).
 
 Returns 0 if valid, <0 otherwise.
 */
-static int ApeItem__check_validity(ApeTag tag, ApeItem *item) {
+static int ApeItem__check_validity(struct ApeTag *tag, ApeItem *item) {
     unsigned long key_length;
     char *key_end;
     char *c;
@@ -1225,7 +1225,7 @@ database are not terminated.
 
 Returns 0 on success, -1 on error;
 */
-static int ApeTag__lookup_genre(ApeTag tag, ApeItem *item, char *genre_id) {
+static int ApeTag__lookup_genre(struct ApeTag *tag, ApeItem *item, char *genre_id) {
     int ret = 0;
     INIT_DBT
 
@@ -1262,7 +1262,7 @@ since it can only occur if ID3_GENRES has not yet been initialized.
 
 Returns 0 on success, -1 on error.
 */
-static int ApeTag__load_ID3_GENRES(ApeTag tag) {
+static int ApeTag__load_ID3_GENRES(struct ApeTag *tag) {
     DB* genres;
     INIT_DBT;
     value_dbt.size = 1;
@@ -1458,7 +1458,7 @@ The caller is expected to have checked that tag->items is not NULL.
 Returns -1 on error, 1 if the item was not in the database, and 0 if the
 item was not in the database.
 */
-static int ApeTag__get_item(ApeTag tag, const char *key, ApeItem **item) {
+static int ApeTag__get_item(struct ApeTag *tag, const char *key, ApeItem **item) {
     int ret = 0;
     INIT_DBT
 
@@ -1490,7 +1490,7 @@ pointers, which the caller is responsible for freeing.
 Returns <0 on error, 1 if the tag has no items, and 0 if the
 array was set sucessfully.
 */
-static int ApeTag__get_items(ApeTag tag, ApeItem ***items, uint32_t *num_items_p) {
+static int ApeTag__get_items(struct ApeTag *tag, ApeItem ***items, uint32_t *num_items_p) {
     *items = NULL;
     *num_items_p = 0;
 

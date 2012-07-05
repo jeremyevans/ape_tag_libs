@@ -32,32 +32,31 @@ typedef struct {
 
 /* Opaque Structure */
 
-struct sApeTag; 
-typedef struct sApeTag* ApeTag;
+struct ApeTag; 
 
 /* Public functions */
 
-ApeTag ApeTag_new(FILE *file, uint32_t flags);
-int ApeTag_free(ApeTag tag);
+struct ApeTag * ApeTag_new(FILE *file, uint32_t flags);
+int ApeTag_free(struct ApeTag *tag);
 
-int ApeTag_exists(ApeTag tag);
-int ApeTag_exists_id3(ApeTag tag);
-int ApeTag_remove(ApeTag tag);
-int ApeTag_raw(ApeTag tag, char **raw, uint32_t *raw_size);
-int ApeTag_parse(ApeTag tag);
+int ApeTag_exists(struct ApeTag *tag);
+int ApeTag_exists_id3(struct ApeTag *tag);
+int ApeTag_remove(struct ApeTag *tag);
+int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size);
+int ApeTag_parse(struct ApeTag *tag);
 
-int ApeTag_add_item(ApeTag tag, ApeItem *item);
-int ApeTag_replace_item(ApeTag tag, ApeItem *item);
-int ApeTag_remove_item(ApeTag tag, const char *key);
-int ApeTag_clear_items(ApeTag tag);
-int ApeTag_update(ApeTag tag);
+int ApeTag_add_item(struct ApeTag *tag, ApeItem *item);
+int ApeTag_replace_item(struct ApeTag *tag, ApeItem *item);
+int ApeTag_remove_item(struct ApeTag *tag, const char *key);
+int ApeTag_clear_items(struct ApeTag *tag);
+int ApeTag_update(struct ApeTag *tag);
 
-int ApeTag_get_item(ApeTag tag, const char *key, ApeItem **item);
-int ApeTag_get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count);
-uint32_t ApeTag_size(ApeTag tag);
-uint32_t ApeTag_item_count(ApeTag tag);
-uint32_t ApeTag_file_item_count(ApeTag tag);
-const char * ApeTag_error(ApeTag tag);
+int ApeTag_get_item(struct ApeTag *tag, const char *key, ApeItem **item);
+int ApeTag_get_items(struct ApeTag *tag, ApeItem ***items, uint32_t *item_count);
+uint32_t ApeTag_size(struct ApeTag *tag);
+uint32_t ApeTag_item_count(struct ApeTag *tag);
+uint32_t ApeTag_file_item_count(struct ApeTag *tag);
+const char * ApeTag_error(struct ApeTag *tag);
 
 /* Override default (very strict) limits */
 void ApeTag_set_max_size(uint32_t size);
