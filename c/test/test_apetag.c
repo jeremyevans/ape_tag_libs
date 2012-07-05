@@ -11,6 +11,8 @@ int assertions = 0;
 int run_tests(void);
 int test_ApeTag_new_free(void);
 int test_ApeTag_exists(void);
+int test_ApeTag_exists_id3(void);
+int test_ApeTag_maximums(void);
 int test_ApeTag_remove(void);
 int test_ApeTag_raw(void);
 int test_ApeTag_parse(void);
@@ -53,6 +55,8 @@ int run_tests(void) {
             
     CHECK_FAILURE(test_ApeTag_new_free);
     CHECK_FAILURE(test_ApeTag_exists);
+    CHECK_FAILURE(test_ApeTag_exists_id3);
+    CHECK_FAILURE(test_ApeTag_maximums);
     CHECK_FAILURE(test_ApeTag_remove);
     CHECK_FAILURE(test_ApeTag_raw);
     CHECK_FAILURE(test_ApeTag_parse);
@@ -80,8 +84,8 @@ int test_ApeTag_new_free(void) {
     CHECK(tag = ApeTag_new(file, 0));
     CHECK(tag->file == file && tag->items == NULL && tag->tag_header == NULL && \
        tag->tag_data == NULL && tag->tag_footer == NULL && tag->id3 == NULL && \
-       tag->error == NULL && tag->flags == (APE_DEFAULT_FLAGS | 0) && \
-       tag->size == 0 && tag->item_count == 0 && tag->num_items == 0 && \
+       ApeTag_error(tag) == NULL && tag->flags == (APE_DEFAULT_FLAGS | 0) && \
+       ApeTag_size(tag) == 0 && ApeTag_file_item_count(tag) == 0 && ApeTag_item_count(tag) == 0 && \
        tag->offset == 0);
     
     CHECK(ApeTag_parse(tag) == 0);
@@ -107,6 +111,55 @@ int test_ApeTag_exists(void) {
     TEST_EXIST("example1_id3.tag", 1);
     TEST_EXIST("example2.tag", 1);
     TEST_EXIST("example2_id3.tag", 1);
+    
+    #undef TEST_EXIST
+    
+    return 0;
+}
+
+int test_ApeTag_exists_id3(void) {
+    ApeTag tag;
+    FILE *file;
+    
+    #define TEST_EXIST(FILENAME, EXIST) \
+        CHECK(file = fopen(FILENAME, "r+")); \
+        CHECK(tag = ApeTag_new(file, 0)); \
+        CHECK(ApeTag_exists_id3(tag) == EXIST);
+    
+    TEST_EXIST("empty_ape.tag", 0);
+    TEST_EXIST("empty_ape_id3.tag", 1);
+    TEST_EXIST("empty_file.tag", 0);
+    TEST_EXIST("empty_id3.tag", 1);
+    TEST_EXIST("example1.tag", 0);
+    TEST_EXIST("example1_id3.tag", 1);
+    TEST_EXIST("example2.tag", 0);
+    TEST_EXIST("example2_id3.tag", 1);
+    
+    #undef TEST_EXIST
+    
+    return 0;
+}
+
+int test_ApeTag_maximums(void) {
+    ApeTag tag;
+    FILE *file;
+    
+    #define TEST_EXIST(FILENAME, EXIST) \
+        CHECK(file = fopen(FILENAME, "r+")); \
+        CHECK(tag = ApeTag_new(file, 0)); \
+        CHECK(ApeTag_exists(tag) == EXIST);
+    
+    ApeTag_set_max_item_count(0);
+    TEST_EXIST("empty_ape.tag", 1);
+    TEST_EXIST("example1.tag", -3);
+    ApeTag_set_max_item_count(64);
+
+    ApeTag_set_max_size(64);
+    TEST_EXIST("empty_ape.tag", 1);
+    TEST_EXIST("example1.tag", -3);
+    ApeTag_set_max_size(63);
+    TEST_EXIST("empty_ape.tag", -3);
+    ApeTag_set_max_size(8192);
     
     #undef TEST_EXIST
     
@@ -175,7 +228,7 @@ int test_ApeTag_parse(void) {
     #define TEST_PARSE(FILENAME, ITEMS) \
         CHECK(file = fopen(FILENAME, "r+")); \
         CHECK(tag = ApeTag_new(file, 0)); \
-        CHECK(ApeTag_parse(tag) == 0 && ITEMS == tag->item_count);
+        CHECK(ApeTag_parse(tag) == 0 && ITEMS == ApeTag_file_item_count(tag));
     
     #define HAS_FIELD(FIELD, KEY_LENGTH, VALUE, VALUE_LENGTH) \
         key_dbt.data = FIELD; \
@@ -238,9 +291,9 @@ int test_ApeTag_update(void) {
         CHECK(ApeTag_parse(tag) == 0); \
         CHECK(ApeTag_update(tag) == 0); \
         CHECK(fseek(file, 0, SEEK_SET) == 0); \
-        CHECK(after = (char *)malloc(tag->size+ID3)); \
-        CHECK(tag->size+ID3 == fread(after, 1, tag->size+ID3, file)); \
-        CHECK(memcmp(CHANGED ? empty_ape_id3 : before, after, tag->size+ID3) == 0);
+        CHECK(after = (char *)malloc(ApeTag_size(tag)+ID3)); \
+        CHECK(ApeTag_size(tag)+ID3 == fread(after, 1, ApeTag_size(tag)+ID3, file)); \
+        CHECK(memcmp(CHANGED ? empty_ape_id3 : before, after, ApeTag_size(tag)+ID3) == 0);
         
     #define ADD_FIELD(KEY, VALUE, SIZE) \
         item = (ApeItem *)malloc(sizeof(ApeItem)); \
@@ -307,7 +360,8 @@ int test_ApeTag_filesizes(void) {
         for(i=0; i<SIZE; i++) { \
             CHECK(1 == fwrite(" ", 1, 1, file)); \
         } \
-        CHECK(ApeTag_exists(tag) == 0);
+        CHECK(ApeTag_exists(tag) == 0); \
+        CHECK(ApeTag_exists_id3(tag) == 0);
     
     TEST_FILESIZE(0);
     TEST_FILESIZE(1);
@@ -579,6 +633,9 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     ApeTag tag;
     FILE *file;
     ApeItem *item;
+    ApeItem *check_item;
+    ApeItem **items;
+    uint32_t items_size;
     int i;
     
     system("cp example1_id3.tag example1_id3.tag.0");
@@ -588,6 +645,9 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     /* Test functions before parsing */
     CHECK(tag = ApeTag_new(file, 0));
     CHECK(ApeTag_clear_items(tag) == 0);
+    CHECK(ApeTag_get_items(tag, &items, &items_size) == 1);
+    CHECK(items == NULL);
+    CHECK(items_size == 0);
     CHECK(item = (ApeItem *)malloc(sizeof(ApeItem)));
     item->size = 5;
     item->flags = 0;
@@ -596,6 +656,22 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     memcpy(item->key, "ALBUM", 6);
     memcpy(item->value, "VALUE", 5);
     CHECK(ApeTag_add_item(tag, item) == 0);
+
+    CHECK(ApeTag_get_item(tag, "track", &check_item) == 1);
+    CHECK(ApeTag_get_item(tag, "album", &check_item) == 0);
+    CHECK(check_item->size == 5);
+    CHECK(check_item->flags == 0);
+    CHECK(strcmp(check_item->key, "ALBUM") == 0);
+    CHECK(memcmp(check_item->value, "VALUE", 5) == 0);
+
+    CHECK(ApeTag_get_items(tag, &items, &items_size) == 0);
+    CHECK(items != NULL);
+    CHECK(items_size == 1);
+    CHECK(items[0]->size == 5);
+    CHECK(items[0]->flags == 0);
+    CHECK(strcmp(items[0]->key, "ALBUM") == 0);
+    CHECK(memcmp(items[0]->value, "VALUE", 5) == 0);
+
     CHECK(ApeTag_remove_item(tag, "track") == 1);
     CHECK(ApeTag_clear_items(tag) == 0);
     CHECK(ApeTag_parse(tag) == 0);
@@ -638,9 +714,10 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     snprintf(item->value, 2, "65");
     CHECK(ApeTag_add_item(tag, item) == -3);
     
-    /* Check updating with too large tag allowed */
+    /* Check updating with too large tag not allowed */
     CHECK(tag = ApeTag_new(file, 0));
     CHECK(ApeTag_exists(tag) == 1);
+    CHECK(ApeTag_exists_id3(tag) == 1);
     CHECK(item = (ApeItem *)malloc(sizeof(ApeItem)));
     CHECK(item->key = (char *)malloc(9));
     CHECK(item->value = (char *)malloc(8112));
@@ -652,6 +729,7 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     }
     CHECK(ApeTag_add_item(tag, item) == 0);
     CHECK(ApeTag_update(tag) == -3);
+
     /* Check fits perfectly */
     item->size = 8111;
     CHECK(ApeTag_update(tag) == 0);
@@ -679,18 +757,18 @@ int test_no_id3(void) {
         CHECK(0 == ID3_LENGTH(tag)); \
         if(NO_ID3_FLAGS & APE_HAS_APE) { \
             CHECK(0 == fseek(file, 0, SEEK_SET)); \
-            CHECK(file_contents = (char *)malloc(tag->size)); \
-            CHECK(raw = (char *)malloc(tag->size)); \
-            CHECK(tag->size == fread(file_contents, 1, tag->size, file)); \
+            CHECK(file_contents = (char *)malloc(ApeTag_size(tag))); \
+            CHECK(raw = (char *)malloc(ApeTag_size(tag))); \
+            CHECK(ApeTag_size(tag) == fread(file_contents, 1, ApeTag_size(tag), file)); \
             CHECK(0 == ApeTag_raw(tag, &raw, &raw_size)); \
-            CHECK(0 == memcmp(file_contents, raw, tag->size)); \
+            CHECK(0 == memcmp(file_contents, raw, ApeTag_size(tag))); \
             CHECK(0 == ApeTag_parse(tag)); \
             CHECK(0 == ApeTag_update(tag)); \
             CHECK(0 == fseek(file, 0, SEEK_END)); \
-            CHECK(tag->size == (u_int32_t)ftell(file)); \
+            CHECK(ApeTag_size(tag) == (u_int32_t)ftell(file)); \
             CHECK(0 == fseek(file, 0, SEEK_SET)); \
-            CHECK(tag->size == fread(raw, 1, tag->size, file)); \
-            CHECK(0 == memcmp(file_contents, raw, tag->size)); \
+            CHECK(ApeTag_size(tag) == fread(raw, 1, ApeTag_size(tag), file)); \
+            CHECK(0 == memcmp(file_contents, raw, ApeTag_size(tag))); \
         }
         
     TEST_INFO_NO_ID3("empty_ape.tag", APE_HAS_APE, APE_HAS_APE);
