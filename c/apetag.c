@@ -166,9 +166,7 @@ int ApeTag_free(ApeTag tag) {
     }
     
     /* Free the information stored in the database */
-    if(ApeTag_clear_fields(tag) == -1) {
-        ret = -1;
-    }
+    ret = ApeTag_clear_fields(tag);
     
     /* Free char* on the heap first, then the tag itself */
     free(tag->id3);
@@ -380,12 +378,6 @@ int ApeTag_clear_fields(ApeTag tag) {
     INIT_DBT;
     
     assert(tag != NULL);
-    
-    if(!(tag->flags & APE_CHECKED_APE)) {
-        if((ret = ApeTag__get_tag_information(tag)) < 0) {
-            goto clear_fields_error;
-        }
-    }
     
     if(tag->fields != NULL) {
         /* Free all items in the database and then close it */
