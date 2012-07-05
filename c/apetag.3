@@ -21,17 +21,17 @@
 .P
 .B int ApeTag_update(struct ApeTag *tag);
 .P
-.B int ApeTag_add_item(struct ApeTag *tag, ApeItem *item);
+.B int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item);
 .P
-.B int ApeTag_replace_item(struct ApeTag *tag, ApeItem *item);
+.B int ApeTag_replace_item(struct ApeTag *tag, struct ApeItem *item);
 .P
 .B int ApeTag_remove_item(struct ApeTag *tag, const char *key);
 .P
 .B int ApeTag_clear_items(struct ApeTag *tag);
 .P
-.B int ApeTag_get_item(struct ApeTag *tag, const char *key, ApeItem **item);
+.B int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item);
 .P
-.B int ApeTag_get_items(struct ApeTag *tag, ApeItem ***items, uint32_t *item_count);
+.B int ApeTag_get_items(struct ApeTag *tag, struct ApeItem ***items, uint32_t *item_count);
 .P
 .B uint32_t ApeTag_size(struct ApeTag *tag);
 .P
@@ -237,7 +237,7 @@ tag but doesn't have an ID3v1 tag.
 .P
 Returns 0 on success, <0 on error.
 .P
-.B int ApeTag_add_item(struct ApeTag *tag, ApeItem *item);
+.B int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item);
 .P
 Adds a item to the tag.
 The item cannot already exist in the tag, otherwise it will return
@@ -256,7 +256,7 @@ or
 .P
 Returns 0 on success, <0 on error.
 .P
-.B int ApeTag_replace_item(struct ApeTag *tag, ApeItem *item);
+.B int ApeTag_replace_item(struct ApeTag *tag, struct ApeItem *item);
 .P
 If an item with the matching key does not already exist in the tag,
 this is the same as
@@ -279,7 +279,7 @@ Frees all items stored in the tag.
 .P
 Returns 0 on success, -1 on error.
 .P
-.B int ApeTag_get_item(struct ApeTag *tag, const char *key, ApeItem **item);
+.B int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item);
 .P
 Sets
 .BR *item
@@ -289,7 +289,7 @@ if such an item exists in the tag.
 .P
 Returns 0 on success, 1 if the item did not exist in the tag, <0 on error.
 .P
-.B int ApeTag_get_items(struct ApeTag *tag, ApeItem ***items, uint32_t *item_count);
+.B int ApeTag_get_items(struct ApeTag *tag, struct ApeItem ***items, uint32_t *item_count);
 .P
 Sets
 .BR *items

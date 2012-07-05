@@ -7,13 +7,13 @@
 /* Specify not to check for or write an ID3 tag */
 #define APE_NO_ID3             1 << 5
 
-/* Mask used for ApeItem flags for read-only value */
+/* Mask used for struct ApeItem flags for read-only value */
 #define APE_ITEM_READ_FLAGS    1
 
 #define APE_ITEM_READ_WRITE    0
 #define APE_ITEM_READ_ONLY     1
 
-/* Mask used for ApeItem flags for type value */
+/* Mask used for struct ApeItem flags for type value */
 #define APE_ITEM_TYPE_FLAGS    6
 
 #define APE_ITEM_UTF8          0
@@ -21,18 +21,18 @@
 #define APE_ITEM_EXTERNAL      4
 #define APE_ITEM_RESERVED      6
 
-/* Structures */
+/* Opaque structure used for tag internals */
 
-typedef struct {
+struct ApeTag; 
+
+/* Public structure for individual items in tag */
+
+struct ApeItem {
     uint32_t size;        /* Size of the value */
     uint32_t flags;       /* Flags on the item */
     char *key;            /* NULL-terminated string */
     char *value;          /* Unterminated string */
-} ApeItem;
-
-/* Opaque Structure */
-
-struct ApeTag; 
+};
 
 /* Public functions */
 
@@ -45,14 +45,14 @@ int ApeTag_remove(struct ApeTag *tag);
 int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size);
 int ApeTag_parse(struct ApeTag *tag);
 
-int ApeTag_add_item(struct ApeTag *tag, ApeItem *item);
-int ApeTag_replace_item(struct ApeTag *tag, ApeItem *item);
+int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item);
+int ApeTag_replace_item(struct ApeTag *tag, struct ApeItem *item);
 int ApeTag_remove_item(struct ApeTag *tag, const char *key);
 int ApeTag_clear_items(struct ApeTag *tag);
 int ApeTag_update(struct ApeTag *tag);
 
-int ApeTag_get_item(struct ApeTag *tag, const char *key, ApeItem **item);
-int ApeTag_get_items(struct ApeTag *tag, ApeItem ***items, uint32_t *item_count);
+int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item);
+int ApeTag_get_items(struct ApeTag *tag, struct ApeItem ***items, uint32_t *item_count);
 uint32_t ApeTag_size(struct ApeTag *tag);
 uint32_t ApeTag_item_count(struct ApeTag *tag);
 uint32_t ApeTag_file_item_count(struct ApeTag *tag);

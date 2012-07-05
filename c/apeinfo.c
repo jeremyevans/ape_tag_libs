@@ -6,7 +6,7 @@
 
 int ApeInfo_process(char *);
 void ApeTag_print(struct ApeTag *tag);
-void ApeItem_print(ApeItem *item);
+void ApeItem_print(struct ApeItem *item);
 
 /* Process all files on the command line */
 int main(int argc, char *argv[]) {
@@ -83,7 +83,7 @@ int ApeInfo_process(char *filename) {
 void ApeTag_print(struct ApeTag *tag) {
     int i;
     uint32_t item_count;
-    ApeItem **items = NULL;
+    struct ApeItem **items = NULL;
     
     assert(tag != NULL);
 
@@ -103,7 +103,7 @@ void ApeTag_print(struct ApeTag *tag) {
 Prints a line with the key and value of the item separated by a colon. Includes
 information about the tags flags unless they are the default (read-write UTF8).
 */
-void ApeItem_print(ApeItem *item) {
+void ApeItem_print(struct ApeItem *item) {
     u_int32_t i;
     char c;
     
