@@ -15,7 +15,7 @@ int test_ApeTag_remove(void);
 int test_ApeTag_raw(void);
 int test_ApeTag_parse(void);
 int test_ApeTag_update(void);
-int test_ApeTag_add_remove_clear_fields_update(void);
+int test_ApeTag_add_remove_clear_items_update(void);
 int test_ApeTag_filesizes(void);
 int test_ApeItem_validity(void);
 int test_bad_tags(void);
@@ -60,7 +60,7 @@ int run_tests(void) {
     CHECK_FAILURE(test_ApeTag_filesizes);
     CHECK_FAILURE(test_ApeItem_validity);
     CHECK_FAILURE(test_bad_tags);
-    CHECK_FAILURE(test_ApeTag_add_remove_clear_fields_update);
+    CHECK_FAILURE(test_ApeTag_add_remove_clear_items_update);
     CHECK_FAILURE(test_no_id3);
     CHECK_FAILURE(test_ApeTag__strcasecpy);
     CHECK_FAILURE(test_ApeItem__parse_track);
@@ -78,10 +78,10 @@ int test_ApeTag_new_free(void) {
     
     CHECK(file = fopen("example1.tag", "r+"));
     CHECK(tag = ApeTag_new(file, 0));
-    CHECK(tag->file == file && tag->fields == NULL && tag->tag_header == NULL && \
+    CHECK(tag->file == file && tag->items == NULL && tag->tag_header == NULL && \
        tag->tag_data == NULL && tag->tag_footer == NULL && tag->id3 == NULL && \
        tag->error == NULL && tag->flags == (APE_DEFAULT_FLAGS | 0) && \
-       tag->size == 0 && tag->item_count == 0 && tag->num_fields == 0 && \
+       tag->size == 0 && tag->item_count == 0 && tag->num_items == 0 && \
        tag->offset == 0);
     
     CHECK(ApeTag_parse(tag) == 0);
@@ -180,7 +180,7 @@ int test_ApeTag_parse(void) {
     #define HAS_FIELD(FIELD, KEY_LENGTH, VALUE, VALUE_LENGTH) \
         key_dbt.data = FIELD; \
         key_dbt.size = KEY_LENGTH; \
-        CHECK(tag->fields->get(tag->fields, &key_dbt, &value_dbt, 0) == 0); \
+        CHECK(tag->items->get(tag->items, &key_dbt, &value_dbt, 0) == 0); \
         CHECK(memcmp(VALUE, (*(ApeItem **)(value_dbt.data))->value, VALUE_LENGTH) == 0); \
     
     TEST_PARSE("empty_ape.tag", 0);
@@ -250,7 +250,7 @@ int test_ApeTag_update(void) {
         item->value = (char *)malloc(SIZE); \
         memcpy(item->key, KEY, strlen(KEY)+1); \
         memcpy(item->value, VALUE, SIZE); \
-        CHECK(ApeTag_add_field(tag, item) == 0);
+        CHECK(ApeTag_add_item(tag, item) == 0);
         
     #define CHECK_TAG(POINTER, SIZE) \
         CHECK(ApeTag_update(tag) == 0); \
@@ -280,8 +280,8 @@ int test_ApeTag_update(void) {
     ADD_FIELD("Date", "2007", 4);
     CHECK_TAG(example1_id3, 336);
     
-    ApeTag_remove_field(tag, "Title");
-    ApeTag_remove_field(tag, "Track");
+    ApeTag_remove_item(tag, "Title");
+    ApeTag_remove_item(tag, "Track");
     ADD_FIELD("Blah", "Blah", 4);
     CHECK_TAG(example2_id3, 313);
      
@@ -575,7 +575,7 @@ int test_bad_tags(void) {
     return 0;
 }
 
-int test_ApeTag_add_remove_clear_fields_update(void) {
+int test_ApeTag_add_remove_clear_items_update(void) {
     ApeTag tag;
     FILE *file;
     ApeItem *item;
@@ -587,7 +587,7 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
         
     /* Test functions before parsing */
     CHECK(tag = ApeTag_new(file, 0));
-    CHECK(ApeTag_clear_fields(tag) == 0);
+    CHECK(ApeTag_clear_items(tag) == 0);
     CHECK(item = (ApeItem *)malloc(sizeof(ApeItem)));
     item->size = 5;
     item->flags = 0;
@@ -595,15 +595,15 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
     CHECK(item->value = (char *)malloc(5));
     memcpy(item->key, "ALBUM", 6);
     memcpy(item->value, "VALUE", 5);
-    CHECK(ApeTag_add_field(tag, item) == 0);
-    CHECK(ApeTag_remove_field(tag, "track") == 1);
-    CHECK(ApeTag_clear_fields(tag) == 0);
+    CHECK(ApeTag_add_item(tag, item) == 0);
+    CHECK(ApeTag_remove_item(tag, "track") == 1);
+    CHECK(ApeTag_clear_items(tag) == 0);
     CHECK(ApeTag_parse(tag) == 0);
     
     /* Test after parsing */
     CHECK(tag = ApeTag_new(file, 0));
     CHECK(ApeTag_parse(tag) == 0);
-    CHECK(ApeTag_remove_field(tag, "track") == 0);
+    CHECK(ApeTag_remove_item(tag, "track") == 0);
     
     /* Check add duplicate key */
     CHECK(item = (ApeItem *)malloc(sizeof(ApeItem)));
@@ -613,12 +613,12 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
     item->flags = 0;
     memcpy(item->key, "ALBUM", 6);
     memcpy(item->value,"VALUE",  5);
-    CHECK(ApeTag_add_field(tag, item) == -3);
+    CHECK(ApeTag_add_item(tag, item) == -3);
     memcpy(item->key, "album", 6);
-    CHECK(ApeTag_add_field(tag, item) == -3);
+    CHECK(ApeTag_add_item(tag, item) == -3);
     
-    /* Check adding more fields than allowed */
-    CHECK(ApeTag_clear_fields(tag) == 0);
+    /* Check adding more items than allowed */
+    CHECK(ApeTag_clear_items(tag) == 0);
     for(i=0; i < 64; i++) {
         CHECK(item = (ApeItem *)malloc(sizeof(ApeItem)));
         CHECK(item->key = (char *)malloc(6));
@@ -627,7 +627,7 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
         item->flags = 0;
         snprintf(item->key, 6, "Key%02i", i);
         snprintf(item->value, 3, "%02i", i);
-        CHECK(ApeTag_add_field(tag, item) == 0);
+        CHECK(ApeTag_add_item(tag, item) == 0);
     }
     CHECK(item = (ApeItem *)malloc(sizeof(ApeItem)));
     CHECK(item->key = (char *)malloc(6));
@@ -636,7 +636,7 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
     item->flags = 0;
     snprintf(item->key, 6, "Key65");
     snprintf(item->value, 2, "65");
-    CHECK(ApeTag_add_field(tag, item) == -3);
+    CHECK(ApeTag_add_item(tag, item) == -3);
     
     /* Check updating with too large tag allowed */
     CHECK(tag = ApeTag_new(file, 0));
@@ -650,7 +650,7 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
     for(i=0; i < 507; i++) {
         memcpy(item->value+i*16, "0123456789abcdef", 16);
     }
-    CHECK(ApeTag_add_field(tag, item) == 0);
+    CHECK(ApeTag_add_item(tag, item) == 0);
     CHECK(ApeTag_update(tag) == -3);
     /* Check fits perfectly */
     item->size = 8111;

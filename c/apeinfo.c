@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     return ret;
 }
 
-/* Print out the fields in the file */
+/* Print out the items in the file */
 int ApeInfo_process(char *filename) {
     int ret;
     int status;
@@ -60,7 +60,7 @@ int ApeInfo_process(char *filename) {
     }
     
     if(ApeTag_exists(tag)) {
-        printf("%s (%i fields):\n", filename, ApeTag_item_count(tag));
+        printf("%s (%i items):\n", filename, ApeTag_item_count(tag));
         ApeTag_print(tag);
     } else {
         printf("%s: no ape tag\n\n", filename);
@@ -87,8 +87,8 @@ void ApeTag_print(ApeTag tag) {
     
     assert(tag != NULL);
 
-    if ((i = ApeTag_get_fields(tag, &items, &item_count)) < 0) {
-       printf("Error getting fields: %s", ApeTag_error(tag));
+    if ((i = ApeTag_get_items(tag, &items, &item_count)) < 0) {
+       printf("Error getting items: %s", ApeTag_error(tag));
     } else if (i == 0) {
         for (; i < item_count; i++) {
             ApeItem_print(items[i]);

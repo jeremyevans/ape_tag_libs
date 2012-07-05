@@ -21,15 +21,15 @@
 .P
 .B int ApeTag_update(ApeTag tag);
 .P
-.B int ApeTag_add_field(ApeTag tag, ApeItem *item);
+.B int ApeTag_add_item(ApeTag tag, ApeItem *item);
 .P
-.B int ApeTag_remove_field(ApeTag tag, const char *key);
+.B int ApeTag_remove_item(ApeTag tag, const char *key);
 .P
-.B int ApeTag_clear_fields(ApeTag tag);
+.B int ApeTag_clear_items(ApeTag tag);
 .P
-.B int ApeTag_get_field(ApeTag tag, const char *key, ApeItem **item);
+.B int ApeTag_get_item(ApeTag tag, const char *key, ApeItem **item);
 .P
-.B int ApeTag_get_fields(ApeTag tag, ApeItem ***items, uint32_t *item_count);
+.B int ApeTag_get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count);
 .P
 .B uint32_t ApeTag_size(ApeTag tag);
 .P
@@ -110,7 +110,7 @@ typedef struct {
 .br
 } ApeItem;
 .P
-Adding new fields to the tag requires creating the 
+Adding new items to the tag requires creating the 
 .I ApeItem
 manually,
 using 
@@ -119,7 +119,7 @@ for both the
 .I ApeItem
 itself, as well as its key and value,
 as all must be stored on the heap.  A pointer to the item can then be passed to 
-.BR ApeTag_add_field 
+.BR ApeTag_add_item 
 to add the item to the tag.
 .SS FUNCTIONS
 .B ApeTag ApeTag_new(FILE *file, uint32_t flags);
@@ -206,15 +206,15 @@ Returns 0 on success, <0 on error.
 .B int ApeTag_parse(ApeTag tag);
 .P
 Parses the tag to get the actual items.  This should be called before
-.BR ApeTag_add_field
+.BR ApeTag_add_item
 and
 .BR ApeTag_update ,
 unless you don't care about the existing items in the file (i.e. you are
 just replacing the entire tag with new items).
 .P
 This is basically the same as calling
-.BR ApeTag_add_field
-manually with each field already in the tag.
+.BR ApeTag_add_item
+manually with each item already in the tag.
 .P
 Returns 0 on success, <0 on error.
 .P
@@ -239,10 +239,10 @@ tag but doesn't have an ID3v1 tag.
 .P
 Returns 0 on success, <0 on error.
 .P
-.B int ApeTag_add_field(ApeTag tag, ApeItem *item);
+.B int ApeTag_add_item(ApeTag tag, ApeItem *item);
 .P
-Adds a field to the tag.
-The field cannot already exist in the tag, otherwise it will return
+Adds a item to the tag.
+The item cannot already exist in the tag, otherwise it will return
 an error without changing the item.
 The
 .I item
@@ -252,25 +252,25 @@ and
 .IR item->value ,
 must be created on the heap, as they are all freed when calling 
 .BR ApeTag_free , 
-.BR ApeTag_clear_fields ,
+.BR ApeTag_clear_items ,
 or
-.BR ApeTag_remove_field .
+.BR ApeTag_remove_item .
 .P
 Returns 0 on success, <0 on error.
 .P
-.B int ApeTag_remove_field(ApeTag tag, const char *key);
+.B int ApeTag_remove_item(ApeTag tag, const char *key);
 .P
-Removes the field with a matching key from the tag.
+Removes the item with a matching key from the tag.
 .P
-Returns 0 on success, 1 if the field did not exist in the tag, <0 on error.
+Returns 0 on success, 1 if the item did not exist in the tag, <0 on error.
 .P
-.B int ApeTag_clear_fields(ApeTag tag);
+.B int ApeTag_clear_items(ApeTag tag);
 .P
 Frees all items stored in the tag.
 .P
 Returns 0 on success, -1 on error.
 .P
-.B int ApeTag_get_field(ApeTag tag, const char *key, ApeItem **item);
+.B int ApeTag_get_item(ApeTag tag, const char *key, ApeItem **item);
 .P
 Sets
 .BR *item
@@ -280,7 +280,7 @@ if such an item exists in the tag.
 .P
 Returns 0 on success, 1 if the item did not exist in the tag, <0 on error.
 .P
-.B int ApeTag_get_fields(ApeTag tag, ApeItem ***items, uint32_t *item_count);
+.B int ApeTag_get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count);
 .P
 Sets
 .BR *items
@@ -307,9 +307,9 @@ Returns the current number of items in the tag.
 should be called before calling this method unless you are going to be
 replacing the tag completely.
 This reflects the count after items have been added or removed using
-.BR ApeTag_add_field
+.BR ApeTag_add_item
 and
-.BR ApeTag_remove_field .
+.BR ApeTag_remove_item .
 .P
 .B uint32_t ApeTag_file_item_count(ApeTag tag);
 .P

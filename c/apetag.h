@@ -46,13 +46,13 @@ int ApeTag_remove(ApeTag tag);
 int ApeTag_raw(ApeTag tag, char **raw, uint32_t *raw_size);
 int ApeTag_parse(ApeTag tag);
 
-int ApeTag_add_field(ApeTag tag, ApeItem *item);
-int ApeTag_remove_field(ApeTag tag, const char *key);
-int ApeTag_clear_fields(ApeTag tag);
+int ApeTag_add_item(ApeTag tag, ApeItem *item);
+int ApeTag_remove_item(ApeTag tag, const char *key);
+int ApeTag_clear_items(ApeTag tag);
 int ApeTag_update(ApeTag tag);
 
-int ApeTag_get_field(ApeTag tag, const char *key, ApeItem **item);
-int ApeTag_get_fields(ApeTag tag, ApeItem ***items, uint32_t *item_count);
+int ApeTag_get_item(ApeTag tag, const char *key, ApeItem **item);
+int ApeTag_get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count);
 uint32_t ApeTag_size(ApeTag tag);
 uint32_t ApeTag_item_count(ApeTag tag);
 uint32_t ApeTag_file_item_count(ApeTag tag);

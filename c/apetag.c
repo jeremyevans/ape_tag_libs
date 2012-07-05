@@ -105,7 +105,7 @@ static uint32_t APE_MAXIMUM_ITEM_COUNT = 64;
 
 struct sApeTag {
     FILE *file;           /* file containing tag */
-    DB *fields;           /* DB_HASH format database */
+    DB *items;           /* DB_HASH format database */
                           /* Keys are NULL-terminated */
                           /* Values are ApeItem** */
     char *tag_header;     /* Tag Header data */
@@ -116,20 +116,20 @@ struct sApeTag {
     uint32_t flags;       /* Internal tag flags */
     uint32_t size;        /* On disk size in bytes */
     uint32_t item_count;  /* On disk item count */
-    uint32_t num_fields;  /* In database item count */
+    uint32_t num_items;  /* In database item count */
     off_t offset;         /* Start of tag in file */
 };
 
 /* Private function prototypes */
 
 static int ApeTag__get_tag_information(ApeTag tag);
-static int ApeTag__parse_fields(ApeTag tag);
-static int ApeTag__parse_field(ApeTag tag, uint32_t *offset);
+static int ApeTag__parse_items(ApeTag tag);
+static int ApeTag__parse_item(ApeTag tag, uint32_t *offset);
 static int ApeTag__update_id3(ApeTag tag);
 static int ApeTag__update_ape(ApeTag tag);
 static int ApeTag__write_tag(ApeTag tag);
-static int ApeTag__get_field(ApeTag tag, const char *key, ApeItem **items);
-static int ApeTag__get_fields(ApeTag tag, ApeItem ***items, uint32_t *item_count);
+static int ApeTag__get_item(ApeTag tag, const char *key, ApeItem **items);
+static int ApeTag__get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count);
 
 static void ApeItem__free(ApeItem **item);
 static char * ApeTag__strcasecpy(const char *src, unsigned char size);
@@ -166,7 +166,7 @@ int ApeTag_free(ApeTag tag) {
     }
     
     /* Free the information stored in the database */
-    ret = ApeTag_clear_fields(tag);
+    ret = ApeTag_clear_items(tag);
     
     /* Free char* on the heap first, then the tag itself */
     free(tag->id3);
@@ -249,7 +249,7 @@ int ApeTag_parse(ApeTag tag) {
     APETAG_ACCESSOR_CHECK
 
     if((tag->flags & APE_HAS_APE) && !(tag->flags & APE_CHECKED_FIELDS)) {
-        if((ret = ApeTag__parse_fields(tag)) < 0) {
+        if((ret = ApeTag__parse_items(tag)) < 0) {
             return ret;
         }
     }
@@ -273,7 +273,7 @@ int ApeTag_update(ApeTag tag) {
     return 0;
 }
 
-int ApeTag_add_field(ApeTag tag, ApeItem *item) {
+int ApeTag_add_item(ApeTag tag, ApeItem *item) {
     APETAG_ACCESSOR_CHECK_DBT
 
     value_dbt.size = sizeof(ApeItem **);
@@ -290,14 +290,14 @@ int ApeTag_add_field(ApeTag tag, ApeItem *item) {
     }
     
     /* Don't exceed the maximum number of items allowed */
-    if(tag->num_fields == APE_MAXIMUM_ITEM_COUNT) {
+    if(tag->num_items == APE_MAXIMUM_ITEM_COUNT) {
         tag->error = "maximum item count exceeded";
         return -3;
     }
     
     /* Create the database if it doesn't already exist */
-    if(tag->fields == NULL) {
-        if((tag->fields = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
+    if(tag->items == NULL) {
+        if((tag->items = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
             tag->error = "dbopen";
             return -1;
         }
@@ -307,36 +307,36 @@ int ApeTag_add_field(ApeTag tag, ApeItem *item) {
     if((key_dbt.data = ApeTag__strcasecpy(item->key, (unsigned char)key_dbt.size)) == NULL) {
         tag->error = "malloc";
         ret = -1;
-        goto add_field_error;
+        goto add_item_error;
     }
     
     /* Add to the database */
-    ret = tag->fields->put(tag->fields, &key_dbt, &value_dbt, R_NOOVERWRITE);
+    ret = tag->items->put(tag->items, &key_dbt, &value_dbt, R_NOOVERWRITE);
     if(ret == -1) {
         tag->error = "db->put";
-        goto add_field_error;
+        goto add_item_error;
     } else if(ret == 1) {
-        tag->error = "duplicate field in tag";
+        tag->error = "duplicate item in tag";
         ret = -3;
-        goto add_field_error;
+        goto add_item_error;
     }
 
-    tag->num_fields++;
+    tag->num_items++;
     ret = 0;
     
-    add_field_error:
+    add_item_error:
     free(key_dbt.data);
     return ret;
 }
 
-int ApeTag_remove_field(ApeTag tag, const char *key) {
+int ApeTag_remove_item(ApeTag tag, const char *key) {
     APETAG_ACCESSOR_CHECK_DBT
 
     assert(key != NULL);
     key_dbt.size = strlen(key) + 1;
     
-    /* Empty database implies field doesn't exist */
-    if(tag->fields == NULL) {
+    /* Empty database implies item doesn't exist */
+    if(tag->items == NULL) {
         return 1;
     }
     
@@ -347,7 +347,7 @@ int ApeTag_remove_field(ApeTag tag, const char *key) {
     }
     
     /* Get the item from the database so it can be freed */
-    ret = tag->fields->get(tag->fields, &key_dbt, &value_dbt, 0);
+    ret = tag->items->get(tag->items, &key_dbt, &value_dbt, 0);
     if(ret != 0) {
         if(ret == -1) {
             tag->error = "db->get";
@@ -358,7 +358,7 @@ int ApeTag_remove_field(ApeTag tag, const char *key) {
 
     /* Free the item and remove it from the database  */
     ApeItem__free((ApeItem **)(value_dbt.data));
-    ret = tag->fields->del(tag->fields, &key_dbt, 0);
+    ret = tag->items->del(tag->items, &key_dbt, 0);
     if(ret != 0) {
         if(ret == -1) {
             tag->error = "db->del";
@@ -368,60 +368,60 @@ int ApeTag_remove_field(ApeTag tag, const char *key) {
         }
     }
     
-    tag->num_fields--;
+    tag->num_items--;
     free(key_dbt.data);
     return ret;
 }
 
-int ApeTag_clear_fields(ApeTag tag) {
+int ApeTag_clear_items(ApeTag tag) {
     int ret = 0;
     INIT_DBT;
     
     assert(tag != NULL);
     
-    if(tag->fields != NULL) {
+    if(tag->items != NULL) {
         /* Free all items in the database and then close it */
-        if(tag->fields->seq(tag->fields, &key_dbt, &value_dbt, R_FIRST) == 0) {
+        if(tag->items->seq(tag->items, &key_dbt, &value_dbt, R_FIRST) == 0) {
             ApeItem__free((ApeItem **)(value_dbt.data));
-            while(tag->fields->seq(tag->fields, &key_dbt, &value_dbt, R_NEXT) == 0) {
+            while(tag->items->seq(tag->items, &key_dbt, &value_dbt, R_NEXT) == 0) {
                 ApeItem__free((ApeItem **)(value_dbt.data));
             }
         }
-        if(tag->fields->close(tag->fields) == -1) {
+        if(tag->items->close(tag->items) == -1) {
             tag->error = "db->close";
             ret = -1;
-            goto clear_fields_error;
+            goto clear_items_error;
         }
     }
     
     ret = 0;
     
-    clear_fields_error:
-    tag->fields = NULL;
+    clear_items_error:
+    tag->items = NULL;
     tag->flags &= ~APE_CHECKED_FIELDS;
-    tag->num_fields = 0;
+    tag->num_items = 0;
     return ret;
 }
 
-int ApeTag_get_field(ApeTag tag, const char *key, ApeItem **item) {
+int ApeTag_get_item(ApeTag tag, const char *key, ApeItem **item) {
     APETAG_ACCESSOR_CHECK
 
     assert(key != NULL);
     assert(item != NULL);
 
-    if(tag->fields == NULL) {
+    if(tag->items == NULL) {
         return 1;
     }
 
-    return ApeTag__get_field(tag, key, item);
+    return ApeTag__get_item(tag, key, item);
 }
 
-int ApeTag_get_fields(ApeTag tag, ApeItem ***items, uint32_t *item_count) {
+int ApeTag_get_items(ApeTag tag, ApeItem ***items, uint32_t *item_count) {
     APETAG_ACCESSOR_CHECK
 
     assert(items != NULL);
 
-    return ApeTag__get_fields(tag, items, item_count);
+    return ApeTag__get_items(tag, items, item_count);
 }
 
 uint32_t ApeTag_size(ApeTag tag) {
@@ -429,7 +429,7 @@ uint32_t ApeTag_size(ApeTag tag) {
 }
 
 uint32_t ApeTag_item_count(ApeTag tag) {
-    return tag->num_fields;
+    return tag->num_items;
 }
 
 uint32_t ApeTag_file_item_count(ApeTag tag) {
@@ -623,11 +623,11 @@ static int ApeTag__get_tag_information(ApeTag tag) {
 }
 
 /* 
-Parses all fields from the tag and puts them in the database.
+Parses all items from the tag and puts them in the database.
 
 Returns 0 on success, <0 on error.
 */
-static int ApeTag__parse_fields(ApeTag tag) {
+static int ApeTag__parse_items(ApeTag tag) {
     uint32_t i;
     uint32_t offset = 0;
     int ret =0;
@@ -636,8 +636,8 @@ static int ApeTag__parse_fields(ApeTag tag) {
     
     assert(tag != NULL);
     
-    if(tag->fields != NULL) {
-        if(ApeTag_clear_fields(tag) != 0) {
+    if(tag->items != NULL) {
+        if(ApeTag_clear_items(tag) != 0) {
             return -1;
         }
     }
@@ -648,7 +648,7 @@ static int ApeTag__parse_fields(ApeTag tag) {
             return -3;
         }
 
-        if((ret = ApeTag__parse_field(tag, &offset)) != 0) {
+        if((ret = ApeTag__parse_item(tag, &offset)) != 0) {
             return ret;
         }
     }
@@ -662,12 +662,12 @@ static int ApeTag__parse_fields(ApeTag tag) {
 }
 
 /* 
-Parses a single field from the tag at the given offset from the start of the
+Parses a single item from the tag at the given offset from the start of the
 tag's data.
 
 Returns 0 on success, <0 on error.
 */
-static int ApeTag__parse_field(ApeTag tag, uint32_t *offset) {
+static int ApeTag__parse_item(ApeTag tag, uint32_t *offset) {
     char *data = tag->tag_data;
     char *value_start = NULL;
     char *key_start = data+(*offset)+8;
@@ -729,7 +729,7 @@ static int ApeTag__parse_field(ApeTag tag, uint32_t *offset) {
     memcpy(item->value, value_start, item->size);
     
     /* Add item to the database */
-    if((ret = ApeTag_add_field(tag, item)) != 0) {
+    if((ret = ApeTag_add_item(tag, item)) != 0) {
         goto parse_error;
     }
 
@@ -774,13 +774,13 @@ static int ApeTag__update_id3(ApeTag tag) {
     memset(tag->id3+3, 0, 124);
     *(tag->id3+127) = '\377';
     
-    if(tag->fields == NULL) {
+    if(tag->items == NULL) {
         return 0;
     }
 
     /* Easier to use a macro than a function in this case */
     #define APE_FIELD_TO_ID3_FIELD(FIELD, LENGTH, OFFSET) \
-        if((ret = ApeTag__get_field(tag, FIELD, &item)) < 0) { \
+        if((ret = ApeTag__get_item(tag, FIELD, &item)) < 0) { \
             return ret; \
         } else if(ret == 0) { \
             size = (item->size < LENGTH ? item->size : LENGTH); \
@@ -812,13 +812,13 @@ static int ApeTag__update_id3(ApeTag tag) {
     #undef APE_FIELD_TO_ID3_FIELD
     
     /* Need to handle the track and genre differently, as they are just bytes */
-    if((ret = ApeTag__get_field(tag, "track", &item)) < 0) { 
+    if((ret = ApeTag__get_item(tag, "track", &item)) < 0) { 
         return ret; 
     } else if(ret == 0) { 
         *(tag->id3+126) = (char)ApeItem__parse_track(item->size, item->value);
     } 
 
-    if((ret = ApeTag__get_field(tag, "genre", &item)) < 0) { 
+    if((ret = ApeTag__get_item(tag, "genre", &item)) < 0) { 
         return ret; 
     } else if(ret == 0) { 
         if(ApeTag__lookup_genre(tag, item, tag->id3+127) != 0) {
@@ -841,29 +841,29 @@ static int ApeTag__update_ape(ApeTag tag) {
     int ret = 0;
     uint32_t size;
     uint32_t flags;
-    uint32_t tag_size = 64 + 9 * tag->num_fields;
-    uint32_t num_fields;
+    uint32_t tag_size = 64 + 9 * tag->num_items;
+    uint32_t num_items;
     ApeItem **items;
     INIT_DBT;
     
     assert(tag != NULL);
     
     /* Check that the total number of items in the tag is ok */
-    if(tag->num_fields > APE_MAXIMUM_ITEM_COUNT) {
+    if(tag->num_items > APE_MAXIMUM_ITEM_COUNT) {
         tag->error = "tag item count larger than allowed";
         return -3;
     }
     
     /* Get the array of items */
-    if((ret = ApeTag__get_fields(tag, &items, &num_fields)) < 0) {
+    if((ret = ApeTag__get_items(tag, &items, &num_items)) < 0) {
         return ret;
     }
     
     /* Sort the items */
-    qsort(items, num_fields, sizeof(ApeItem *), ApeItem__compare);
+    qsort(items, num_items, sizeof(ApeItem *), ApeItem__compare);
 
     /* Check all of the items for validity and update the total size of the tag*/
-    for(i=0; i < num_fields; i++) {
+    for(i=0; i < num_items; i++) {
         if(ApeItem__check_validity(tag, items[i]) != 0) {
             ret = -3;
             goto update_ape_error;
@@ -886,7 +886,7 @@ static int ApeTag__update_ape(ApeTag tag) {
         ret = -1;
         goto update_ape_error;
     }
-    for(i=0, c=tag->tag_data; i < num_fields; i++) {
+    for(i=0, c=tag->tag_data; i < num_items; i++) {
         key_size = (uint32_t)strlen(items[i]->key) + 1;
         size = H2LE32(items[i]->size);
         flags = H2LE32(items[i]->flags);
@@ -917,13 +917,13 @@ static int ApeTag__update_ape(ApeTag tag) {
     
     /* Update the internal tag header and footer strings */
     tag_size = H2LE32(tag_size - 32);
-    num_fields = H2LE32(num_fields);
+    num_items = H2LE32(num_items);
     memcpy(tag->tag_header, APE_PREAMBLE, 12);
     memcpy(tag->tag_footer, APE_PREAMBLE, 12);
     memcpy(tag->tag_header+12, &tag_size, 4);
     memcpy(tag->tag_footer+12, &tag_size, 4);
-    memcpy(tag->tag_header+16, &num_fields, 4);
-    memcpy(tag->tag_footer+16, &num_fields,  4);
+    memcpy(tag->tag_header+16, &num_items, 4);
+    memcpy(tag->tag_footer+16, &num_items,  4);
     *(tag->tag_header+20) = '\0';
     *(tag->tag_footer+20) = '\0';
     memcpy(tag->tag_header+21, APE_HEADER_FLAGS, 4);
@@ -982,7 +982,7 @@ static int ApeTag__write_tag(ApeTag tag) {
         tag->error = "ftruncate";
         return -1;
     }
-    tag->item_count = tag->num_fields;
+    tag->item_count = tag->num_items;
     tag->flags |= APE_HAS_APE;
     
     return 0;
@@ -1436,12 +1436,12 @@ static int ApeTag__load_ID3_GENRES(ApeTag tag) {
 Update the passed in **item pointer to point to a ApeItem * for the matching
 item in the database.
 
-The caller is expected to have checked that tag->fields is not NULL.
+The caller is expected to have checked that tag->items is not NULL.
 
 Returns -1 on error, 1 if the item was not in the database, and 0 if the
 item was not in the database.
 */
-static int ApeTag__get_field(ApeTag tag, const char *key, ApeItem **item) {
+static int ApeTag__get_item(ApeTag tag, const char *key, ApeItem **item) {
     int ret = 0;
     INIT_DBT
 
@@ -1453,7 +1453,7 @@ static int ApeTag__get_field(ApeTag tag, const char *key, ApeItem **item) {
         return -1;
     }
 
-    ret = tag->fields->get(tag->fields, &key_dbt, &value_dbt, 0);
+    ret = tag->items->get(tag->items, &key_dbt, &value_dbt, 0);
     if(ret == -1) { 
         tag->error = "db->get"; 
         free(key_dbt.data);
@@ -1473,46 +1473,46 @@ pointers, which the caller is responsible for freeing.
 Returns <0 on error, 1 if the tag has no items, and 0 if the
 array was set sucessfully.
 */
-static int ApeTag__get_fields(ApeTag tag, ApeItem ***items, uint32_t *num_items) {
+static int ApeTag__get_items(ApeTag tag, ApeItem ***items, uint32_t *num_items_p) {
     *items = NULL;
-    *num_items = 0;
+    *num_items_p = 0;
 
-    if(tag->num_fields > 0) {
+    if(tag->num_items > 0) {
         uint32_t i = 0;
-        uint32_t num_fields = tag->num_fields;
+        uint32_t num_items = tag->num_items;
         INIT_DBT
         ApeItem **is;
 
-        if(tag->fields == NULL) {
-            tag->error = "internal consistency error: num_fields > 0 but fields is NULL";
+        if(tag->items == NULL) {
+            tag->error = "internal consistency error: num_items > 0 but items is NULL";
             return -3;
         }
 
-        if((is = (ApeItem **)calloc(num_fields, sizeof(ApeItem *))) == NULL) {
+        if((is = (ApeItem **)calloc(num_items, sizeof(ApeItem *))) == NULL) {
             tag->error = "calloc";
             return -1;
         }
         
         /* Get all ape items from the database */
-        if(tag->fields->seq(tag->fields, &key_dbt, &value_dbt, R_FIRST) == 0) {
+        if(tag->items->seq(tag->items, &key_dbt, &value_dbt, R_FIRST) == 0) {
             is[i++] = *(ApeItem **)(value_dbt.data);
-            while(tag->fields->seq(tag->fields, &key_dbt, &value_dbt, R_NEXT) == 0) {
-                if (i >= num_fields) {
+            while(tag->items->seq(tag->items, &key_dbt, &value_dbt, R_NEXT) == 0) {
+                if (i >= num_items) {
                     free(is);
-                    tag->error = "internal consistency error: more fields in database than num_fields";
+                    tag->error = "internal consistency error: more items in database than num_items";
                     return -3;
                 }
                 is[i++] = *(ApeItem **)(value_dbt.data);
             }
         }
-        if (i != num_fields) {
+        if (i != num_items) {
             free(is);
-            tag->error = "internal consistency error: fewer fields in database than num_fields";
+            tag->error = "internal consistency error: fewer items in database than num_items";
             return -3;
         }
 
         *items = is;
-        *num_items = num_fields;
+        *num_items_p = num_items;
 
         return 0;
     }
