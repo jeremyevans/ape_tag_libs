@@ -144,13 +144,14 @@ int test_ApeTag_raw(void) {
     FILE* file;
     char* raw_tag = NULL;
     char* file_contents = NULL;
+    uint32_t raw_size;
     
     #define TEST_RAW(FILENAME, SIZE) \
         CHECK(file = fopen(FILENAME, "r+")); \
         CHECK(tag = ApeTag_new(file, 0)); \
         CHECK(file_contents = (char *)malloc(SIZE)); \
         CHECK(SIZE == fread(file_contents, 1, SIZE, file)); \
-        CHECK(ApeTag_raw(tag, &raw_tag) == 0 && memcmp(file_contents, raw_tag, SIZE) == 0);
+        CHECK(ApeTag_raw(tag, &raw_tag, &raw_size) == 0 && memcmp(file_contents, raw_tag, SIZE) == 0);
     
     TEST_RAW("empty_ape.tag", 64);
     TEST_RAW("empty_ape_id3.tag", 192);
@@ -425,6 +426,7 @@ int test_bad_tags(void) {
     char* example1_raw;
     char c;
     int i;
+    uint32_t raw_size;
     
     #define OPEN_FILE(FILE, RAW, FILENAME) \
         system("cp " FILENAME " " FILENAME ".0"); \
@@ -432,7 +434,7 @@ int test_bad_tags(void) {
         system("rm " FILENAME ".0"); \
         CHECK(tag = ApeTag_new(FILE, 0)); \
         CHECK(ApeTag_parse(tag) == 0); \
-        CHECK(ApeTag_raw(tag, &RAW) == 0);
+        CHECK(ApeTag_raw(tag, &RAW, &raw_size) == 0);
     
     #define WRITE_BYTES(FILE, OFFSET, VALUE, LENGTH) \
         CHECK(fseek(FILE, OFFSET, SEEK_SET) == 0); \
@@ -662,6 +664,7 @@ int test_no_id3(void) {
     FILE* file;
     char* file_contents;
     char* raw;
+    uint32_t raw_size;
     
     #define TEST_INFO_NO_ID3(FILENAME, FLAGS, NO_ID3_FLAGS) \
         system("cp " FILENAME " " FILENAME ".0"); \
@@ -679,7 +682,7 @@ int test_no_id3(void) {
             CHECK(file_contents = (char*)malloc(tag->size)); \
             CHECK(raw = (char*)malloc(tag->size)); \
             CHECK(tag->size == fread(file_contents, 1, tag->size, file)); \
-            CHECK(0 == ApeTag_raw(tag, &raw)); \
+            CHECK(0 == ApeTag_raw(tag, &raw, &raw_size)); \
             CHECK(0 == memcmp(file_contents, raw, tag->size)); \
             CHECK(0 == ApeTag_parse(tag)); \
             CHECK(0 == ApeTag_update(tag)); \

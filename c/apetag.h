@@ -43,7 +43,7 @@ int ApeTag_free(ApeTag tag);
 int ApeTag_exists(ApeTag tag);
 int ApeTag_exists_id3(ApeTag tag);
 int ApeTag_remove(ApeTag tag);
-int ApeTag_raw(ApeTag tag, char** raw);
+int ApeTag_raw(ApeTag tag, char** raw, uint32_t* raw_size);
 int ApeTag_parse(ApeTag tag);
 
 int ApeTag_add_field(ApeTag tag, ApeItem* item);
@@ -52,7 +52,7 @@ int ApeTag_clear_fields(ApeTag tag);
 int ApeTag_update(ApeTag tag);
 
 int ApeTag_get_field(ApeTag tag, const char *key, ApeItem **item);
-int ApeTag_get_fields(ApeTag tag, ApeItem ***items);
+int ApeTag_get_fields(ApeTag tag, ApeItem ***items, uint32_t* item_count);
 uint32_t ApeTag_size(ApeTag tag);
 uint32_t ApeTag_item_count(ApeTag tag);
 const char* ApeTag_error(ApeTag tag);

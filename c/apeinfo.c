@@ -82,15 +82,14 @@ int ApeInfo_process(char* filename) {
 /* Prints all items in the tag, one per line. */
 void ApeTag_print(ApeTag tag) {
     int i;
+    uint32_t item_count;
     ApeItem **items = NULL;
     
     assert(tag != NULL);
 
-    if ((i = ApeTag_get_fields(tag, &items)) < 0) {
+    if ((i = ApeTag_get_fields(tag, &items, &item_count)) < 0) {
        printf("Error getting fields: %s", ApeTag_error(tag));
     } else if (i == 0) {
-        int item_count = ApeTag_item_count(tag);
-
         for (; i < item_count; i++) {
             ApeItem_print(items[i]);
         }
