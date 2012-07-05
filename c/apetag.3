@@ -299,6 +299,7 @@ Returns the current size of the tag in the file, if a tag exists.
 should be called before calling this method.
 Note this does not reflect the size of the tag that will be written to file
 if you've modified the tag's items.
+This also does not include the size of the any ID3v1 tag.
 .P
 .B uint32_t ApeTag_item_count(ApeTag tag);
 .P
