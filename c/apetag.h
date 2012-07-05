@@ -26,8 +26,8 @@
 typedef struct {
     uint32_t size;        /* Size of the value */
     uint32_t flags;       /* Flags on the item */
-    char* key;            /* NULL-terminated string */
-    char* value;          /* Unterminated string */
+    char *key;            /* NULL-terminated string */
+    char *value;          /* Unterminated string */
 } ApeItem;
 
 /* Opaque Structure */
@@ -37,26 +37,26 @@ typedef struct sApeTag* ApeTag;
 
 /* Public functions */
 
-ApeTag ApeTag_new(FILE* file, uint32_t flags);
+ApeTag ApeTag_new(FILE *file, uint32_t flags);
 int ApeTag_free(ApeTag tag);
 
 int ApeTag_exists(ApeTag tag);
 int ApeTag_exists_id3(ApeTag tag);
 int ApeTag_remove(ApeTag tag);
-int ApeTag_raw(ApeTag tag, char** raw, uint32_t* raw_size);
+int ApeTag_raw(ApeTag tag, char **raw, uint32_t *raw_size);
 int ApeTag_parse(ApeTag tag);
 
-int ApeTag_add_field(ApeTag tag, ApeItem* item);
-int ApeTag_remove_field(ApeTag tag, const char* key);
+int ApeTag_add_field(ApeTag tag, ApeItem *item);
+int ApeTag_remove_field(ApeTag tag, const char *key);
 int ApeTag_clear_fields(ApeTag tag);
 int ApeTag_update(ApeTag tag);
 
 int ApeTag_get_field(ApeTag tag, const char *key, ApeItem **item);
-int ApeTag_get_fields(ApeTag tag, ApeItem ***items, uint32_t* item_count);
+int ApeTag_get_fields(ApeTag tag, ApeItem ***items, uint32_t *item_count);
 uint32_t ApeTag_size(ApeTag tag);
 uint32_t ApeTag_item_count(ApeTag tag);
 uint32_t ApeTag_file_item_count(ApeTag tag);
-const char* ApeTag_error(ApeTag tag);
+const char * ApeTag_error(ApeTag tag);
 
 /* Override default (very strict) limits */
 void ApeTag_set_max_size(uint32_t size);

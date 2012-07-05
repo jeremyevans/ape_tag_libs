@@ -6,7 +6,7 @@
 
 int ApeInfo_process(char *);
 void ApeTag_print(ApeTag tag);
-void ApeItem_print(ApeItem* item);
+void ApeItem_print(ApeItem *item);
 
 /* Process all files on the command line */
 int main(int argc, char *argv[]) {
@@ -28,10 +28,10 @@ int main(int argc, char *argv[]) {
 }
 
 /* Print out the fields in the file */
-int ApeInfo_process(char* filename) {
+int ApeInfo_process(char *filename) {
     int ret;
     int status;
-    FILE* file;
+    FILE *file;
     ApeTag tag = NULL;
     
     if((file = fopen(filename, "r")) == NULL) {
@@ -103,7 +103,7 @@ void ApeTag_print(ApeTag tag) {
 Prints a line with the key and value of the item separated by a colon. Includes
 information about the tags flags unless they are the default (read-write UTF8).
 */
-void ApeItem_print(ApeItem* item) {
+void ApeItem_print(ApeItem *item) {
     u_int32_t i;
     char c;
     

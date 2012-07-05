@@ -74,7 +74,7 @@ int run_tests(void) {
 
 int test_ApeTag_new_free(void) {
     ApeTag tag;
-    FILE* file;
+    FILE *file;
     
     CHECK(file = fopen("example1.tag", "r+"));
     CHECK(tag = ApeTag_new(file, 0));
@@ -92,7 +92,7 @@ int test_ApeTag_new_free(void) {
 
 int test_ApeTag_exists(void) {
     ApeTag tag;
-    FILE* file;
+    FILE *file;
     
     #define TEST_EXIST(FILENAME, EXIST) \
         CHECK(file = fopen(FILENAME, "r+")); \
@@ -115,7 +115,7 @@ int test_ApeTag_exists(void) {
 
 int test_ApeTag_remove(void) {
     ApeTag tag;
-    FILE* file;
+    FILE *file;
     
     #define TEST_REMOVE(FILENAME, EXIST) \
         system("cp " FILENAME " " FILENAME ".0"); \
@@ -141,9 +141,9 @@ int test_ApeTag_remove(void) {
 
 int test_ApeTag_raw(void) {
     ApeTag tag;
-    FILE* file;
-    char* raw_tag = NULL;
-    char* file_contents = NULL;
+    FILE *file;
+    char *raw_tag = NULL;
+    char *file_contents = NULL;
     uint32_t raw_size;
     
     #define TEST_RAW(FILENAME, SIZE) \
@@ -169,7 +169,7 @@ int test_ApeTag_raw(void) {
 
 int test_ApeTag_parse(void) {
     ApeTag tag;
-    FILE* file;
+    FILE *file;
     DBT key_dbt, value_dbt;
     
     #define TEST_PARSE(FILENAME, ITEMS) \
@@ -214,13 +214,13 @@ int test_ApeTag_parse(void) {
 
 int test_ApeTag_update(void) {
     ApeTag tag;
-    ApeItem* item;
-    FILE* file;
-    char* before;
-    char* after;
-    char* empty_ape_id3;
-    char* example1_id3;
-    char* example2_id3;
+    ApeItem *item;
+    FILE *file;
+    char *before;
+    char *after;
+    char *empty_ape_id3;
+    char *example1_id3;
+    char *example2_id3;
     
     #define RAW_TAGS(POINTER, FILENAME, SIZE) \
         CHECK(file = fopen(FILENAME, "r")); \
@@ -295,7 +295,7 @@ int test_ApeTag_update(void) {
 
 int test_ApeTag_filesizes(void) {
     ApeTag tag;
-    FILE* file;
+    FILE *file;
     int i;
     
     CHECK(file = fopen("new.tag", "w+"));
@@ -333,7 +333,7 @@ int test_ApeTag_filesizes(void) {
 }
 
 int test_ApeItem_validity(void) {
-    FILE* file;
+    FILE *file;
     ApeTag tag;
     ApeItem item;
     unsigned char i;
@@ -420,10 +420,10 @@ int test_ApeItem_validity(void) {
 
 int test_bad_tags(void) {
     ApeTag tag;
-    FILE* empty;
-    FILE* example1;
-    char* empty_raw;
-    char* example1_raw;
+    FILE *empty;
+    FILE *example1;
+    char *empty_raw;
+    char *example1_raw;
     char c;
     int i;
     uint32_t raw_size;
@@ -577,8 +577,8 @@ int test_bad_tags(void) {
 
 int test_ApeTag_add_remove_clear_fields_update(void) {
     ApeTag tag;
-    FILE* file;
-    ApeItem* item;
+    FILE *file;
+    ApeItem *item;
     int i;
     
     system("cp example1_id3.tag example1_id3.tag.0");
@@ -652,7 +652,7 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
     }
     CHECK(ApeTag_add_field(tag, item) == 0);
     CHECK(ApeTag_update(tag) == -3);
-    /* Check fits perfectly*/
+    /* Check fits perfectly */
     item->size = 8111;
     CHECK(ApeTag_update(tag) == 0);
     
@@ -661,9 +661,9 @@ int test_ApeTag_add_remove_clear_fields_update(void) {
 
 int test_no_id3(void) {
     ApeTag tag;
-    FILE* file;
-    char* file_contents;
-    char* raw;
+    FILE *file;
+    char *file_contents;
+    char *raw;
     uint32_t raw_size;
     
     #define TEST_INFO_NO_ID3(FILENAME, FLAGS, NO_ID3_FLAGS) \
@@ -679,8 +679,8 @@ int test_no_id3(void) {
         CHECK(0 == ID3_LENGTH(tag)); \
         if(NO_ID3_FLAGS & APE_HAS_APE) { \
             CHECK(0 == fseek(file, 0, SEEK_SET)); \
-            CHECK(file_contents = (char*)malloc(tag->size)); \
-            CHECK(raw = (char*)malloc(tag->size)); \
+            CHECK(file_contents = (char *)malloc(tag->size)); \
+            CHECK(raw = (char *)malloc(tag->size)); \
             CHECK(tag->size == fread(file_contents, 1, tag->size, file)); \
             CHECK(0 == ApeTag_raw(tag, &raw, &raw_size)); \
             CHECK(0 == memcmp(file_contents, raw, tag->size)); \
