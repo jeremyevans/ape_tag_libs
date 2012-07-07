@@ -2,6 +2,7 @@
 #define _APETAG_H_
 
 #include <sys/types.h>
+#include <stdint.h>
 #include <stdio.h>
 
 /* Specify not to check for or write an ID3 tag */
