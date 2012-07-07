@@ -53,7 +53,7 @@ int ApeTag_clear_items(struct ApeTag *tag);
 int ApeTag_update(struct ApeTag *tag);
 
 int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item);
-int ApeTag_get_items(struct ApeTag *tag, struct ApeItem ***items, uint32_t *item_count);
+struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count);
 uint32_t ApeTag_size(struct ApeTag *tag);
 uint32_t ApeTag_item_count(struct ApeTag *tag);
 uint32_t ApeTag_file_item_count(struct ApeTag *tag);

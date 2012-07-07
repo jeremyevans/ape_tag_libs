@@ -645,8 +645,9 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     /* Test functions before parsing */
     CHECK(tag = ApeTag_new(file, 0));
     CHECK(ApeTag_clear_items(tag) == 0);
-    CHECK(ApeTag_get_items(tag, &items, &items_size) == 1);
-    CHECK(items == NULL);
+    items = ApeTag_get_items(tag, &items_size);
+    CHECK(items);
+    free(items);
     CHECK(items_size == 0);
     CHECK(item = (struct ApeItem *)malloc(sizeof(struct ApeItem)));
     item->size = 5;
@@ -664,9 +665,18 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     CHECK(strcmp(check_item->key, "ALBUM") == 0);
     CHECK(memcmp(check_item->value, "VALUE", 5) == 0);
 
-    CHECK(ApeTag_get_items(tag, &items, &items_size) == 0);
+    items = ApeTag_get_items(tag, &items_size);
     CHECK(items != NULL);
     CHECK(items_size == 1);
+    CHECK(items[0]->size == 5);
+    CHECK(items[0]->flags == 0);
+    CHECK(strcmp(items[0]->key, "ALBUM") == 0);
+    CHECK(memcmp(items[0]->value, "VALUE", 5) == 0);
+    free(items);
+
+    /* ensure we don't crash if we don't care about the item count */
+    items = ApeTag_get_items(tag, NULL);
+    CHECK(items != NULL);
     CHECK(items[0]->size == 5);
     CHECK(items[0]->flags == 0);
     CHECK(strcmp(items[0]->key, "ALBUM") == 0);

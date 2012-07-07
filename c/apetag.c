@@ -129,7 +129,7 @@ static int ApeTag__update_id3(struct ApeTag *tag);
 static int ApeTag__update_ape(struct ApeTag *tag);
 static int ApeTag__write_tag(struct ApeTag *tag);
 static int ApeTag__get_item(struct ApeTag *tag, const char *key, struct ApeItem **items);
-static int ApeTag__get_items(struct ApeTag *tag, struct ApeItem ***items, uint32_t *item_count);
+static struct ApeItem **ApeTag__get_items(struct ApeTag *tag, uint32_t *item_count);
 
 static void ApeItem__free(struct ApeItem **item);
 static char * ApeTag__strcasecpy(const char *src, unsigned char size);
@@ -433,12 +433,12 @@ int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item) 
     return ApeTag__get_item(tag, key, item);
 }
 
-int ApeTag_get_items(struct ApeTag *tag, struct ApeItem ***items, uint32_t *item_count) {
-    APETAG_ACCESSOR_CHECK
+struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count) {
 
-    assert(items != NULL);
+    if (!(tag->flags & APE_CHECKED_APE) && ApeTag__get_tag_information(tag) < 0)
+        return NULL;
 
-    return ApeTag__get_items(tag, items, item_count);
+    return ApeTag__get_items(tag, item_count);
 }
 
 uint32_t ApeTag_size(struct ApeTag *tag) {
@@ -872,8 +872,9 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     }
     
     /* Get the array of items */
-    if((ret = ApeTag__get_items(tag, &items, &num_items)) < 0) {
-        return ret;
+    items = ApeTag__get_items(tag, &num_items);
+    if (items == NULL) {
+        return -3;
     }
     
     /* Sort the items */
@@ -1490,24 +1491,26 @@ pointers, which the caller is responsible for freeing.
 Returns <0 on error, 1 if the tag has no items, and 0 if the
 array was set sucessfully.
 */
-static int ApeTag__get_items(struct ApeTag *tag, struct ApeItem ***items, uint32_t *num_items_p) {
-    *items = NULL;
-    *num_items_p = 0;
+static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_items) {
+    uint32_t num_items = tag->num_items;
+    struct ApeItem **is;
 
-    if(tag->num_items > 0) {
+    if (num_items)
+        *num_items = 0;
+
+    if((is = calloc(num_items + 1, sizeof(struct ApeItem *))) == NULL) {
+        tag->error = "calloc";
+        return NULL;
+    }
+
+    if (num_items > 0) {
         uint32_t i = 0;
-        uint32_t num_items = tag->num_items;
         INIT_DBT
-        struct ApeItem **is;
 
         if(tag->items == NULL) {
+            free(is);
             tag->error = "internal consistency error: num_items > 0 but items is NULL";
-            return -3;
-        }
-
-        if((is = (struct ApeItem **)calloc(num_items, sizeof(struct ApeItem *))) == NULL) {
-            tag->error = "calloc";
-            return -1;
+            return NULL;
         }
         
         /* Get all ape items from the database */
@@ -1517,7 +1520,7 @@ static int ApeTag__get_items(struct ApeTag *tag, struct ApeItem ***items, uint32
                 if (i >= num_items) {
                     free(is);
                     tag->error = "internal consistency error: more items in database than num_items";
-                    return -3;
+                    return NULL;
                 }
                 is[i++] = *(struct ApeItem **)(value_dbt.data);
             }
@@ -1525,15 +1528,12 @@ static int ApeTag__get_items(struct ApeTag *tag, struct ApeItem ***items, uint32
         if (i != num_items) {
             free(is);
             tag->error = "internal consistency error: fewer items in database than num_items";
-            return -3;
+            return NULL;
         }
-
-        *items = is;
-        *num_items_p = num_items;
-
-        return 0;
     }
 
-    return 1;
+    if (num_items)
+        *num_items = num_items;
+    return is;
 }
 
