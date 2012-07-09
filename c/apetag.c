@@ -26,10 +26,6 @@
 #define APE_HEADER_FLAGS "\0\0\240"
 #define APE_FOOTER_FLAGS "\0\0\200"
 
-#define ID3_LENGTH(TAG) (uint32_t)(((TAG->flags & APE_HAS_ID3) && \
-                                    !(TAG->flags & APE_NO_ID3)) ? 128 : 0)
-#define TAG_LENGTH(TAG) (tag->size + ID3_LENGTH(TAG))
-
 /* True minimum values */
 #define APE_MINIMUM_TAG_SIZE   64
 #define APE_ITEM_MINIMUM_SIZE  11
@@ -99,6 +95,8 @@ static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset);
 static int ApeTag__update_id3(struct ApeTag *tag);
 static int ApeTag__update_ape(struct ApeTag *tag);
 static int ApeTag__write_tag(struct ApeTag *tag);
+static uint32_t ApeTag__tag_length(struct ApeTag *tag);
+static uint32_t ApeTag__id3_length(struct ApeTag *tag);
 static int ApeTag__get_item(struct ApeTag *tag, const char *key, struct ApeItem **items);
 static struct ApeItem **ApeTag__get_items(struct ApeTag *tag, uint32_t *item_count);
 
@@ -220,7 +218,7 @@ int ApeTag_raw(struct ApeTag *tag, char **raw_p, uint32_t *raw_size_p) {
     *raw_p = NULL;
     *raw_size_p = 0;
     
-    raw_size = TAG_LENGTH(tag);
+    raw_size = ApeTag__tag_length(tag);
     if((raw = malloc(raw_size)) == NULL) {
         tag->error = "malloc";
         return -1;
@@ -231,7 +229,7 @@ int ApeTag_raw(struct ApeTag *tag, char **raw_p, uint32_t *raw_size_p) {
         memcpy(raw+tag->size-32, tag->tag_footer, 32);
     }
     if(tag->flags & APE_HAS_ID3 && !(tag->flags & APE_NO_ID3)) {
-        memcpy(raw+tag->size, tag->id3, ID3_LENGTH(tag));
+        memcpy(raw+tag->size, tag->id3, ApeTag__id3_length(tag));
     }
 
     *raw_p = raw;
@@ -1058,7 +1056,7 @@ static int ApeTag__write_tag(struct ApeTag *tag) {
         tag->error = "fflush";
         return -1;
     }
-    if(ftruncate(fileno(tag->file), (tag->offset + TAG_LENGTH(tag))) == -1) {
+    if(ftruncate(fileno(tag->file), (tag->offset + ApeTag__tag_length(tag))) == -1) {
         tag->error = "ftruncate";
         return -1;
     }
@@ -1510,6 +1508,17 @@ static int ApeTag__load_ID3_GENRES(struct ApeTag *tag) {
         genres = NULL;
     }
     return -1;
+}
+
+static uint32_t ApeTag__tag_length(struct ApeTag *tag) {
+    return tag->size + ApeTag__id3_length(tag);
+}
+
+static uint32_t ApeTag__id3_length(struct ApeTag *tag) {
+    if ((tag->flags & APE_HAS_ID3) && !(tag->flags & APE_NO_ID3)) {
+        return 128;
+    }
+    return 0;
 }
 
 /* 
