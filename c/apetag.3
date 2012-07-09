@@ -31,13 +31,17 @@
 .P
 .B int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item);
 .P
-.B int ApeTag_get_items(struct ApeTag *tag, struct ApeItem ***items, uint32_t *item_count);
+.B struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count);
 .P
 .B uint32_t ApeTag_size(struct ApeTag *tag);
 .P
 .B uint32_t ApeTag_item_count(struct ApeTag *tag);
 .P
 .B const char * ApeTag_error(struct ApeTag *tag);
+.P
+.B size_t ApeTag_get_max_size(void);
+.P
+.B size_t ApeTag_get_max_item_count(void);
 .P
 .B void ApeTag_set_max_size(uint32_t size);
 .P
@@ -289,17 +293,22 @@ if such an item exists in the tag.
 .P
 Returns 0 on success, 1 if the item did not exist in the tag, <0 on error.
 .P
-.B int ApeTag_get_items(struct ApeTag *tag, struct ApeItem ***items, uint32_t *item_count);
+.B struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count);
 .P
-Sets
-.BR *items
-to point an to array of all of the items in the tag, and sets
-.BR item_count
-to the number of items in the array.
+Returns a array of 
+.BR ApeItem* s
+for all items in the tag.
 The array returned is unsorted and items returned are not necessarily returned
 in the order they are stored in the file.
+If
+.BR item_count
+is not NULL, it is set to the number of items in the array.
+The returned array is always terminated by NULL, and always contains at least
+1 item (which is NULL if the tag has no items).
 .P
-Returns 0 on success, 1 if the tag has no items, <0 on error.
+It is the caller's responsibility to free the returned array.
+.P
+Returns 0 on success, <0 on error.
 .P
 .B uint32_t ApeTag_size(struct ApeTag *tag);
 .P
@@ -333,17 +342,26 @@ This does not reflect changes made by adding or removing items.
 Returns a pointer to the last error message.
 This pointer should not be freed by the user.
 .P
+.B size_t ApeTag_get_max_size(void);
+.P
+Get the maximum tag size that this library will handle.
+Tags larger than this will not be read or written.
+Defaults to a very strict 8192 bytes, as recommended by
+the APE specification.
+.P
+.B size_t ApeTag_get_max_item_count(void);
+.P
+Get the maximum number of items allowed in a tag.
+Tags with more items than this will not be read or written.
+Defaults to 64.
+.P
 .B void ApeTag_set_max_size(uint32_t size);
 .P
 Override the maximum tag size that this library will handle.
-Tags larger than this will not be read or written.
-Defaults to a very strict 8K.
 .P
 .B void ApeTag_set_max_item_count(uint32_t item_count);
 .P
 Override the maximum number of items allowed in a tag.
-Tags with more items than this will not be read or written.
-Defaults to 64.
 .SH AUTHOR
 .B apetag
 is written by Jeremy Evans.  You can contact the author at
