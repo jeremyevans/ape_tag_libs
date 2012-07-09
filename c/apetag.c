@@ -851,7 +851,7 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
         if((ret = ApeTag__get_item(tag, FIELD, &item)) < 0) { \
             return ret; \
         } else if(ret == 0) { \
-            size = (item->size < LENGTH ? item->size : LENGTH); \
+            size = (item->size < (uint32_t)LENGTH ? item->size : (uint32_t)LENGTH); \
             end = tag->id3 + OFFSET + size; \
             memcpy(tag->id3 + OFFSET, item->value, size); \
             for(c=tag->id3 + OFFSET; c < end; c++) { \
@@ -871,11 +871,11 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
     track - 126, 1
     genre - 127, 1
     */
-    APE_FIELD_TO_ID3_FIELD("title", 30, (uint32_t)3);
-    APE_FIELD_TO_ID3_FIELD("artist", 30, (uint32_t)33);
-    APE_FIELD_TO_ID3_FIELD("album", 30, (uint32_t)63);
-    APE_FIELD_TO_ID3_FIELD("year", 4, (uint32_t)93);
-    APE_FIELD_TO_ID3_FIELD("comment", 28, (uint32_t)97);
+    APE_FIELD_TO_ID3_FIELD("title", 30, 3);
+    APE_FIELD_TO_ID3_FIELD("artist", 30, 33);
+    APE_FIELD_TO_ID3_FIELD("album", 30, 63);
+    APE_FIELD_TO_ID3_FIELD("year", 4, 93);
+    APE_FIELD_TO_ID3_FIELD("comment", 28, 97);
     
     #undef APE_FIELD_TO_ID3_FIELD
     
