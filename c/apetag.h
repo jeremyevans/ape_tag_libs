@@ -46,6 +46,7 @@ enum ApeTag_errcode {
     APETAG_DUPLICATEITEM,
     APETAG_CORRUPTTAG,
     APETAG_INVALIDITEM,
+    APETAG_NULLPTR,
 };
 
 /* Public functions */

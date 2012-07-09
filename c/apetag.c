@@ -241,7 +241,16 @@ int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size) {
         return -1;
     }
 
-    assert(raw != NULL);
+    if (raw == NULL) {
+        tag->errcode = APETAG_NULLPTR;
+        tag->error = "raw";
+        return -1;
+    }
+    if (raw_size == NULL) {
+        tag->errcode = APETAG_NULLPTR;
+        tag->error = "raw_size";
+        return -1;
+    }
 
     *raw = NULL;
     *raw_size = 0;
@@ -312,9 +321,21 @@ int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
     value_dbt.data = &item; 
     key_dbt.size = strlen(item->key)+1;
     
-    assert(item != NULL);
-    assert(item->key != NULL);
-    assert(item->value != NULL);
+    if (item == NULL) {
+        tag->errcode = APETAG_INVALIDITEM;
+        tag->error = "item pointer is NULL";
+        return -1;
+    }
+    if (item->key == NULL) {
+        tag->errcode = APETAG_INVALIDITEM;
+        tag->error = "item key is NULL";
+        return -1;
+    }
+    if (item->value == NULL) {
+        tag->errcode = APETAG_INVALIDITEM;
+        tag->error = "item value is NULL";
+        return -1;
+    }
     
     /* Don't add invalid items to the database */
     if(ApeItem__check_validity(tag, item) != 0) {
@@ -394,7 +415,11 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
         return -1;
     }
 
-    assert(key != NULL);
+    if (key == NULL) {
+        tag->errcode = APETAG_NULLPTR;
+        tag->error = "key";
+        return -1;
+    }
     key_dbt.size = strlen(key) + 1;
     
     /* Empty database implies item doesn't exist */
@@ -481,8 +506,16 @@ int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item) 
         return -1;
     }
 
-    assert(key != NULL);
-    assert(item != NULL);
+    if (key == NULL) {
+        tag->errcode = APETAG_NULLPTR;
+        tag->error = "key";
+        return -1;
+    }
+    if (item == NULL) {
+        tag->errcode = APETAG_NULLPTR;
+        tag->error = "item";
+        return -1;
+    }
 
     if(tag->items == NULL) {
         return 1;
