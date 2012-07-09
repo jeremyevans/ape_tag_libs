@@ -1492,18 +1492,19 @@ Returns <0 on error, 1 if the tag has no items, and 0 if the
 array was set sucessfully.
 */
 static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_items) {
-    uint32_t num_items = tag->num_items;
+    uint32_t nitems = tag->num_items;
     struct ApeItem **is;
 
-    if (num_items)
+    if (num_items) {
         *num_items = 0;
+    }
 
-    if((is = calloc(num_items + 1, sizeof(struct ApeItem *))) == NULL) {
+    if((is = calloc(nitems + 1, sizeof(struct ApeItem *))) == NULL) {
         tag->error = "calloc";
         return NULL;
     }
 
-    if (num_items > 0) {
+    if (nitems > 0) {
         uint32_t i = 0;
         INIT_DBT
 
@@ -1517,7 +1518,7 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
         if(tag->items->seq(tag->items, &key_dbt, &value_dbt, R_FIRST) == 0) {
             is[i++] = *(struct ApeItem **)(value_dbt.data);
             while(tag->items->seq(tag->items, &key_dbt, &value_dbt, R_NEXT) == 0) {
-                if (i >= num_items) {
+                if (i >= nitems) {
                     free(is);
                     tag->error = "internal consistency error: more items in database than num_items";
                     return NULL;
@@ -1525,15 +1526,17 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
                 is[i++] = *(struct ApeItem **)(value_dbt.data);
             }
         }
-        if (i != num_items) {
+        if (i != nitems) {
             free(is);
             tag->error = "internal consistency error: fewer items in database than num_items";
             return NULL;
         }
     }
 
-    if (num_items)
-        *num_items = num_items;
+    if (num_items) {
+        *num_items = nitems;
+    }
+
     return is;
 }
 
