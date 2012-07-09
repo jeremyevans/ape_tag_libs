@@ -805,7 +805,7 @@ int test_no_id3(void) {
         CHECK(tag = ApeTag_new(file, APE_NO_ID3)); \
         CHECK(ApeTag_exists(tag) >= 0); \
         CHECK((tag->flags & (APE_HAS_APE|APE_HAS_ID3)) == (NO_ID3_FLAGS)); \
-        CHECK(0 == ID3_LENGTH(tag)); \
+        CHECK(0 == ApeTag__id3_length(tag)); \
         if(NO_ID3_FLAGS & APE_HAS_APE) { \
             CHECK(0 == fseek(file, 0, SEEK_SET)); \
             CHECK(file_contents = malloc(ApeTag_size(tag))); \
