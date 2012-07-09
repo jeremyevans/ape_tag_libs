@@ -151,7 +151,9 @@ static int ApeTag__strncasecmp(const char *s1, const char *s2, size_t n);
 struct ApeTag * ApeTag_new(FILE *file, uint32_t flags) {
     struct ApeTag *tag;
     
-    assert(file != NULL);
+    if (file == NULL) {
+        return NULL;
+    }
     
     tag = malloc(sizeof(struct ApeTag));
 
@@ -190,8 +192,6 @@ int ApeTag_free(struct ApeTag *tag) {
 }
 
 int ApeTag_exists(struct ApeTag *tag) {
-    assert(tag != NULL);
-
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
@@ -200,8 +200,6 @@ int ApeTag_exists(struct ApeTag *tag) {
 }
 
 int ApeTag_exists_id3(struct ApeTag *tag) {
-    assert(tag != NULL);
-
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
@@ -210,8 +208,6 @@ int ApeTag_exists_id3(struct ApeTag *tag) {
 }
 
 int ApeTag_remove(struct ApeTag *tag) {
-    assert(tag != NULL);
-
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
@@ -240,8 +236,6 @@ int ApeTag_remove(struct ApeTag *tag) {
 int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size) {    
     uint32_t r_size; 
     char *r; 
-
-    assert(tag != NULL);
 
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
@@ -276,8 +270,6 @@ int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size) {
 }
 
 int ApeTag_parse(struct ApeTag *tag) {
-    assert(tag != NULL);
-
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
@@ -292,8 +284,6 @@ int ApeTag_parse(struct ApeTag *tag) {
 }
 
 int ApeTag_update(struct ApeTag *tag) {
-    assert(tag != NULL);
-
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
@@ -313,8 +303,6 @@ int ApeTag_update(struct ApeTag *tag) {
 int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
     int ret;
     DBT key_dbt, value_dbt;
-
-    assert(tag != NULL);
 
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
@@ -381,8 +369,6 @@ int ApeTag_replace_item(struct ApeTag *tag, struct ApeItem *item) {
     int existed = 0;
     int ret;
 
-    assert(tag != NULL);
-
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
@@ -403,8 +389,6 @@ int ApeTag_replace_item(struct ApeTag *tag, struct ApeItem *item) {
 int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
     int ret;
     DBT key_dbt, value_dbt;
-
-    assert(tag != NULL);
 
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
@@ -463,7 +447,9 @@ int ApeTag_clear_items(struct ApeTag *tag) {
     value_dbt.data = NULL;
     value_dbt.size = 0;
     
-    assert(tag != NULL);
+    if(tag == NULL) {
+        return -1;
+    }
     
     if(tag->items != NULL) {
         /* Free all items in the database and then close it */
@@ -491,8 +477,6 @@ int ApeTag_clear_items(struct ApeTag *tag) {
 }
 
 int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item) {
-    assert(tag != NULL);
-
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
@@ -508,8 +492,6 @@ int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item) 
 }
 
 struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count) {
-    assert(tag != NULL);
-
     if(ApeTag__get_tag_information(tag) != 0) {
         return NULL;
     }
@@ -570,7 +552,10 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
     int id3_length = 0;
     uint32_t header_check;
     off_t file_size = 0;
-    assert(tag != NULL);
+
+    if (tag == NULL) {
+        return -1;
+    }
 
     if(tag->flags & APE_CHECKED_APE) {
         return 0;

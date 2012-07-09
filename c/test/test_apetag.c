@@ -82,6 +82,7 @@ int test_ApeTag_new_free(void) {
     struct ApeTag *tag;
     FILE *file;
     
+    CHECK(ApeTag_new(NULL, 0) == NULL);
     CHECK(file = fopen("example1.tag", "r+"));
     CHECK(tag = ApeTag_new(file, 0));
     CHECK(tag->file == file && tag->items == NULL && tag->tag_header == NULL && \
@@ -93,6 +94,7 @@ int test_ApeTag_new_free(void) {
     
     CHECK(ApeTag_parse(tag) == 0);
     CHECK(ApeTag_free(tag) == 0);
+    CHECK(ApeTag_free(NULL) == 0);
     
     return 0;
 }
@@ -106,6 +108,7 @@ int test_ApeTag_exists(void) {
         CHECK(tag = ApeTag_new(file, 0)); \
         CHECK(ApeTag_exists(tag) == EXIST);
     
+    CHECK(ApeTag_exists(NULL) == -1);
     TEST_EXIST("empty_ape.tag", 1);
     TEST_EXIST("empty_ape_id3.tag", 1);
     TEST_EXIST("empty_file.tag", 0);
@@ -129,6 +132,7 @@ int test_ApeTag_exists_id3(void) {
         CHECK(tag = ApeTag_new(file, 0)); \
         CHECK(ApeTag_exists_id3(tag) == EXIST);
     
+    CHECK(ApeTag_exists_id3(NULL) == -1);
     TEST_EXIST("empty_ape.tag", 0);
     TEST_EXIST("empty_ape_id3.tag", 1);
     TEST_EXIST("empty_file.tag", 0);
@@ -187,6 +191,7 @@ int test_ApeTag_remove(void) {
         CHECK(ApeTag_remove(tag) == EXIST); \
         CHECK(ApeTag_exists(tag) == 0);
     
+    CHECK(ApeTag_remove(NULL) == -1);
     TEST_REMOVE("empty_ape.tag", 0);
     TEST_REMOVE("empty_ape_id3.tag", 0);
     TEST_REMOVE("empty_file.tag", 1);
@@ -215,6 +220,7 @@ int test_ApeTag_raw(void) {
         CHECK(SIZE == fread(file_contents, 1, SIZE, file)); \
         CHECK(ApeTag_raw(tag, &raw_tag, &raw_size) == 0 && memcmp(file_contents, raw_tag, SIZE) == 0);
     
+    CHECK(ApeTag_raw(NULL, &raw_tag, &raw_size) == -1);
     TEST_RAW("empty_ape.tag", 64);
     TEST_RAW("empty_ape_id3.tag", 192);
     TEST_RAW("empty_file.tag", 0);
@@ -245,6 +251,7 @@ int test_ApeTag_parse(void) {
         CHECK(tag->items->get(tag->items, &key_dbt, &value_dbt, 0) == 0); \
         CHECK(memcmp(VALUE, (*(struct ApeItem **)(value_dbt.data))->value, VALUE_LENGTH) == 0); \
     
+    CHECK(ApeTag_parse(NULL) == -1);
     TEST_PARSE("empty_ape.tag", 0);
     TEST_PARSE("empty_ape_id3.tag", 0);
     TEST_PARSE("empty_file.tag", 0);
@@ -325,6 +332,7 @@ int test_ApeTag_update(void) {
     RAW_TAGS(example1_id3, "example1_id3.tag", 336);
     RAW_TAGS(example2_id3, "example2_id3.tag", 313);
     
+    CHECK(ApeTag_update(NULL) == -1);
     TEST_UPDATE("empty_ape.tag", 64, 0, 0);
     TEST_UPDATE("empty_ape_id3.tag", 192, 0, 128);
     TEST_UPDATE("empty_id3.tag", 128, 1, 128);
@@ -648,6 +656,13 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     uint32_t items_size;
     int i;
     
+    CHECK(ApeTag_clear_items(NULL) == -1);
+    CHECK(ApeTag_get_items(NULL, NULL) == NULL);
+    CHECK(ApeTag_get_item(NULL, NULL, NULL) == -1);
+    CHECK(ApeTag_add_item(NULL, NULL) == -1);
+    CHECK(ApeTag_remove_item(NULL, NULL) == -1);
+    CHECK(ApeTag_replace_item(NULL, NULL) == -1);
+
     system("cp example1_id3.tag example1_id3.tag.0");
     CHECK(file = fopen("example1_id3.tag.0", "r+"));
     system("rm example1_id3.tag.0");
