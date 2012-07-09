@@ -201,9 +201,9 @@ int ApeTag_remove(struct ApeTag *tag) {
     return 0;
 }
 
-int ApeTag_raw(struct ApeTag *tag, char **raw_p, uint32_t *raw_size_p) {    
-    uint32_t raw_size; 
-    char *raw; 
+int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size) {    
+    uint32_t r_size; 
+    char *r; 
 
     int ret;
 
@@ -213,27 +213,27 @@ int ApeTag_raw(struct ApeTag *tag, char **raw_p, uint32_t *raw_size_p) {
         return ret;
     }
 
-    assert(raw_p != NULL);
+    assert(raw != NULL);
 
-    *raw_p = NULL;
-    *raw_size_p = 0;
+    *raw = NULL;
+    *raw_size = 0;
     
-    raw_size = ApeTag__tag_length(tag);
-    if((raw = malloc(raw_size)) == NULL) {
+    r_size = ApeTag__tag_length(tag);
+    if((r = malloc(r_size)) == NULL) {
         tag->error = "malloc";
         return -1;
     }
     if(tag->flags & APE_HAS_APE) {
-        memcpy(raw, tag->tag_header, 32);
-        memcpy(raw+32, tag->tag_data, tag->size-64);
-        memcpy(raw+tag->size-32, tag->tag_footer, 32);
+        memcpy(r, tag->tag_header, 32);
+        memcpy(r+32, tag->tag_data, tag->size-64);
+        memcpy(r+tag->size-32, tag->tag_footer, 32);
     }
     if(tag->flags & APE_HAS_ID3 && !(tag->flags & APE_NO_ID3)) {
-        memcpy(raw+tag->size, tag->id3, ApeTag__id3_length(tag));
+        memcpy(r+tag->size, tag->id3, ApeTag__id3_length(tag));
     }
 
-    *raw_p = raw;
-    *raw_size_p = raw_size;
+    *raw = r;
+    *raw_size = r_size;
     
     return 0;
 }
