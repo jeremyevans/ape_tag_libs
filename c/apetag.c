@@ -71,20 +71,20 @@ static uint32_t APE_MAXIMUM_ITEM_COUNT = 64;
 /* Private Structure */
 
 struct ApeTag {
-    FILE *file;           /* file containing tag */
-    DB *items;            /* DB_HASH format database */
-                          /* Keys are NULL-terminated */
-                          /* Values are ApeItem** */
-    char *tag_header;     /* Tag Header data */
-    char *tag_data;       /* Tag body data */
-    char *tag_footer;     /* Tag footer data */
-    char *id3;            /* ID3 data, if any */
-    char *error;          /* String for last error */
-    uint32_t flags;       /* Internal tag flags */
-    uint32_t size;        /* On disk size in bytes */
-    uint32_t item_count;  /* On disk item count */
-    uint32_t num_items;   /* In database item count */
-    off_t offset;         /* Start of tag in file */
+    FILE *file;                /* file containing tag */
+    DB *items;                 /* DB_HASH format database */
+                               /* Keys are NULL-terminated */
+                               /* Values are ApeItem** */
+    char *tag_header;          /* Tag Header data */
+    char *tag_data;            /* Tag body data */
+    char *tag_footer;          /* Tag footer data */
+    char *id3;                 /* ID3 data, if any */
+    char *error;               /* String for last error */
+    uint32_t flags;            /* Internal tag flags */
+    uint32_t size;             /* On disk size in bytes */
+    uint32_t file_item_count;  /* On disk item count */
+    uint32_t item_count;       /* In database item count */
+    off_t offset;              /* Start of tag in file */
 };
 
 /* Private function prototypes */
@@ -302,7 +302,7 @@ int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
     }
     
     /* Don't exceed the maximum number of items allowed */
-    if(tag->num_items == APE_MAXIMUM_ITEM_COUNT) {
+    if(tag->item_count == APE_MAXIMUM_ITEM_COUNT) {
         tag->error = "maximum item count exceeded";
         return -3;
     }
@@ -333,7 +333,7 @@ int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
         goto add_item_error;
     }
 
-    tag->num_items++;
+    tag->item_count++;
     ret = 0;
     
     add_item_error:
@@ -410,7 +410,7 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
         }
     }
     
-    tag->num_items--;
+    tag->item_count--;
     free(key_dbt.data);
     return ret;
 }
@@ -445,7 +445,7 @@ int ApeTag_clear_items(struct ApeTag *tag) {
     clear_items_error:
     tag->items = NULL;
     tag->flags &= ~APE_CHECKED_FIELDS;
-    tag->num_items = 0;
+    tag->item_count = 0;
     return ret;
 }
 
@@ -489,11 +489,11 @@ uint32_t ApeTag_size(struct ApeTag *tag) {
 }
 
 uint32_t ApeTag_item_count(struct ApeTag *tag) {
-    return tag->num_items;
+    return tag->item_count;
 }
 
 uint32_t ApeTag_file_item_count(struct ApeTag *tag) {
-    return tag->item_count;
+    return tag->file_item_count;
 }
 
 const char * ApeTag_error(struct ApeTag *tag){
@@ -617,9 +617,9 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
     }
     
     memcpy(&tag->size, tag->tag_footer+12, 4);
-    memcpy(&tag->item_count, tag->tag_footer+16, 4);
+    memcpy(&tag->file_item_count, tag->tag_footer+16, 4);
     tag->size = LE2H32(tag->size);
-    tag->item_count = LE2H32(tag->item_count);
+    tag->file_item_count = LE2H32(tag->file_item_count);
     tag->size += 32;
     
     /* Check tag footer for validity */
@@ -635,11 +635,11 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
         tag->error = "tag larger than possible size";
         return -3;
     }
-    if(tag->item_count > APE_MAXIMUM_ITEM_COUNT) {
+    if(tag->file_item_count > APE_MAXIMUM_ITEM_COUNT) {
         tag->error = "tag item count larger than allowed";
         return -3;
     }
-    if(tag->item_count > (tag->size - APE_MINIMUM_TAG_SIZE)/APE_ITEM_MINIMUM_SIZE) {
+    if(tag->file_item_count > (tag->size - APE_MINIMUM_TAG_SIZE)/APE_ITEM_MINIMUM_SIZE) {
         tag->error = "tag item count larger than possible";
         return -3;
     }
@@ -685,7 +685,7 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
         return -3;
     }
     memcpy(&header_check, tag->tag_header+16, 4);
-    if(tag->item_count != LE2H32(header_check)) {
+    if(tag->file_item_count != LE2H32(header_check)) {
         tag->error = "header and footer item count does not match";
         return -3;
     }
@@ -714,7 +714,7 @@ static int ApeTag__parse_items(struct ApeTag *tag) {
         }
     }
     
-    for(i=0; i < tag->item_count; i++) {
+    for(i=0; i < tag->file_item_count; i++) {
         if(offset > last_possible_offset) {
             tag->error = "end of tag reached but more items specified";
             return -3;
@@ -913,7 +913,7 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     int ret = 0;
     uint32_t size;
     uint32_t flags;
-    uint32_t tag_size = 64 + 9 * tag->num_items;
+    uint32_t tag_size = 64 + 9 * tag->item_count;
     uint32_t num_items;
     struct ApeItem **items;
     DBT key_dbt, value_dbt;
@@ -926,7 +926,7 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     assert(tag != NULL);
     
     /* Check that the total number of items in the tag is ok */
-    if(tag->num_items > APE_MAXIMUM_ITEM_COUNT) {
+    if(tag->item_count > APE_MAXIMUM_ITEM_COUNT) {
         tag->error = "tag item count larger than allowed";
         return -3;
     }
@@ -1060,7 +1060,7 @@ static int ApeTag__write_tag(struct ApeTag *tag) {
         tag->error = "ftruncate";
         return -1;
     }
-    tag->item_count = tag->num_items;
+    tag->file_item_count = tag->item_count;
     tag->flags |= APE_HAS_APE;
     
     return 0;
@@ -1569,7 +1569,7 @@ Returns <0 on error, 1 if the tag has no items, and 0 if the
 array was set sucessfully.
 */
 static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_items) {
-    uint32_t nitems = tag->num_items;
+    uint32_t nitems = tag->item_count;
     struct ApeItem **is;
 
     if (num_items) {
