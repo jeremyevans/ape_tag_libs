@@ -242,13 +242,13 @@ int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size) {
     }
 
     if (raw == NULL) {
-        tag->errcode = APETAG_NULLPTR;
-        tag->error = "raw";
+        tag->errcode = APETAG_ARGERR;
+        tag->error = "raw is NULL";
         return -1;
     }
     if (raw_size == NULL) {
-        tag->errcode = APETAG_NULLPTR;
-        tag->error = "raw_size";
+        tag->errcode = APETAG_ARGERR;
+        tag->error = "raw_size is NULL";
         return -1;
     }
 
@@ -416,11 +416,17 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
     }
 
     if (key == NULL) {
-        tag->errcode = APETAG_NULLPTR;
-        tag->error = "key";
+        tag->errcode = APETAG_ARGERR;
+        tag->error = "key IS NULL";
         return -1;
     }
+
     key_dbt.size = strlen(key) + 1;
+    if (key_dbt.size > 256) {
+        tag->errcode = APETAG_ARGERR;
+        tag->error = "key is greater than 255 characters";
+        return -1;
+    }
     
     /* Empty database implies item doesn't exist */
     if(tag->items == NULL) {
@@ -507,13 +513,13 @@ int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item) 
     }
 
     if (key == NULL) {
-        tag->errcode = APETAG_NULLPTR;
-        tag->error = "key";
+        tag->errcode = APETAG_ARGERR;
+        tag->error = "key is NULL";
         return -1;
     }
     if (item == NULL) {
-        tag->errcode = APETAG_NULLPTR;
-        tag->error = "item";
+        tag->errcode = APETAG_ARGERR;
+        tag->error = "item is NULL";
         return -1;
     }
 
@@ -1646,6 +1652,11 @@ static int ApeTag__get_item(struct ApeTag *tag, const char *key, struct ApeItem 
     *item = NULL;
 
     key_dbt.size = strlen(key) + 1; 
+    if (key_dbt.size > 256) {
+        tag->errcode = APETAG_ARGERR;
+        tag->error = "key is greater than 255 characters";
+        return -1;
+    }
     if ((key_dbt.data = ApeTag__strcasecpy(key, (unsigned char)key_dbt.size)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";

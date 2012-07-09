@@ -354,6 +354,14 @@ int test_ApeTag_update(void) {
     ApeTag_remove_item(tag, "Track");
     ADD_FIELD("Blah", "Blah", 4);
     CHECK_TAG(example2_id3, 313);
+
+    before = malloc(257);
+    memset(before, 'a', 256);
+    before[256] = '\0';
+    CHECK(ApeTag_remove_item(tag, before) == -1);
+    CHECK(ApeTag_error_code(tag) == APETAG_ARGERR);
+    CHECK(ApeTag_get_item(tag, before, &item) == -1);
+    CHECK(ApeTag_error_code(tag) == APETAG_ARGERR);
      
     #undef CHECK_TAG
     #undef ADD_FIELD

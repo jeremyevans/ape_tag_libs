@@ -97,9 +97,10 @@ The tag could not be parsed as some part of it was corrupt.
 An attempt was made to add an invalid item to an existing tag, or to parse
 a tag containing an invalid item.
 .IP \(bu 4
-.BR APETAG_NULLPTR:
-A function was passed a NULL pointer argument where a non-NULL pointer
-argument is required.
+.BR APETAG_ARGERR :
+A function was passed an argument that is not valid.
+One cause of this is if a function was passed a NULL pointer argument
+where a non-NULL pointer argument is required.
 Note that since the error code is stored in the tag object, if you pass a
 NULL tag argument, apetag will just return -1 (since there is nowhere to
 record the type of error in that case).
