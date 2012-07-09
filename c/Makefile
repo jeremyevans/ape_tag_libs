@@ -66,7 +66,7 @@ regress: all test/test_apetag
 
 symlinks: lib${LIB}.so ${SONAME}
 
-test/test_apetag:
+test/test_apetag: test/test_apetag.c
 	cd test && ${CC} ${CCOPTS} -I.. -L.. -l${LIB} ${LDFLAGS} \
 	    -o test_apetag test_apetag.c
 
