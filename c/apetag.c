@@ -15,12 +15,6 @@
 
 /* Macros */
 
-#define INIT_DBT    DBT key_dbt, value_dbt; \
-    key_dbt.data = NULL; \
-    key_dbt.size = 0; \
-    value_dbt.data = NULL; \
-    value_dbt.size = 0;
-
 #define APE_DEFAULT_FLAGS      0
 #define APE_CHECKED_APE        1 << 0
 #define APE_CHECKED_OFFSET     1 << 1
@@ -36,29 +30,6 @@
                                     !(TAG->flags & APE_NO_ID3)) ? 128 : 0)
 #define TAG_LENGTH(TAG) (tag->size + ID3_LENGTH(TAG))
 
-#define APETAG_ACCESSOR_CHECK \
-    int ret; \
-    assert(tag != NULL); \
-    if(!(tag->flags & APE_CHECKED_APE)) { \
-        if((ret = ApeTag__get_tag_information(tag)) < 0) { \
-            return ret; \
-        } \
-    }
-    
-#define APETAG_ACCESSOR_CHECK_DBT \
-    int ret; \
-    DBT key_dbt, value_dbt; \
-    assert(tag != NULL); \
-    if(!(tag->flags & APE_CHECKED_APE)) { \
-        if((ret = ApeTag__get_tag_information(tag)) < 0) { \
-            return ret; \
-        } \
-    } \
-    key_dbt.data = NULL; \
-    key_dbt.size = 0; \
-    value_dbt.data = NULL; \
-    value_dbt.size = 0;
-    
 /* True minimum values */
 #define APE_MINIMUM_TAG_SIZE   64
 #define APE_ITEM_MINIMUM_SIZE  11
@@ -184,19 +155,37 @@ int ApeTag_free(struct ApeTag *tag) {
 }
 
 int ApeTag_exists(struct ApeTag *tag) {
-    APETAG_ACCESSOR_CHECK
+    int ret;
+
+    assert(tag != NULL);
+
+    if((ret = ApeTag__get_tag_information(tag)) < 0) {
+        return ret;
+    }
 
     return (tag->flags & APE_HAS_APE) > 0;
 }
 
 int ApeTag_exists_id3(struct ApeTag *tag) {
-    APETAG_ACCESSOR_CHECK
+    int ret;
+
+    assert(tag != NULL);
+
+    if((ret = ApeTag__get_tag_information(tag)) < 0) {
+        return ret;
+    }
 
     return (tag->flags & APE_HAS_ID3) > 0;
 }
 
 int ApeTag_remove(struct ApeTag *tag) {
-    APETAG_ACCESSOR_CHECK
+    int ret;
+
+    assert(tag != NULL);
+
+    if((ret = ApeTag__get_tag_information(tag)) < 0) {
+        return ret;
+    }
     
     if(!(tag->flags & APE_HAS_APE)) {
         return 1;
@@ -218,7 +207,13 @@ int ApeTag_raw(struct ApeTag *tag, char **raw_p, uint32_t *raw_size_p) {
     uint32_t raw_size; 
     char *raw; 
 
-    APETAG_ACCESSOR_CHECK
+    int ret;
+
+    assert(tag != NULL);
+
+    if((ret = ApeTag__get_tag_information(tag)) < 0) {
+        return ret;
+    }
 
     assert(raw_p != NULL);
 
@@ -246,7 +241,13 @@ int ApeTag_raw(struct ApeTag *tag, char **raw_p, uint32_t *raw_size_p) {
 }
 
 int ApeTag_parse(struct ApeTag *tag) {
-    APETAG_ACCESSOR_CHECK
+    int ret;
+
+    assert(tag != NULL);
+
+    if((ret = ApeTag__get_tag_information(tag)) < 0) {
+        return ret;
+    }
 
     if((tag->flags & APE_HAS_APE) && !(tag->flags & APE_CHECKED_FIELDS)) {
         if((ret = ApeTag__parse_items(tag)) < 0) {
@@ -258,7 +259,13 @@ int ApeTag_parse(struct ApeTag *tag) {
 }
 
 int ApeTag_update(struct ApeTag *tag) {
-    APETAG_ACCESSOR_CHECK
+    int ret;
+
+    assert(tag != NULL);
+
+    if((ret = ApeTag__get_tag_information(tag)) < 0) {
+        return ret;
+    }
     
     if((ret = ApeTag__update_id3(tag)) != 0) {
         return ret;
@@ -274,7 +281,14 @@ int ApeTag_update(struct ApeTag *tag) {
 }
 
 int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
-    APETAG_ACCESSOR_CHECK_DBT
+    int ret;
+    DBT key_dbt, value_dbt;
+
+    assert(tag != NULL);
+
+    if((ret = ApeTag__get_tag_information(tag)) < 0) {
+        return ret;
+    }
 
     value_dbt.size = sizeof(struct ApeItem **);
     value_dbt.data = &item; 
@@ -331,7 +345,13 @@ int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
 
 int ApeTag_replace_item(struct ApeTag *tag, struct ApeItem *item) {
     int existed = 0;
-    APETAG_ACCESSOR_CHECK
+    int ret;
+
+    assert(tag != NULL);
+
+    if((ret = ApeTag__get_tag_information(tag)) < 0) {
+        return ret;
+    }
     
     if((ret = ApeTag_remove_item(tag, item->key)) < 0) {
         return ret;
@@ -347,7 +367,14 @@ int ApeTag_replace_item(struct ApeTag *tag, struct ApeItem *item) {
 }
 
 int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
-    APETAG_ACCESSOR_CHECK_DBT
+    int ret;
+    DBT key_dbt, value_dbt;
+
+    assert(tag != NULL);
+
+    if((ret = ApeTag__get_tag_information(tag)) < 0) {
+        return ret;
+    }
 
     assert(key != NULL);
     key_dbt.size = strlen(key) + 1;
@@ -392,7 +419,11 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
 
 int ApeTag_clear_items(struct ApeTag *tag) {
     int ret = 0;
-    INIT_DBT;
+    DBT key_dbt, value_dbt;
+    key_dbt.data = NULL;
+    key_dbt.size = 0;
+    value_dbt.data = NULL;
+    value_dbt.size = 0;
     
     assert(tag != NULL);
     
@@ -421,7 +452,13 @@ int ApeTag_clear_items(struct ApeTag *tag) {
 }
 
 int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item) {
-    APETAG_ACCESSOR_CHECK
+    int ret;
+
+    assert(tag != NULL);
+
+    if((ret = ApeTag__get_tag_information(tag)) < 0) {
+        return ret;
+    }
 
     assert(key != NULL);
     assert(item != NULL);
@@ -434,9 +471,11 @@ int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item) 
 }
 
 struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count) {
+    assert(tag != NULL);
 
-    if (!(tag->flags & APE_CHECKED_APE) && ApeTag__get_tag_information(tag) < 0)
+    if (ApeTag__get_tag_information(tag) < 0) {
         return NULL;
+    }
 
     return ApeTag__get_items(tag, item_count);
 }
@@ -477,6 +516,10 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
     uint32_t header_check;
     off_t file_size = 0;
     assert(tag != NULL);
+
+    if(tag->flags & APE_CHECKED_APE) {
+        return 0;
+    }
     
     /* Get file size */
     if(fseek(tag->file, 0, SEEK_END) == -1) {
@@ -808,7 +851,7 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
                     *c = ','; \
                 } \
             } \
-        } \
+        }
     
     /* 
     ID3v1.1 tag offsets, lengths
@@ -861,7 +904,12 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     uint32_t tag_size = 64 + 9 * tag->num_items;
     uint32_t num_items;
     struct ApeItem **items;
-    INIT_DBT;
+    DBT key_dbt, value_dbt;
+    key_dbt.data = NULL;
+    key_dbt.size = 0;
+    value_dbt.data = NULL;
+    value_dbt.size = 0;
+    
     
     assert(tag != NULL);
     
@@ -1228,7 +1276,11 @@ Returns 0 on success, -1 on error;
 */
 static int ApeTag__lookup_genre(struct ApeTag *tag, struct ApeItem *item, char *genre_id) {
     int ret = 0;
-    INIT_DBT
+    DBT key_dbt, value_dbt;
+    key_dbt.data = NULL;
+    key_dbt.size = 0;
+    value_dbt.data = NULL;
+    value_dbt.size = 0;
 
     key_dbt.size = item->size;
     key_dbt.data = item->value;
@@ -1265,7 +1317,11 @@ Returns 0 on success, -1 on error.
 */
 static int ApeTag__load_ID3_GENRES(struct ApeTag *tag) {
     DB* genres;
-    INIT_DBT;
+    DBT key_dbt, value_dbt;
+    key_dbt.data = NULL;
+    key_dbt.size = 0;
+    value_dbt.data = NULL;
+    value_dbt.size = 0;
     value_dbt.size = 1;
     
     assert(tag != NULL);
@@ -1461,7 +1517,11 @@ item was not in the database.
 */
 static int ApeTag__get_item(struct ApeTag *tag, const char *key, struct ApeItem **item) {
     int ret = 0;
-    INIT_DBT
+    DBT key_dbt, value_dbt;
+    key_dbt.data = NULL;
+    key_dbt.size = 0;
+    value_dbt.data = NULL;
+    value_dbt.size = 0;
 
     *item = NULL;
 
@@ -1506,7 +1566,11 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
 
     if (nitems > 0) {
         uint32_t i = 0;
-        INIT_DBT
+        DBT key_dbt, value_dbt;
+        key_dbt.data = NULL;
+        key_dbt.size = 0;
+        value_dbt.data = NULL;
+        value_dbt.size = 0;
 
         if(tag->items == NULL) {
             free(is);
