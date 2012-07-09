@@ -522,12 +522,12 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
     }
     
     /* Get file size */
-    if(fseek(tag->file, 0, SEEK_END) == -1) {
-        tag->error = "fseek";
+    if(fseeko(tag->file, 0, SEEK_END) == -1) {
+        tag->error = "fseeko";
         return -1;
     }
     if((file_size = ftello(tag->file)) == -1) {
-        tag->error = "ftell";
+        tag->error = "ftello";
         return -1;
     } 
     
@@ -545,8 +545,8 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
             tag->flags &= ~APE_HAS_ID3;
         } else {
             /* Check for id3 tag */
-            if((fseek(tag->file, -128, SEEK_END)) == -1) {
-                tag->error = "fseek";
+            if((fseeko(tag->file, -128, SEEK_END)) == -1) {
+                tag->error = "fseeko";
                 return -1;
             }
             free(tag->id3);
@@ -578,8 +578,8 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
     }
     
     /* Check for existance of ape tag footer */
-    if(fseek(tag->file, -32-id3_length, SEEK_END) == -1) {
-        tag->error = "fseek";
+    if(fseeko(tag->file, -32-id3_length, SEEK_END) == -1) {
+        tag->error = "fseeko";
         return -1;
     }
     free(tag->tag_footer);
@@ -631,12 +631,12 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
         tag->error = "tag item count larger than possible";
         return -3;
     }
-    if(fseek(tag->file, (-(long)tag->size - id3_length), SEEK_END) == -1) {
-        tag->error = "fseek";
+    if(fseeko(tag->file, (-(long)tag->size - id3_length), SEEK_END) == -1) {
+        tag->error = "fseeko";
         return -1;
     }
     if((tag->offset = ftello(tag->file)) == -1) {
-        tag->error = "ftell";
+        tag->error = "ftello";
         return -1;
     }
     tag->flags |= APE_CHECKED_OFFSET;
@@ -1016,7 +1016,7 @@ static int ApeTag__write_tag(struct ApeTag *tag) {
     assert(tag->tag_footer != NULL);
     
     if(fseeko(tag->file, tag->offset, SEEK_SET) == -1) {
-        tag->error = "fseek";
+        tag->error = "fseeko";
         return -1;
     }
     
