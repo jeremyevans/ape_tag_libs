@@ -118,7 +118,7 @@ struct ApeTag * ApeTag_new(FILE *file, uint32_t flags) {
     
     assert(file != NULL);
     
-    tag = (struct ApeTag *)malloc(sizeof(struct ApeTag));
+    tag = malloc(sizeof(struct ApeTag));
 
     if(tag != NULL) {
         memset(tag, 0, sizeof(struct ApeTag));
@@ -221,7 +221,7 @@ int ApeTag_raw(struct ApeTag *tag, char **raw_p, uint32_t *raw_size_p) {
     *raw_size_p = 0;
     
     raw_size = TAG_LENGTH(tag);
-    if((raw = (char *)malloc(raw_size)) == NULL) {
+    if((raw = malloc(raw_size)) == NULL) {
         tag->error = "malloc";
         return -1;
     }
@@ -558,7 +558,7 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
                 return -1;
             }
             free(tag->id3);
-            if((tag->id3 = (char *)malloc(128)) == NULL) {
+            if((tag->id3 = malloc(128)) == NULL) {
                 tag->error = "malloc";
                 return -1;
             }
@@ -591,7 +591,7 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
         return -1;
     }
     free(tag->tag_footer);
-    if((tag->tag_footer = (char *)malloc(32)) == NULL) {
+    if((tag->tag_footer = malloc(32)) == NULL) {
         tag->error = "malloc";
         return -1;
     }
@@ -651,7 +651,7 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
     
     /* Read tag header and data */
     free(tag->tag_header);
-    if((tag->tag_header = (char *)malloc(32)) == NULL) {
+    if((tag->tag_header = malloc(32)) == NULL) {
         tag->error = "malloc";
         return -1;
     }
@@ -660,7 +660,7 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
         return -2;
     }
     free(tag->tag_data);
-    if((tag->tag_data = (char *)malloc(tag->size-64)) == NULL) {
+    if((tag->tag_data = malloc(tag->size-64)) == NULL) {
         tag->error = "malloc";
         return -1;
     }
@@ -746,7 +746,7 @@ static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset) {
     
     assert(tag != NULL);
 
-    if((item = (struct ApeItem *)malloc(sizeof(struct ApeItem))) == NULL) {
+    if((item = malloc(sizeof(struct ApeItem))) == NULL) {
         tag->error = "malloc";
         return -1;
     }
@@ -783,12 +783,12 @@ static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset) {
     }
     
     /* Copy key and value from tag data to item */
-    if((item->key = (char *)malloc(key_length)) == NULL) {
+    if((item->key = malloc(key_length)) == NULL) {
         tag->error = "malloc";
         ret = -1;
         goto parse_error;
     }
-    if((item->value = (char *)malloc(item->size)) == NULL) {
+    if((item->value = malloc(item->size)) == NULL) {
         tag->error = "malloc";
         ret = -1;
         goto parse_error;
@@ -834,7 +834,7 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
     }
     
     /* Initialize id3 */
-    if((tag->id3 = (char *)malloc(128)) == NULL) {
+    if((tag->id3 = malloc(128)) == NULL) {
         tag->error = "malloc";
         return -1;
     }
@@ -955,7 +955,7 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     
     /* Write all of the tag items to the internal tag item string */
     free(tag->tag_data);
-    if((tag->tag_data = (char *)malloc(tag->size-64)) == NULL) {
+    if((tag->tag_data = malloc(tag->size-64)) == NULL) {
         tag->error = "malloc";
         ret = -1;
         goto update_ape_error;
@@ -977,13 +977,13 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     }
     
     free(tag->tag_footer);
-    if((tag->tag_footer = (char *)malloc(32)) == NULL) {
+    if((tag->tag_footer = malloc(32)) == NULL) {
         tag->error = "malloc";
         ret = -1;
         goto update_ape_error;
     }
     free(tag->tag_header);
-    if((tag->tag_header = (char *)malloc(32)) == NULL) {
+    if((tag->tag_header = malloc(32)) == NULL) {
         tag->error = "malloc";
         ret = -1;
         goto update_ape_error;
@@ -1095,7 +1095,7 @@ static char* ApeTag__strcasecpy(const char *src, unsigned char size) {
     
     assert(src != NULL);
     
-    if((dest = (char *)malloc(size)) == NULL) {
+    if((dest = malloc(size)) == NULL) {
         return NULL;
     }
     

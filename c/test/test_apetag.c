@@ -207,7 +207,7 @@ int test_ApeTag_raw(void) {
     #define TEST_RAW(FILENAME, SIZE) \
         CHECK(file = fopen(FILENAME, "r+")); \
         CHECK(tag = ApeTag_new(file, 0)); \
-        CHECK(file_contents = (char *)malloc(SIZE)); \
+        CHECK(file_contents = malloc(SIZE)); \
         CHECK(SIZE == fread(file_contents, 1, SIZE, file)); \
         CHECK(ApeTag_raw(tag, &raw_tag, &raw_size) == 0 && memcmp(file_contents, raw_tag, SIZE) == 0);
     
@@ -282,7 +282,7 @@ int test_ApeTag_update(void) {
     
     #define RAW_TAGS(POINTER, FILENAME, SIZE) \
         CHECK(file = fopen(FILENAME, "r")); \
-        CHECK(POINTER = (char *)malloc(SIZE)); \
+        CHECK(POINTER = malloc(SIZE)); \
         CHECK(SIZE == fread(POINTER, 1, SIZE, file)); \
         CHECK(fclose(file) == 0);
     
@@ -290,22 +290,22 @@ int test_ApeTag_update(void) {
         system("cp " FILENAME " " FILENAME ".0"); \
         CHECK(file = fopen(FILENAME ".0", "r+")); \
         system("rm " FILENAME ".0"); \
-        CHECK(before = (char *)malloc(SIZE)); \
+        CHECK(before = malloc(SIZE)); \
         CHECK(SIZE == fread(before, 1, SIZE, file)); \
         CHECK(tag = ApeTag_new(file, 0)); \
         CHECK(ApeTag_parse(tag) == 0); \
         CHECK(ApeTag_update(tag) == 0); \
         CHECK(fseek(file, 0, SEEK_SET) == 0); \
-        CHECK(after = (char *)malloc(ApeTag_size(tag)+ID3)); \
+        CHECK(after = malloc(ApeTag_size(tag)+ID3)); \
         CHECK(ApeTag_size(tag)+ID3 == fread(after, 1, ApeTag_size(tag)+ID3, file)); \
         CHECK(memcmp(CHANGED ? empty_ape_id3 : before, after, ApeTag_size(tag)+ID3) == 0);
         
     #define ADD_FIELD(KEY, VALUE, SIZE) \
-        item = (struct ApeItem *)malloc(sizeof(struct ApeItem)); \
+        item = malloc(sizeof(struct ApeItem)); \
         item->size = SIZE; \
         item->flags = 0; \
-        item->key = (char *)malloc(strlen(KEY)+1); \
-        item->value = (char *)malloc(SIZE); \
+        item->key = malloc(strlen(KEY)+1); \
+        item->value = malloc(SIZE); \
         memcpy(item->key, KEY, strlen(KEY)+1); \
         memcpy(item->value, VALUE, SIZE); \
         CHECK(ApeTag_add_item(tag, item) == 0);
@@ -313,7 +313,7 @@ int test_ApeTag_update(void) {
     #define CHECK_TAG(POINTER, SIZE) \
         CHECK(ApeTag_update(tag) == 0); \
         CHECK(fseek(file, 0, SEEK_SET) == 0); \
-        CHECK(after = (char *)malloc(SIZE)); \
+        CHECK(after = malloc(SIZE)); \
         CHECK(SIZE == fread(after, 1, SIZE, file)); \
         CHECK(memcmp(POINTER, after, SIZE) == 0);
     
@@ -430,7 +430,7 @@ int test_ApeItem_validity(void) {
     CHECK_VALIDITY(-3);
     item.key="ID3";
     CHECK_VALIDITY(-3);
-    item.key=(char *)malloc(260);
+    item.key=malloc(260);
     memcpy(item.key, "TAGS", 5);
     CHECK_VALIDITY(0);
     for(i=0; i < 0x20; i++) {
@@ -654,11 +654,11 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     CHECK(items);
     free(items);
     CHECK(items_size == 0);
-    CHECK(item = (struct ApeItem *)malloc(sizeof(struct ApeItem)));
+    CHECK(item = malloc(sizeof(struct ApeItem)));
     item->size = 5;
     item->flags = 0;
-    CHECK(item->key = (char *)malloc(6));
-    CHECK(item->value = (char *)malloc(5));
+    CHECK(item->key = malloc(6));
+    CHECK(item->value = malloc(5));
     memcpy(item->key, "ALBUM", 6);
     memcpy(item->value, "VALUE", 5);
     CHECK(ApeTag_add_item(tag, item) == 0);
@@ -688,11 +688,11 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     CHECK(memcmp(items[0]->value, "VALUE", 5) == 0);
     free(items);
 
-    CHECK(item = (struct ApeItem *)malloc(sizeof(struct ApeItem)));
+    CHECK(item = malloc(sizeof(struct ApeItem)));
     item->size = 3;
     item->flags = 0;
-    CHECK(item->key = (char *)malloc(6));
-    CHECK(item->value = (char *)malloc(5));
+    CHECK(item->key = malloc(6));
+    CHECK(item->value = malloc(5));
     memcpy(item->key, "ALBUM", 6);
     memcpy(item->value, "FOO", 3);
 
@@ -707,11 +707,11 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     CHECK(ApeTag_remove_item(tag, "track") == 1);
     CHECK(ApeTag_remove_item(tag, "album") == 0);
 
-    CHECK(item = (struct ApeItem *)malloc(sizeof(struct ApeItem)));
+    CHECK(item = malloc(sizeof(struct ApeItem)));
     item->size = 3;
     item->flags = 0;
-    CHECK(item->key = (char *)malloc(6));
-    CHECK(item->value = (char *)malloc(5));
+    CHECK(item->key = malloc(6));
+    CHECK(item->value = malloc(5));
     memcpy(item->key, "ALBUM", 6);
     memcpy(item->value, "FOO", 3);
 
@@ -731,9 +731,9 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     CHECK(ApeTag_remove_item(tag, "track") == 0);
     
     /* Check add duplicate key */
-    CHECK(item = (struct ApeItem *)malloc(sizeof(struct ApeItem)));
-    CHECK(item->key = (char *)malloc(6));
-    CHECK(item->value = (char *)malloc(5));
+    CHECK(item = malloc(sizeof(struct ApeItem)));
+    CHECK(item->key = malloc(6));
+    CHECK(item->value = malloc(5));
     item->size = 5;
     item->flags = 0;
     memcpy(item->key, "ALBUM", 6);
@@ -745,18 +745,18 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     /* Check adding more items than allowed */
     CHECK(ApeTag_clear_items(tag) == 0);
     for(i=0; i < 64; i++) {
-        CHECK(item = (struct ApeItem *)malloc(sizeof(struct ApeItem)));
-        CHECK(item->key = (char *)malloc(6));
-        CHECK(item->value = (char *)malloc(3));
+        CHECK(item = malloc(sizeof(struct ApeItem)));
+        CHECK(item->key = malloc(6));
+        CHECK(item->value = malloc(3));
         item->size = 2;
         item->flags = 0;
         snprintf(item->key, 6, "Key%02i", i);
         snprintf(item->value, 3, "%02i", i);
         CHECK(ApeTag_add_item(tag, item) == 0);
     }
-    CHECK(item = (struct ApeItem *)malloc(sizeof(struct ApeItem)));
-    CHECK(item->key = (char *)malloc(6));
-    CHECK(item->value = (char *)malloc(2));
+    CHECK(item = malloc(sizeof(struct ApeItem)));
+    CHECK(item->key = malloc(6));
+    CHECK(item->value = malloc(2));
     item->size = 2;
     item->flags = 0;
     snprintf(item->key, 6, "Key65");
@@ -767,9 +767,9 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     CHECK(tag = ApeTag_new(file, 0));
     CHECK(ApeTag_exists(tag) == 1);
     CHECK(ApeTag_exists_id3(tag) == 1);
-    CHECK(item = (struct ApeItem *)malloc(sizeof(struct ApeItem)));
-    CHECK(item->key = (char *)malloc(9));
-    CHECK(item->value = (char *)malloc(8112));
+    CHECK(item = malloc(sizeof(struct ApeItem)));
+    CHECK(item->key = malloc(9));
+    CHECK(item->value = malloc(8112));
     item->size = 8112;
     item->flags = 0;
     memcpy(item->key, "Too Big!", 9);
@@ -806,8 +806,8 @@ int test_no_id3(void) {
         CHECK(0 == ID3_LENGTH(tag)); \
         if(NO_ID3_FLAGS & APE_HAS_APE) { \
             CHECK(0 == fseek(file, 0, SEEK_SET)); \
-            CHECK(file_contents = (char *)malloc(ApeTag_size(tag))); \
-            CHECK(raw = (char *)malloc(ApeTag_size(tag))); \
+            CHECK(file_contents = malloc(ApeTag_size(tag))); \
+            CHECK(raw = malloc(ApeTag_size(tag))); \
             CHECK(ApeTag_size(tag) == fread(file_contents, 1, ApeTag_size(tag), file)); \
             CHECK(0 == ApeTag_raw(tag, &raw, &raw_size)); \
             CHECK(0 == memcmp(file_contents, raw, ApeTag_size(tag))); \
