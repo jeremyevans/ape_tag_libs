@@ -480,6 +480,12 @@ struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count) {
     return ApeTag__get_items(tag, item_count);
 }
 
+int ApeTag_mt_init(void) {
+    struct ApeTag tag;
+
+    return ApeTag__load_ID3_GENRES(&tag);
+}
+
 uint32_t ApeTag_size(struct ApeTag *tag) {
     return tag->size;
 }
@@ -1321,10 +1327,6 @@ Returns 0 on success, -1 on error.
 static int ApeTag__load_ID3_GENRES(struct ApeTag *tag) {
     DB* genres;
     DBT key_dbt, value_dbt;
-    key_dbt.data = NULL;
-    key_dbt.size = 0;
-    value_dbt.data = NULL;
-    value_dbt.size = 0;
     value_dbt.size = 1;
     
     assert(tag != NULL);
@@ -1332,6 +1334,7 @@ static int ApeTag__load_ID3_GENRES(struct ApeTag *tag) {
     if(ID3_GENRES != NULL) {
         return 0;
     }
+
     if((ID3_GENRES = genres = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
         tag->error = "dbopen";
         return -1;

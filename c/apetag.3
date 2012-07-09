@@ -46,6 +46,8 @@
 .B void ApeTag_set_max_size(uint32_t size);
 .P
 .B void ApeTag_set_max_item_count(uint32_t item_count);
+.P
+.B int ApeTag_mt_init(void);
 .SH DESCRIPTION
 .SS QUICK INTRO
 .BR apetag 's
@@ -362,6 +364,17 @@ Override the maximum tag size that this library will handle.
 .B void ApeTag_set_max_item_count(uint32_t item_count);
 .P
 Override the maximum number of items allowed in a tag.
+.P
+.B int ApeTag_mt_init(void);
+.P
+Should only be necessary in multi-threaded code.
+If libapetag is used in multi-threaded code, should be called before
+threads are created to initialize some global state.
+If this function is called before creating threads, then libapetag
+is thread-safe assuming you do not have multiple threads operating
+on the same ApeTag or ApeItem struct concurrently.
+.P
+Returns 0 on success, <0 on error.
 .SH AUTHOR
 .B apetag
 is written by Jeremy Evans.  You can contact the author at

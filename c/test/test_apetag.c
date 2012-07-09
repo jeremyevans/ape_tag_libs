@@ -29,6 +29,8 @@ int test_ApeTag__lookup_genre(void);
 
 int main(void) {
     int num_failures = 0;
+
+    CHECK(ApeTag_mt_init() == 0);
     
     if(chdir("tags") != 0) {
         err(1, NULL);
