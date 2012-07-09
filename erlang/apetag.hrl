@@ -21,6 +21,6 @@
         "Goa", "Drum & Bass", "Club-House", "Hardcore", "Terror", "Indie", "BritPop", "Negerpunk",
         "Polsk Punk", "Beat", "Christian Gangsta Rap", "Heavy Metal", "Black Metal",
         "Crossover", "Contemporary Christian", "Christian Rock", "Merengue", "Salsa",
-        "Trash Meta", "Anime", "Jpop", "Synthpop"]).
+        "Thrash Metal", "Anime", "Jpop", "Synthpop"]).
 -record(apetag, {filename, file = nil, check_id3 = true, has_tag = nil,  file_size = nil, tag_start = nil, tag_size = nil, tag_item_count = nil, tag_header = nil, tag_data = nil, tag_footer = nil, id3 = nil, fields = nil}).
 -record(apeitem, {key, values, flags, lowercase_key}).

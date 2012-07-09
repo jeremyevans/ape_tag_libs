@@ -242,7 +242,7 @@ class ApeTag
     Goa, Drum & Bass, Club-House, Hardcore, Terror, Indie, BritPop, Negerpunk, 
     Polsk Punk, Beat, Christian Gangsta Rap, Heavy Metal, Black Metal, 
     Crossover, Contemporary Christian, Christian Rock, Merengue, Salsa, 
-    Trash Meta, Anime, Jpop, Synthpop'.split(',').collect{|g| g.strip}
+    Thrash Metal, Anime, Jpop, Synthpop'.split(',').collect{|g| g.strip}
   ID3_GENRES_HASH = CICPHash.new(255.chr)
   ID3_GENRES.each_with_index{|g,i| ID3_GENRES_HASH[g] = i.chr }
   FILE_OBJ_METHODS = %w'close seek read pos write truncate'

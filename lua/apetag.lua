@@ -286,7 +286,7 @@ ApeTag = {
         'Goa', 'Drum & Bass', 'Club-House', 'Hardcore', 'Terror', 'Indie', 'BritPop', 'Negerpunk',
         'Polsk Punk', 'Beat', 'Christian Gangsta Rap', 'Heavy Metal', 'Black Metal',
         'Crossover', 'Contemporary Christian', 'Christian Rock', 'Merengue', 'Salsa',
-        'Trash Meta', 'Anime', 'Jpop', 'Synthpop'},
+        'Thrash Metal', 'Anime', 'Jpop', 'Synthpop'},
     ID3_GENRES_HASH = {},
     YEAR_RE = '%d%d%d%d',
     MP3_RE = '%.mp3$',

@@ -1493,7 +1493,7 @@ static int ApeTag__load_ID3_GENRES(struct ApeTag *tag) {
     ADD_TO_ID3_GENRES("Christian Rock", "\215");
     ADD_TO_ID3_GENRES("Merengue", "\216");
     ADD_TO_ID3_GENRES("Salsa", "\217");
-    ADD_TO_ID3_GENRES("Trash Meta", "\220");
+    ADD_TO_ID3_GENRES("Thrash Metal", "\220");
     ADD_TO_ID3_GENRES("Anime", "\221");
     ADD_TO_ID3_GENRES("Jpop", "\222");
     ADD_TO_ID3_GENRES("Synthpop", "\223");

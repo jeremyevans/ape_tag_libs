@@ -144,7 +144,7 @@ _id3genresstr = '''Blues, Classic Rock, Country, Dance, Disco, Funk, Grunge,
     Goa, Drum & Bass, Club-House, Hardcore, Terror, Indie, BritPop, Negerpunk, 
     Polsk Punk, Beat, Christian Gangsta Rap, Heavy Metal, Black Metal, 
     Crossover, Contemporary Christian, Christian Rock, Merengue, Salsa, 
-    Trash Meta, Anime, Jpop, Synthpop'''
+    Thrash Metal, Anime, Jpop, Synthpop'''
 _apeitemkeys = '''Title, Artist, Album, Year, Comment, Genre, Track, 
     Debut Album, Subtitle, Publisher, Conductor, Composer, Copyright, 
     Publicationright, File, EAN/UPC, ISBN, Catalog, LC, Record Date, 

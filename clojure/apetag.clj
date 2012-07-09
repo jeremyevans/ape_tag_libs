@@ -39,7 +39,7 @@
     "Goa", "Drum & Bass", "Club-House", "Hardcore", "Terror", "Indie", "BritPop", "Negerpunk",
     "Polsk Punk", "Beat", "Christian Gangsta Rap", "Heavy Metal", "Black Metal",
     "Crossover", "Contemporary Christian", "Christian Rock", "Merengue", "Salsa",
-    "Trash Meta", "Anime", "Jpop", "Synthpop"])
+    "Thrash Metal", "Anime", "Jpop", "Synthpop"])
 (def ID3-GENRES-HASH ((reduce (fn [m g] {:number (+ 1 (m :number)), :hash (assoc (m :hash) (.toLowerCase g) (m :number))}) {:number 0, :hash {}} ID3-GENRES) :hash))
 
 (defn- with-file-channel [filename options f]

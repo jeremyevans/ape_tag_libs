@@ -1068,7 +1068,7 @@ int test_ApeTag__lookup_genre(void) {
     LOOKUP_GENRE("Christian Rock", 14, '\215');
     LOOKUP_GENRE("Merengue", 8, '\216');
     LOOKUP_GENRE("Salsa", 5, '\217');
-    LOOKUP_GENRE("Trash Meta", 10, '\220');
+    LOOKUP_GENRE("Thrash Metal", 10, '\220');
     LOOKUP_GENRE("Anime", 5, '\221');
     LOOKUP_GENRE("Jpop", 4, '\222');
     LOOKUP_GENRE("Synthpop", 8, '\223');
