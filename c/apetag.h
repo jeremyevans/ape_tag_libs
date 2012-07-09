@@ -35,6 +35,19 @@ struct ApeItem {
     char *value;          /* Unterminated string */
 };
 
+/* Possible error types for the library */
+
+enum ApeTag_errcode {
+    APETAG_NOERR = 0,
+    APETAG_FILEERR,
+    APETAG_MEMERR,
+    APETAG_INTERNALERR,
+    APETAG_LIMITEXCEEDED,
+    APETAG_DUPLICATEITEM,
+    APETAG_CORRUPTTAG,
+    APETAG_INVALIDITEM,
+};
+
 /* Public functions */
 
 struct ApeTag * ApeTag_new(FILE *file, uint32_t flags);
@@ -58,6 +71,7 @@ uint32_t ApeTag_size(struct ApeTag *tag);
 uint32_t ApeTag_item_count(struct ApeTag *tag);
 uint32_t ApeTag_file_item_count(struct ApeTag *tag);
 const char * ApeTag_error(struct ApeTag *tag);
+enum ApeTag_errcode ApeTag_error_code(struct ApeTag *tag);
 
 int ApeTag_mt_init(void);
 

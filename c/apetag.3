@@ -37,6 +37,8 @@
 .P
 .B uint32_t ApeTag_item_count(struct ApeTag *tag);
 .P
+.B enum ApeTag_errcode ApeTag_error_code(struct ApeTag *tag);
+.P
 .B const char * ApeTag_error(struct ApeTag *tag);
 .P
 .B size_t ApeTag_get_max_size(void);
@@ -55,23 +57,47 @@ API is fairly straight forward.  Some common things to remember:
 .IP \(bu 2
 Most functions assert that their pointer arguments are not NULL.
 .IP \(bu 2
-For the public functions that return an int, negative numbers imply an error:
+For the public functions that return an
+.BR int ,
+-1 is always represents an error.
+You can find the general area of error by calling
+.BR ApeTag_error_code ,
+which returns a member of the
+.B ApeTag_errcode
+enum.
+You can get more detail about the specific error by calling
+.BR ApeTag_error ,
+which returns a
+.B char*
+describing the specific error (or in some cases, the underlying system function
+that returned an error).
+The members of the
+.B ApeTag_errcode
+enum are:
 .IP \(bu 4
--1: Check 
-.IR errno ,
-see 
-.I tag->error
-for function name.
+.BR APETAG_NOERR :
+No error has yet occurred for this tag.
 .IP \(bu 4
--2: File error, check 
-.BR ferror ,
-see 
-.I tag->error
-for function name.
+.BR APETAG_FILEERR :
+An error occurred while dealing with the tag's file (reading/writing/etc.).
 .IP \(bu 4
--3: internal tag/item consistancy error, see
-.I tag->error
-for reason.
+.BR APETAG_INTERNALERR :
+An internal library error occurred.
+.IP \(bu 4
+.BR APETAG_LIMITEXCEEDED :
+An attempt was made to read or write a tag with that violates the library's
+limit for tag size or item count.
+.IP \(bu 4
+.BR APETAG_DUPLICATEITEM :
+An attempt was made to add a duplicate item to an existing tag, or to parse
+a tag containing a duplicate item.
+.IP \(bu 4
+.BR APETAG_CORRUPTTAG :
+The tag could not be parsed as some part of it was corrupt.
+.IP \(bu 4
+.BR APETAG_INVALIDITEM :
+An attempt was made to add an invalid item to an existing tag, or to parse
+a tag containing an invalid item.
 .IP \(bu 2
 ApeItem keys are NULL-terminated strings.
 .IP \(bu 2
@@ -338,6 +364,13 @@ Returns the current number of items in the tag in the file.
 .BR ApeTag_exists
 should be called before calling this method.
 This does not reflect changes made by adding or removing items.
+.P
+.B enum ApeTag_errcode ApeTag_error_code(struct ApeTag *tag);
+.P
+Returns a member of ApeTag_errcode indicating the general area of the
+cause of the last error.
+More detail about the error can be found in the error message returned by
+.BR ApeTag_error .
 .P
 .B const char * ApeTag_error(struct ApeTag *tag);
 .P

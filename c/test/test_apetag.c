@@ -86,6 +86,7 @@ int test_ApeTag_new_free(void) {
     CHECK(tag = ApeTag_new(file, 0));
     CHECK(tag->file == file && tag->items == NULL && tag->tag_header == NULL && \
        tag->tag_data == NULL && tag->tag_footer == NULL && tag->id3 == NULL && \
+       ApeTag_error_code(tag) == APETAG_NOERR && \
        ApeTag_error(tag) == NULL && tag->flags == (APE_DEFAULT_FLAGS | 0) && \
        ApeTag_size(tag) == 0 && ApeTag_file_item_count(tag) == 0 && ApeTag_item_count(tag) == 0 && \
        tag->offset == 0);
@@ -146,26 +147,27 @@ int test_ApeTag_maximums(void) {
     struct ApeTag *tag;
     FILE *file;
     
-    #define TEST_EXIST(FILENAME, EXIST) \
+    #define TEST_EXIST(FILENAME, EXIST, ERROR) \
         CHECK(file = fopen(FILENAME, "r+")); \
         CHECK(tag = ApeTag_new(file, 0)); \
-        CHECK(ApeTag_exists(tag) == EXIST);
+        CHECK(ApeTag_exists(tag) == EXIST); \
+        CHECK(ApeTag_error_code(tag) == ERROR); \
     
     CHECK(ApeTag_get_max_size() == 8192);
     CHECK(ApeTag_get_max_item_count() == 64);
 
     ApeTag_set_max_item_count(0);
     CHECK(ApeTag_get_max_item_count() == 0);
-    TEST_EXIST("empty_ape.tag", 1);
-    TEST_EXIST("example1.tag", -3);
+    TEST_EXIST("empty_ape.tag", 1, APETAG_NOERR);
+    TEST_EXIST("example1.tag", -1, APETAG_LIMITEXCEEDED);
     ApeTag_set_max_item_count(64);
 
     ApeTag_set_max_size(64);
     CHECK(ApeTag_get_max_size() == 64);
-    TEST_EXIST("empty_ape.tag", 1);
-    TEST_EXIST("example1.tag", -3);
+    TEST_EXIST("empty_ape.tag", 1, APETAG_NOERR);
+    TEST_EXIST("example1.tag", -1, APETAG_LIMITEXCEEDED);
     ApeTag_set_max_size(63);
-    TEST_EXIST("empty_ape.tag", -3);
+    TEST_EXIST("empty_ape.tag", -1, APETAG_LIMITEXCEEDED);
     ApeTag_set_max_size(8192);
     
     #undef TEST_EXIST
@@ -413,35 +415,35 @@ int test_ApeItem_validity(void) {
     /* Check invalid flags */
     CHECK_VALIDITY(0);
     item.flags = 8;
-    CHECK_VALIDITY(-3);
+    CHECK_VALIDITY(-1);
     item.flags = 0;
     
     /* Check invalid keys */
     CHECK_VALIDITY(0);
     item.key="";
-    CHECK_VALIDITY(-3);
+    CHECK_VALIDITY(-1);
     item.key="a";
-    CHECK_VALIDITY(-3);
+    CHECK_VALIDITY(-1);
     item.key="aa";
     CHECK_VALIDITY(0);
     item.key="tag";
-    CHECK_VALIDITY(-3);
+    CHECK_VALIDITY(-1);
     item.key="oggs";
-    CHECK_VALIDITY(-3);
+    CHECK_VALIDITY(-1);
     item.key="MP+";
-    CHECK_VALIDITY(-3);
+    CHECK_VALIDITY(-1);
     item.key="ID3";
-    CHECK_VALIDITY(-3);
+    CHECK_VALIDITY(-1);
     item.key=malloc(260);
     memcpy(item.key, "TAGS", 5);
     CHECK_VALIDITY(0);
     for(i=0; i < 0x20; i++) {
         *(item.key+3) = (char)i;
-        CHECK_VALIDITY(-3);
+        CHECK_VALIDITY(-1);
     }
     for(i=0xff; i >= 0x80; i--) {
         *(item.key+3) = (char)i;
-        CHECK_VALIDITY(-3);
+        CHECK_VALIDITY(-1);
     }
     for(i=0; i<9; i++) {
         memcpy(item.key+(26*i), "qwertyuiopasdfghjklzxcvbnm", 27);
@@ -450,7 +452,7 @@ int test_ApeItem_validity(void) {
     memcpy(item.key+234, "qwertyuiopasdfghjklzxcvbnm", 21);
     CHECK_VALIDITY(0);
     memcpy(item.key+235, "qwertyuiopasdfghjklzxcvbnm", 21);
-    CHECK_VALIDITY(-3);
+    CHECK_VALIDITY(-1);
     item.key="ID32";
     CHECK_VALIDITY(0);
     
@@ -466,10 +468,10 @@ int test_ApeItem_validity(void) {
     CHECK_VALIDITY(0);
     /* End in middle of UTF8 character */
     item.value="ab\360\220\207\220";
-    CHECK_VALIDITY(-3);
+    CHECK_VALIDITY(-1);
     /* Bad UTF8 */
     item.value="ab\274\285";
-    CHECK_VALIDITY(-3);
+    CHECK_VALIDITY(-1);
     /* Binary means non-UTF8 is ok */
     item.flags = (item.flags & APE_ITEM_TYPE_FLAGS) + APE_ITEM_BINARY;
     CHECK_VALIDITY(0);
@@ -509,124 +511,125 @@ int test_bad_tags(void) {
         CHECK(LENGTH == fwrite(RAW, 1, LENGTH, FILE)); \
         CHECK(ftruncate(fileno(FILE), LENGTH) == 0);
         
-    #define CHECK_PARSE(FILE, VALUE) \
+    #define CHECK_PARSE(FILE, VALUE, ERROR) \
         CHECK(tag = ApeTag_new(FILE, 0)); \
         CHECK(ApeTag_parse(tag) == VALUE); \
+        CHECK(ApeTag_error_code(tag) == ERROR); \
         CHECK(ApeTag_free(tag) == 0);
     
     /* Open files check good parse */
     OPEN_FILE(empty, empty_raw, "empty_ape_id3.tag");
-    CHECK_PARSE(empty, 0);
+    CHECK_PARSE(empty, 0, APETAG_NOERR);
     OPEN_FILE(example1, example1_raw, "example1_id3.tag");
-    CHECK_PARSE(example1, 0);
+    CHECK_PARSE(example1, 0, APETAG_NOERR);
 
     /* Check works with read only flag, but not other flags */
     WRITE_BYTES(empty, 20, "\1", 1);
-    CHECK_PARSE(empty, 0);
+    CHECK_PARSE(empty, 0, APETAG_NOERR);
     for(c=255;c>1;c--) {
         WRITE_BYTES(empty, 20, &c, 1);
-        CHECK_PARSE(empty, -3);
+        CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     } 
     WRITE_BYTES(empty, 20, "\1", 1);
     WRITE_BYTES(empty, 52, "\1", 1);
-    CHECK_PARSE(empty, 0);
+    CHECK_PARSE(empty, 0, APETAG_NOERR);
     for(c=255;c>1;c--) {
         WRITE_BYTES(empty, 52, &c, 1);
-        CHECK_PARSE(empty, -3);
+        CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
         WRITE_BYTES(empty, 20, &c, 1);
-        CHECK_PARSE(empty, -3);
+        CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     } 
     WRITE_BYTES(empty, 20, "\1", 1);
     WRITE_BYTES(empty, 52, "\1", 1);
-    CHECK_PARSE(empty, 0);
+    CHECK_PARSE(empty, 0, APETAG_NOERR);
 
     /* Test footer size < minimum size*/
     WRITE_BYTES(empty, 44, "\37", 1);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     WRITE_BYTES(empty, 44, "\0", 1);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     
     /* Test footer size > 8192 (APE_MAXIMUM_TAG_SIZE) */
     WRITE_BYTES(empty, 44, "\341\37", 2);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_LIMITEXCEEDED);
     /* Check even when it isn't large than file */
     RESET_FILE(empty, empty_raw, 192, 8192);
     WRITE_BYTES(empty, 8192+44, "\341\37", 2);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_LIMITEXCEEDED);
     
     RESET_FILE(empty, empty_raw, 192, 0);
     /* Check unmatched header and footer, with header size wrong */
     WRITE_BYTES(empty, 12, "\41", 1);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     /* Check matched header and footer size, both wrong */
     WRITE_BYTES(empty, 44, "\41", 1);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     /* Check unmatched header and footer, with footer size wrong */
     WRITE_BYTES(empty, 12, "\40", 1);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     /* Check unmatched header and footer, with footer size wrong,
        not larger than file */
     RESET_FILE(empty, empty_raw, 192, 1);
     WRITE_BYTES(empty, 45, "\41", 1);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     
     /* Check item count greater than 64 (APE_MAXIMUM_ITEM_COUNT) */
     RESET_FILE(empty, empty_raw, 192, 0);
     WRITE_BYTES(empty, 48, "\101", 1);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_LIMITEXCEEDED);
     /* Check item count greater than possible given size */
     WRITE_BYTES(empty, 48, "\1", 1);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     /* Check unmatched header and footer item count, header wrong */
     WRITE_BYTES(empty, 48, "\0", 1);
     WRITE_BYTES(empty, 16, "\1", 1);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     /* Check unmatched header and footer item count, footer wrong */
     WRITE_BYTES(example1, 48, "\1", 1);
-    CHECK_PARSE(example1, -3);
+    CHECK_PARSE(example1, -1, APETAG_CORRUPTTAG);
     
     /* Check missing/corrupt header */
     RESET_FILE(empty, empty_raw, 192, 0);
     WRITE_BYTES(empty, 0, "\0", 1);
-    CHECK_PARSE(empty, -3);
+    CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     
     /* Check parsing bad first item size */
     RESET_FILE(example1, example1_raw, 336, 0);
     WRITE_BYTES(example1, 32, "\2", 1);
-    CHECK_PARSE(example1, -3);
+    CHECK_PARSE(example1, -1, APETAG_INVALIDITEM);
     
     /* Check parsing bad first item invalid key */
     RESET_FILE(example1, example1_raw, 336, 0);
     WRITE_BYTES(example1, 40, "\0", 1);
-    CHECK_PARSE(example1, -3);
+    CHECK_PARSE(example1, -1, APETAG_INVALIDITEM);
     
     /* Check parsing bad first item key end */
     RESET_FILE(example1, example1_raw, 336, 0);
     WRITE_BYTES(example1, 45, "\1", 1);
-    CHECK_PARSE(example1, -3);
+    CHECK_PARSE(example1, -1, APETAG_INVALIDITEM);
     
     /* Check parsing bad second item length too long */
     RESET_FILE(example1, example1_raw, 336, 0);
     WRITE_BYTES(example1, 47, "\377", 1);
-    CHECK_PARSE(example1, -3);
+    CHECK_PARSE(example1, -1, APETAG_CORRUPTTAG);
     
     /* Check parsing case insensitive duplicate keys */
     RESET_FILE(example1, example1_raw, 336, 0);
     WRITE_BYTES(example1, 40, "Album", 5);
-    CHECK_PARSE(example1, -3);
+    CHECK_PARSE(example1, -1, APETAG_DUPLICATEITEM);
     WRITE_BYTES(example1, 40, "album", 5);
-    CHECK_PARSE(example1, -3);
+    CHECK_PARSE(example1, -1, APETAG_DUPLICATEITEM);
     WRITE_BYTES(example1, 40, "ALBUM", 5);
-    CHECK_PARSE(example1, -3);
+    CHECK_PARSE(example1, -1, APETAG_DUPLICATEITEM);
     
     /* Check parsing incorrect item counts */
     RESET_FILE(example1, example1_raw, 336, 0);
     WRITE_BYTES(example1, 16, "\5", 1);
     WRITE_BYTES(example1, 192, "\5", 1);
-    CHECK_PARSE(example1, -3);
+    CHECK_PARSE(example1, -1, APETAG_CORRUPTTAG);
     WRITE_BYTES(example1, 16, "\7", 1);
     WRITE_BYTES(example1, 192, "\7", 1);
-    CHECK_PARSE(example1, -3);
+    CHECK_PARSE(example1, -1, APETAG_CORRUPTTAG);
     
     #undef CHECK_PARSE
     #undef RESET_FILE
@@ -698,7 +701,7 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     memcpy(item->key, "ALBUM", 6);
     memcpy(item->value, "FOO", 3);
 
-    CHECK(ApeTag_add_item(tag, item) == -3);
+    CHECK(ApeTag_add_item(tag, item) == -1);
     CHECK(ApeTag_replace_item(tag, item) == 1);
     CHECK(ApeTag_get_item(tag, "album", &check_item) == 0);
     CHECK(check_item->size == 3);
@@ -740,9 +743,9 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     item->flags = 0;
     memcpy(item->key, "ALBUM", 6);
     memcpy(item->value,"VALUE",  5);
-    CHECK(ApeTag_add_item(tag, item) == -3);
+    CHECK(ApeTag_add_item(tag, item) == -1);
     memcpy(item->key, "album", 6);
-    CHECK(ApeTag_add_item(tag, item) == -3);
+    CHECK(ApeTag_add_item(tag, item) == -1);
     
     /* Check adding more items than allowed */
     CHECK(ApeTag_clear_items(tag) == 0);
@@ -763,7 +766,7 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     item->flags = 0;
     snprintf(item->key, 6, "Key65");
     snprintf(item->value, 2, "65");
-    CHECK(ApeTag_add_item(tag, item) == -3);
+    CHECK(ApeTag_add_item(tag, item) == -1);
     
     /* Check updating with too large tag not allowed */
     CHECK(tag = ApeTag_new(file, 0));
@@ -779,7 +782,7 @@ int test_ApeTag_add_remove_clear_items_update(void) {
         memcpy(item->value+i*16, "0123456789abcdef", 16);
     }
     CHECK(ApeTag_add_item(tag, item) == 0);
-    CHECK(ApeTag_update(tag) == -3);
+    CHECK(ApeTag_update(tag) == -1);
 
     /* Check fits perfectly */
     item->size = 8111;
