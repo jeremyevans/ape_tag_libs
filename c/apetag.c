@@ -108,7 +108,7 @@ static unsigned char ApeItem__parse_track(uint32_t size, char *value);
 static int ApeItem__check_validity(struct ApeTag *tag, struct ApeItem *item);
 static int ApeTag__check_valid_utf8(unsigned char *utf8_string, uint32_t size);
 static int ApeItem__compare(const void *a, const void *b);
-static int ApeTag__lookup_genre(struct ApeTag *tag, struct ApeItem *item, char *genre_id);
+static int ApeTag__lookup_genre(struct ApeTag *tag, struct ApeItem *item, unsigned char *genre_id);
 static int ApeTag__load_ID3_GENRES(struct ApeTag *tag);
 
 /* Public Functions */
@@ -889,7 +889,7 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
     if((ret = ApeTag__get_item(tag, "genre", &item)) < 0) { 
         return ret; 
     } else if(ret == 0) { 
-        if(ApeTag__lookup_genre(tag, item, tag->id3+127) != 0) {
+        if(ApeTag__lookup_genre(tag, item, (unsigned char *)(tag->id3+127)) != 0) {
             return -1;
         }
     } 
@@ -1282,17 +1282,12 @@ database are not terminated.
 
 Returns 0 on success, -1 on error;
 */
-static int ApeTag__lookup_genre(struct ApeTag *tag, struct ApeItem *item, char *genre_id) {
+static int ApeTag__lookup_genre(struct ApeTag *tag, struct ApeItem *item, unsigned char *genre_id) {
     int ret = 0;
     DBT key_dbt, value_dbt;
-    key_dbt.data = NULL;
-    key_dbt.size = 0;
-    value_dbt.data = NULL;
-    value_dbt.size = 0;
 
     key_dbt.size = item->size;
     key_dbt.data = item->value;
-    value_dbt.data = NULL;
     
     assert(tag != NULL);
     
@@ -1308,7 +1303,7 @@ static int ApeTag__lookup_genre(struct ApeTag *tag, struct ApeItem *item, char *
         }
         *genre_id = '\377';
     } else {
-        *genre_id = *(char *)(value_dbt.data);
+        *genre_id = *(unsigned char *)(value_dbt.data);
     }
     
     return 0;
