@@ -496,12 +496,20 @@ const char * ApeTag_error(struct ApeTag *tag){
     return tag->error;
 }
 
+size_t ApeTag_get_max_size(void) {
+    return APE_MAXIMUM_TAG_SIZE;
+}
+
+size_t ApeTag_get_max_item_count(void) {
+    return APE_MAXIMUM_ITEM_COUNT;
+}
+
 void ApeTag_set_max_size(uint32_t size) {
-  APE_MAXIMUM_TAG_SIZE = size;
+    APE_MAXIMUM_TAG_SIZE = size;
 }
 
 void ApeTag_set_max_item_count(uint32_t item_count) {
-  APE_MAXIMUM_ITEM_COUNT = item_count;
+    APE_MAXIMUM_ITEM_COUNT = item_count;
 }
 
 /* Private Functions */

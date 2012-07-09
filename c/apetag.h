@@ -59,7 +59,9 @@ uint32_t ApeTag_item_count(struct ApeTag *tag);
 uint32_t ApeTag_file_item_count(struct ApeTag *tag);
 const char * ApeTag_error(struct ApeTag *tag);
 
-/* Override default (very strict) limits */
+/* Get/set library limits */
+size_t ApeTag_get_max_size(void);
+size_t ApeTag_get_max_item_count(void);
 void ApeTag_set_max_size(uint32_t size);
 void ApeTag_set_max_item_count(uint32_t item_count);
 

@@ -149,12 +149,17 @@ int test_ApeTag_maximums(void) {
         CHECK(tag = ApeTag_new(file, 0)); \
         CHECK(ApeTag_exists(tag) == EXIST);
     
+    CHECK(ApeTag_get_max_size() == 8192);
+    CHECK(ApeTag_get_max_item_count() == 64);
+
     ApeTag_set_max_item_count(0);
+    CHECK(ApeTag_get_max_item_count() == 0);
     TEST_EXIST("empty_ape.tag", 1);
     TEST_EXIST("example1.tag", -3);
     ApeTag_set_max_item_count(64);
 
     ApeTag_set_max_size(64);
+    CHECK(ApeTag_get_max_size() == 64);
     TEST_EXIST("empty_ape.tag", 1);
     TEST_EXIST("example1.tag", -3);
     ApeTag_set_max_size(63);
