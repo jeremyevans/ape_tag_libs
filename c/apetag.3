@@ -29,7 +29,7 @@
 .P
 .B int ApeTag_clear_items(struct ApeTag *tag);
 .P
-.B int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item);
+.B struct ApeItem * ApeTag_get_item(struct ApeTag *tag, const char *key);
 .P
 .B struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count);
 .P
@@ -104,6 +104,9 @@ where a non-NULL pointer argument is required.
 Note that since the error code is stored in the tag object, if you pass a
 NULL tag argument, apetag will just return -1 (since there is nowhere to
 record the type of error in that case).
+.IP \(bu 4
+.BR APETAG_NOTPRESENT :
+The item to be removed or returned was not present in the tag.
 .IP \(bu 2
 ApeItem keys are NULL-terminated strings.
 .IP \(bu 2
@@ -317,15 +320,15 @@ Frees all items stored in the tag.
 .P
 Returns 0 on success, -1 on error.
 .P
-.B int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item);
+.B struct ApeItem * ApeTag_get_item(struct ApeTag *tag, const char *key);
 .P
-Sets
-.BR *item
-to point to the item matching
-.BR key ,
-if such an item exists in the tag.
+Returns a pointer to the item matching the given key.
+If there is no matching item, NULL is returned and the error code is set
+to 
+.BR APETAG_NOTPRESENT .
+For other errors, NULL is returned and the error code is set appropriately.
 .P
-Returns 0 on success, 1 if the item did not exist in the tag, <0 on error.
+The returned pointer should not be freed by the caller.
 .P
 .B struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count);
 .P
@@ -340,7 +343,8 @@ is not NULL, it is set to the number of items in the array.
 The returned array is always terminated by NULL, and always contains at least
 1 item (which is NULL if the tag has no items).
 .P
-It is the caller's responsibility to free the returned array.
+It is the caller's responsibility to free the returned array, but the individual
+items in the array should not be freed by the caller.
 .P
 Returns 0 on success, <0 on error.
 .P

@@ -360,7 +360,7 @@ int test_ApeTag_update(void) {
     before[256] = '\0';
     CHECK(ApeTag_remove_item(tag, before) == -1);
     CHECK(ApeTag_error_code(tag) == APETAG_ARGERR);
-    CHECK(ApeTag_get_item(tag, before, &item) == -1);
+    CHECK(ApeTag_get_item(tag, before) == NULL);
     CHECK(ApeTag_error_code(tag) == APETAG_ARGERR);
      
     #undef CHECK_TAG
@@ -666,7 +666,7 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     
     CHECK(ApeTag_clear_items(NULL) == -1);
     CHECK(ApeTag_get_items(NULL, NULL) == NULL);
-    CHECK(ApeTag_get_item(NULL, NULL, NULL) == -1);
+    CHECK(ApeTag_get_item(NULL, NULL) == NULL);
     CHECK(ApeTag_add_item(NULL, NULL) == -1);
     CHECK(ApeTag_remove_item(NULL, NULL) == -1);
     CHECK(ApeTag_replace_item(NULL, NULL) == -1);
@@ -691,8 +691,9 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     memcpy(item->value, "VALUE", 5);
     CHECK(ApeTag_add_item(tag, item) == 0);
 
-    CHECK(ApeTag_get_item(tag, "track", &check_item) == 1);
-    CHECK(ApeTag_get_item(tag, "album", &check_item) == 0);
+    CHECK(ApeTag_get_item(tag, "track") == NULL);
+    CHECK(ApeTag_error_code(tag) == APETAG_NOTPRESENT);
+    CHECK(check_item = ApeTag_get_item(tag, "album"));
     CHECK(check_item->size == 5);
     CHECK(check_item->flags == 0);
     CHECK(strcmp(check_item->key, "ALBUM") == 0);
@@ -726,13 +727,14 @@ int test_ApeTag_add_remove_clear_items_update(void) {
 
     CHECK(ApeTag_add_item(tag, item) == -1);
     CHECK(ApeTag_replace_item(tag, item) == 1);
-    CHECK(ApeTag_get_item(tag, "album", &check_item) == 0);
+    CHECK(check_item = ApeTag_get_item(tag, "album"));
     CHECK(check_item->size == 3);
     CHECK(check_item->flags == 0);
     CHECK(strcmp(check_item->key, "ALBUM") == 0);
     CHECK(memcmp(check_item->value, "FOO", 3) == 0);
 
     CHECK(ApeTag_remove_item(tag, "track") == 1);
+    CHECK(ApeTag_error_code(tag) == APETAG_NOTPRESENT);
     CHECK(ApeTag_remove_item(tag, "album") == 0);
 
     CHECK(item = malloc(sizeof(struct ApeItem)));
@@ -744,7 +746,7 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     memcpy(item->value, "FOO", 3);
 
     CHECK(ApeTag_replace_item(tag, item) == 0);
-    CHECK(ApeTag_get_item(tag, "album", &check_item) == 0);
+    CHECK(check_item = ApeTag_get_item(tag, "album"));
     CHECK(check_item->size == 3);
     CHECK(check_item->flags == 0);
     CHECK(strcmp(check_item->key, "ALBUM") == 0);

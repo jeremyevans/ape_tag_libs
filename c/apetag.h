@@ -47,6 +47,7 @@ enum ApeTag_errcode {
     APETAG_CORRUPTTAG,
     APETAG_INVALIDITEM,
     APETAG_ARGERR,
+    APETAG_NOTPRESENT,
 };
 
 /* Public functions */
@@ -66,7 +67,7 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key);
 int ApeTag_clear_items(struct ApeTag *tag);
 int ApeTag_update(struct ApeTag *tag);
 
-int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item);
+struct ApeItem * ApeTag_get_item(struct ApeTag *tag, const char *key);
 struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count);
 uint32_t ApeTag_size(struct ApeTag *tag);
 uint32_t ApeTag_item_count(struct ApeTag *tag);

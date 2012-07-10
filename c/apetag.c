@@ -133,7 +133,7 @@ static int ApeTag__update_ape(struct ApeTag *tag);
 static int ApeTag__write_tag(struct ApeTag *tag);
 static uint32_t ApeTag__tag_length(struct ApeTag *tag);
 static uint32_t ApeTag__id3_length(struct ApeTag *tag);
-static int ApeTag__get_item(struct ApeTag *tag, const char *key, struct ApeItem **items);
+static struct ApeItem * ApeTag__get_item(struct ApeTag *tag, const char *key);
 static struct ApeItem **ApeTag__get_items(struct ApeTag *tag, uint32_t *item_count);
 
 static void ApeItem__free(struct ApeItem **item);
@@ -409,30 +409,21 @@ int ApeTag_replace_item(struct ApeTag *tag, struct ApeItem *item) {
 
 int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
     int ret;
-    DBT key_dbt, value_dbt;
+    DBT key_dbt;
+    struct ApeItem *item;
 
     if(ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
 
-    if (key == NULL) {
-        tag->errcode = APETAG_ARGERR;
-        tag->error = "key IS NULL";
+    if((item = ApeTag__get_item(tag, key)) == NULL) {
+        if (tag->errcode == APETAG_NOTPRESENT) {
+          return 1;
+        }
         return -1;
     }
 
     key_dbt.size = strlen(key) + 1;
-    if (key_dbt.size > 256) {
-        tag->errcode = APETAG_ARGERR;
-        tag->error = "key is greater than 255 characters";
-        return -1;
-    }
-    
-    /* Empty database implies item doesn't exist */
-    if(tag->items == NULL) {
-        return 1;
-    }
-    
     /* APE item keys are case insensitive but case preserving */
     if((key_dbt.data = ApeTag__strcasecpy(key, key_dbt.size)) == NULL)  {
         tag->errcode = APETAG_MEMERR;
@@ -440,20 +431,10 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
         return -1;
     }
     
-    /* Get the item from the database so it can be freed */
-    ret = tag->items->get(tag->items, &key_dbt, &value_dbt, 0);
-    if(ret != 0) {
-        if(ret == -1) {
-            tag->errcode = APETAG_INTERNALERR;
-            tag->error = "db->get";
-        }
-        free(key_dbt.data);
-        return ret;
-    }
-
     /* Free the item and remove it from the database  */
-    ApeItem__free((struct ApeItem **)(value_dbt.data));
+    ApeItem__free(&item);
     ret = tag->items->del(tag->items, &key_dbt, 0);
+    free(key_dbt.data);
     if(ret != 0) {
         if(ret == -1) {
             tag->errcode = APETAG_INTERNALERR;
@@ -461,22 +442,17 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
         } else if(ret == 1) {
             tag->errcode = APETAG_INTERNALERR;
             tag->error = "database modified between get and del";
-            ret = -1;
         }
+        return -1;
     }
     
     tag->item_count--;
-    free(key_dbt.data);
     return ret;
 }
 
 int ApeTag_clear_items(struct ApeTag *tag) {
     int ret = 0;
     DBT key_dbt, value_dbt;
-    key_dbt.data = NULL;
-    key_dbt.size = 0;
-    value_dbt.data = NULL;
-    value_dbt.size = 0;
     
     if(tag == NULL) {
         return -1;
@@ -507,27 +483,18 @@ int ApeTag_clear_items(struct ApeTag *tag) {
     return ret;
 }
 
-int ApeTag_get_item(struct ApeTag *tag, const char *key, struct ApeItem **item) {
+struct ApeItem * ApeTag_get_item(struct ApeTag *tag, const char *key) {
     if(ApeTag__get_tag_information(tag) != 0) {
-        return -1;
+        return NULL;
     }
 
     if (key == NULL) {
         tag->errcode = APETAG_ARGERR;
         tag->error = "key is NULL";
-        return -1;
-    }
-    if (item == NULL) {
-        tag->errcode = APETAG_ARGERR;
-        tag->error = "item is NULL";
-        return -1;
+        return NULL;
     }
 
-    if(tag->items == NULL) {
-        return 1;
-    }
-
-    return ApeTag__get_item(tag, key, item);
+    return ApeTag__get_item(tag, key);
 }
 
 struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count) {
@@ -915,7 +882,6 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
     struct ApeItem *item;
     char *c;
     char *end;
-    int ret = 0;
     uint32_t size;
     
     assert (tag != NULL);
@@ -943,10 +909,8 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
     }
 
     /* Easier to use a macro than a function in this case */
-    #define APE_FIELD_TO_ID3_FIELD(FIELD, LENGTH, OFFSET) \
-        if((ret = ApeTag__get_item(tag, FIELD, &item)) < 0) { \
-            return -1; \
-        } else if(ret == 0) { \
+    #define APE_FIELD_TO_ID3_FIELD(FIELD, LENGTH, OFFSET) do { \
+        if((item = ApeTag__get_item(tag, FIELD)) != NULL) { \
             size = (item->size < (uint32_t)LENGTH ? item->size : (uint32_t)LENGTH); \
             end = tag->id3 + OFFSET + size; \
             memcpy(tag->id3 + OFFSET, item->value, size); \
@@ -955,7 +919,11 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
                     *c = ','; \
                 } \
             } \
-        }
+        } else if (tag->errcode != APETAG_NOTPRESENT) { \
+            return -1; \
+        } \
+    } while(0);
+
     
     /* 
     ID3v1.1 tag offsets, lengths
@@ -976,19 +944,19 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
     #undef APE_FIELD_TO_ID3_FIELD
     
     /* Need to handle the track and genre differently, as they are just bytes */
-    if((ret = ApeTag__get_item(tag, "track", &item)) < 0) { 
-        return -1; 
-    } else if(ret == 0) { 
+    if((item = ApeTag__get_item(tag, "track")) != NULL) { 
         *(tag->id3+126) = (char)ApeItem__parse_track(item->size, item->value);
-    } 
+    } else if (tag->errcode != APETAG_NOTPRESENT) {
+        return -1;
+    }
 
-    if((ret = ApeTag__get_item(tag, "genre", &item)) < 0) { 
-        return -1; 
-    } else if(ret == 0) { 
+    if((item = ApeTag__get_item(tag, "genre")) != NULL) { 
         if(ApeTag__lookup_genre(tag, item, (unsigned char *)(tag->id3+127)) != 0) {
             return -1;
         }
-    } 
+    } else if (tag->errcode != APETAG_NOTPRESENT) {
+        return -1;
+    }
     
     return 0;
 }
@@ -1007,12 +975,6 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     uint32_t tag_size = 64 + 9 * tag->item_count;
     uint32_t num_items;
     struct ApeItem **items;
-    DBT key_dbt, value_dbt;
-    key_dbt.data = NULL;
-    key_dbt.size = 0;
-    value_dbt.data = NULL;
-    value_dbt.size = 0;
-    
     
     assert(tag != NULL);
     
@@ -1640,40 +1602,41 @@ The caller is expected to have checked that tag->items is not NULL.
 Returns -1 on error, 1 if the item was not in the database, and 0 if the
 item was not in the database.
 */
-static int ApeTag__get_item(struct ApeTag *tag, const char *key, struct ApeItem **item) {
+static struct ApeItem * ApeTag__get_item(struct ApeTag *tag, const char *key) {
     int ret = 0;
     DBT key_dbt, value_dbt;
-    key_dbt.data = NULL;
-    key_dbt.size = 0;
-    value_dbt.data = NULL;
-    value_dbt.size = 0;
 
-    *item = NULL;
+    if (tag->items == NULL) {
+        tag->errcode = APETAG_NOTPRESENT;
+        tag->error = "get_item"; 
+        return NULL; 
+    }
 
     key_dbt.size = strlen(key) + 1; 
     if (key_dbt.size > 256) {
         tag->errcode = APETAG_ARGERR;
         tag->error = "key is greater than 255 characters";
-        return -1;
+        return NULL;
     }
     if ((key_dbt.data = ApeTag__strcasecpy(key, (unsigned char)key_dbt.size)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
-        return -1;
+        return NULL;
     }
 
     ret = tag->items->get(tag->items, &key_dbt, &value_dbt, 0);
+    free(key_dbt.data);
     if(ret == -1) { 
         tag->errcode = APETAG_INTERNALERR;
         tag->error = "db->get"; 
-        free(key_dbt.data);
-        return -1; 
-    } else if(ret == 0) { 
-        *item = *(struct ApeItem **)(value_dbt.data);
+        return NULL; 
+    } else if(ret != 0) { 
+        tag->errcode = APETAG_NOTPRESENT;
+        tag->error = "get_item"; 
+        return NULL; 
+    } else {
+        return *(struct ApeItem **)(value_dbt.data);
     } 
-
-    free(key_dbt.data);
-    return ret;
 }
 
 /* 
@@ -1700,10 +1663,6 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
     if (nitems > 0) {
         uint32_t i = 0;
         DBT key_dbt, value_dbt;
-        key_dbt.data = NULL;
-        key_dbt.size = 0;
-        value_dbt.data = NULL;
-        value_dbt.size = 0;
 
         if(tag->items == NULL) {
             tag->errcode = APETAG_INTERNALERR;
