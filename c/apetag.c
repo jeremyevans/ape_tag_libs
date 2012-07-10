@@ -157,7 +157,7 @@ struct ApeTag * ApeTag_new(FILE *file, uint32_t flags) {
     
     tag = malloc(sizeof(struct ApeTag));
 
-    if(tag != NULL) {
+    if (tag != NULL) {
         memset(tag, 0, sizeof(struct ApeTag));
         tag->file = file;
         tag->flags = flags | APE_DEFAULT_FLAGS;
@@ -169,7 +169,7 @@ struct ApeTag * ApeTag_new(FILE *file, uint32_t flags) {
 int ApeTag_free(struct ApeTag *tag) {
     int ret = 0;
     
-    if(tag == NULL) {
+    if (tag == NULL) {
         return 0;
     }
     
@@ -192,7 +192,7 @@ int ApeTag_free(struct ApeTag *tag) {
 }
 
 int ApeTag_exists(struct ApeTag *tag) {
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
 
@@ -200,7 +200,7 @@ int ApeTag_exists(struct ApeTag *tag) {
 }
 
 int ApeTag_exists_id3(struct ApeTag *tag) {
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
 
@@ -208,21 +208,21 @@ int ApeTag_exists_id3(struct ApeTag *tag) {
 }
 
 int ApeTag_remove(struct ApeTag *tag) {
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
     
-    if(!(tag->flags & APE_HAS_APE)) {
+    if (!(tag->flags & APE_HAS_APE)) {
         return 1;
     }
 
-    if(fflush(tag->file) != 0) {
+    if (fflush(tag->file) != 0) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fflush";
         return -1;
     }
 
-    if(ftruncate(fileno(tag->file), tag->offset) != 0) {
+    if (ftruncate(fileno(tag->file), tag->offset) != 0) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "ftruncate";
         return -1;
@@ -237,7 +237,7 @@ int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size) {
     uint32_t r_size; 
     char *r; 
 
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
 
@@ -256,19 +256,19 @@ int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size) {
     *raw_size = 0;
     r_size = ApeTag__tag_length(tag);
 
-    if((r = malloc(r_size)) == NULL) {
+    if ((r = malloc(r_size)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         return -1;
     }
 
-    if(tag->flags & APE_HAS_APE) {
+    if (tag->flags & APE_HAS_APE) {
         memcpy(r, tag->tag_header, 32);
         memcpy(r+32, tag->tag_data, tag->size-64);
         memcpy(r+tag->size-32, tag->tag_footer, 32);
     }
 
-    if(tag->flags & APE_HAS_ID3 && !(tag->flags & APE_NO_ID3)) {
+    if (tag->flags & APE_HAS_ID3 && !(tag->flags & APE_NO_ID3)) {
         memcpy(r+tag->size, tag->id3, ApeTag__id3_length(tag));
     }
 
@@ -279,12 +279,12 @@ int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size) {
 }
 
 int ApeTag_parse(struct ApeTag *tag) {
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
 
-    if((tag->flags & APE_HAS_APE) && !(tag->flags & APE_CHECKED_FIELDS)) {
-        if((ApeTag__parse_items(tag)) != 0) {
+    if ((tag->flags & APE_HAS_APE) && !(tag->flags & APE_CHECKED_FIELDS)) {
+        if ((ApeTag__parse_items(tag)) != 0) {
             return -1;
         }
     }
@@ -293,16 +293,16 @@ int ApeTag_parse(struct ApeTag *tag) {
 }
 
 int ApeTag_update(struct ApeTag *tag) {
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
-    if(ApeTag__update_id3(tag) != 0) {
+    if (ApeTag__update_id3(tag) != 0) {
         return -1;
     }
-    if(ApeTag__update_ape(tag) != 0) {
+    if (ApeTag__update_ape(tag) != 0) {
         return -1;
     }
-    if(ApeTag__write_tag(tag) != 0) {
+    if (ApeTag__write_tag(tag) != 0) {
         return -1;
     }
     
@@ -313,7 +313,7 @@ int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
     int ret;
     DBT key_dbt, value_dbt;
 
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
 
@@ -338,20 +338,20 @@ int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
     }
     
     /* Don't add invalid items to the database */
-    if(ApeItem__check_validity(tag, item) != 0) {
+    if (ApeItem__check_validity(tag, item) != 0) {
         return -1;
     }
     
     /* Don't exceed the maximum number of items allowed */
-    if(tag->item_count == APE_MAXIMUM_ITEM_COUNT) {
+    if (tag->item_count == APE_MAXIMUM_ITEM_COUNT) {
         tag->errcode = APETAG_LIMITEXCEEDED;
         tag->error = "maximum item count exceeded";
         return -1;
     }
     
     /* Create the database if it doesn't already exist */
-    if(tag->items == NULL) {
-        if((tag->items = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
+    if (tag->items == NULL) {
+        if ((tag->items = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
             tag->errcode = APETAG_INTERNALERR;
             tag->error = "dbopen";
             return -1;
@@ -359,7 +359,7 @@ int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
     }
     
     /* Apetag keys are case insensitive but case preserving */
-    if((key_dbt.data = ApeTag__strcasecpy(item->key, key_dbt.size)) == NULL) {
+    if ((key_dbt.data = ApeTag__strcasecpy(item->key, key_dbt.size)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         goto add_item_error;
@@ -367,11 +367,11 @@ int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
     
     /* Add to the database */
     ret = tag->items->put(tag->items, &key_dbt, &value_dbt, R_NOOVERWRITE);
-    if(ret == -1) {
+    if (ret == -1) {
         tag->errcode = APETAG_INTERNALERR;
         tag->error = "db->put";
         goto add_item_error;
-    } else if(ret == 1) {
+    } else if (ret == 1) {
         tag->errcode = APETAG_DUPLICATEITEM;
         tag->error = "duplicate item in tag";
         goto add_item_error;
@@ -390,17 +390,17 @@ int ApeTag_replace_item(struct ApeTag *tag, struct ApeItem *item) {
     int existed = 0;
     int ret;
 
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
     
-    if((ret = ApeTag_remove_item(tag, item->key)) < 0) {
+    if ((ret = ApeTag_remove_item(tag, item->key)) < 0) {
         return ret;
     } else if (ret == 0) {
         existed = 1;
     }
 
-    if((ret = ApeTag_add_item(tag, item)) < 0) {
+    if ((ret = ApeTag_add_item(tag, item)) < 0) {
         return ret;
     }
     
@@ -412,11 +412,11 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
     DBT key_dbt;
     struct ApeItem *item;
 
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return -1;
     }
 
-    if((item = ApeTag__get_item(tag, key)) == NULL) {
+    if ((item = ApeTag__get_item(tag, key)) == NULL) {
         if (tag->errcode == APETAG_NOTPRESENT) {
           return 1;
         }
@@ -425,7 +425,7 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
 
     key_dbt.size = strlen(key) + 1;
     /* APE item keys are case insensitive but case preserving */
-    if((key_dbt.data = ApeTag__strcasecpy(key, key_dbt.size)) == NULL)  {
+    if ((key_dbt.data = ApeTag__strcasecpy(key, key_dbt.size)) == NULL)  {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         return -1;
@@ -435,11 +435,11 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
     ApeItem__free(&item);
     ret = tag->items->del(tag->items, &key_dbt, 0);
     free(key_dbt.data);
-    if(ret != 0) {
-        if(ret == -1) {
+    if (ret != 0) {
+        if (ret == -1) {
             tag->errcode = APETAG_INTERNALERR;
             tag->error = "db->del";
-        } else if(ret == 1) {
+        } else if (ret == 1) {
             tag->errcode = APETAG_INTERNALERR;
             tag->error = "database modified between get and del";
         }
@@ -454,19 +454,19 @@ int ApeTag_clear_items(struct ApeTag *tag) {
     int ret = 0;
     DBT key_dbt, value_dbt;
     
-    if(tag == NULL) {
+    if (tag == NULL) {
         return -1;
     }
     
-    if(tag->items != NULL) {
+    if (tag->items != NULL) {
         /* Free all items in the database and then close it */
-        if(tag->items->seq(tag->items, &key_dbt, &value_dbt, R_FIRST) == 0) {
+        if (tag->items->seq(tag->items, &key_dbt, &value_dbt, R_FIRST) == 0) {
             ApeItem__free((struct ApeItem **)(value_dbt.data));
-            while(tag->items->seq(tag->items, &key_dbt, &value_dbt, R_NEXT) == 0) {
+            while (tag->items->seq(tag->items, &key_dbt, &value_dbt, R_NEXT) == 0) {
                 ApeItem__free((struct ApeItem **)(value_dbt.data));
             }
         }
-        if(tag->items->close(tag->items) == -1) {
+        if (tag->items->close(tag->items) == -1) {
             tag->errcode = APETAG_INTERNALERR;
             tag->error = "db->close";
             ret = -1;
@@ -484,7 +484,7 @@ int ApeTag_clear_items(struct ApeTag *tag) {
 }
 
 struct ApeItem * ApeTag_get_item(struct ApeTag *tag, const char *key) {
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return NULL;
     }
 
@@ -498,7 +498,7 @@ struct ApeItem * ApeTag_get_item(struct ApeTag *tag, const char *key) {
 }
 
 struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count) {
-    if(ApeTag__get_tag_information(tag) != 0) {
+    if (ApeTag__get_tag_information(tag) != 0) {
         return NULL;
     }
 
@@ -563,53 +563,53 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
         return -1;
     }
 
-    if(tag->flags & APE_CHECKED_APE) {
+    if (tag->flags & APE_CHECKED_APE) {
         return 0;
     }
     
     /* Get file size */
-    if(fseeko(tag->file, 0, SEEK_END) == -1) {
+    if (fseeko(tag->file, 0, SEEK_END) == -1) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fseeko";
         return -1;
     }
-    if((file_size = ftello(tag->file)) == -1) {
+    if ((file_size = ftello(tag->file)) == -1) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "ftello";
         return -1;
     } 
     
     /* No ape or id3 tag possible in this size */
-    if(file_size < APE_MINIMUM_TAG_SIZE) {
+    if (file_size < APE_MINIMUM_TAG_SIZE) {
         tag->offset = file_size;
         tag->flags |= APE_CHECKED_APE | APE_CHECKED_OFFSET;
         tag->flags &= ~(APE_HAS_APE | APE_HAS_ID3);
         return 0;
     } 
     
-    if(!(tag->flags & APE_NO_ID3)) {
-        if(file_size < 128) {
+    if (!(tag->flags & APE_NO_ID3)) {
+        if (file_size < 128) {
             /* No id3 tag possible in this size */
             tag->flags &= ~APE_HAS_ID3;
         } else {
             /* Check for id3 tag */
-            if((fseeko(tag->file, -128, SEEK_END)) == -1) {
+            if ((fseeko(tag->file, -128, SEEK_END)) == -1) {
                 tag->errcode = APETAG_FILEERR;
                 tag->error = "fseeko";
                 return -1;
             }
             free(tag->id3);
-            if((tag->id3 = malloc(128)) == NULL) {
+            if ((tag->id3 = malloc(128)) == NULL) {
                 tag->errcode = APETAG_MEMERR;
                 tag->error = "malloc";
                 return -1;
             }
-            if(fread(tag->id3, 1, 128, tag->file) < 128) {
+            if (fread(tag->id3, 1, 128, tag->file) < 128) {
                 tag->errcode = APETAG_FILEERR;
                 tag->error = "fread";
                 return -1;
             }
-            if(tag->id3[0] == 'T' && tag->id3[1] == 'A' && 
+            if (tag->id3[0] == 'T' && tag->id3[1] == 'A' && 
                tag->id3[2] == 'G' && tag->id3[125] == '\0') {
                 id3_length = 128;
                 tag->flags |= APE_HAS_ID3;
@@ -620,7 +620,7 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
             }
         }
         /* Recheck possibility for ape tag now that id3 presence is known */
-        if(file_size < APE_MINIMUM_TAG_SIZE + id3_length) {
+        if (file_size < APE_MINIMUM_TAG_SIZE + id3_length) {
             tag->flags &= ~APE_HAS_APE;
             tag->offset = file_size - id3_length;
             tag->flags |= APE_CHECKED_OFFSET | APE_CHECKED_APE;
@@ -629,29 +629,29 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
     }
     
     /* Check for existance of ape tag footer */
-    if(fseeko(tag->file, -32-id3_length, SEEK_END) == -1) {
+    if (fseeko(tag->file, -32-id3_length, SEEK_END) == -1) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fseeko";
         return -1;
     }
     free(tag->tag_footer);
-    if((tag->tag_footer = malloc(32)) == NULL) {
+    if ((tag->tag_footer = malloc(32)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         return -1;
     }
-    if(fread(tag->tag_footer, 1, 32, tag->file) < 32) {
+    if (fread(tag->tag_footer, 1, 32, tag->file) < 32) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fread";
         return -1;
     }
-    if(memcmp(APE_PREAMBLE, tag->tag_footer, 12)) {
+    if (memcmp(APE_PREAMBLE, tag->tag_footer, 12)) {
         tag->flags &= ~APE_HAS_APE;
         tag->offset = file_size - id3_length;
         tag->flags |= APE_CHECKED_OFFSET | APE_CHECKED_APE;
         return 0;
     }
-    if(memcmp(APE_FOOTER_FLAGS, tag->tag_footer+21, 3) || \
+    if (memcmp(APE_FOOTER_FLAGS, tag->tag_footer+21, 3) || \
        ((char)*(tag->tag_footer+20) != '\0' && \
        (char)*(tag->tag_footer+20) != '\1')) {
         tag->errcode = APETAG_CORRUPTTAG;
@@ -666,37 +666,37 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
     tag->size += 32;
     
     /* Check tag footer for validity */
-    if(tag->size < APE_MINIMUM_TAG_SIZE) {
+    if (tag->size < APE_MINIMUM_TAG_SIZE) {
         tag->errcode = APETAG_CORRUPTTAG;
         tag->error = "tag smaller than minimum possible size";
         return -1;
     }
-    if(tag->size > APE_MAXIMUM_TAG_SIZE) {
+    if (tag->size > APE_MAXIMUM_TAG_SIZE) {
         tag->errcode = APETAG_LIMITEXCEEDED;
         tag->error = "tag larger than maximum allowed size";
         return -1;
     }
-    if(tag->size + (off_t)id3_length > file_size) {
+    if (tag->size + (off_t)id3_length > file_size) {
         tag->errcode = APETAG_CORRUPTTAG;
         tag->error = "tag larger than possible size";
         return -1;
     }
-    if(tag->file_item_count > APE_MAXIMUM_ITEM_COUNT) {
+    if (tag->file_item_count > APE_MAXIMUM_ITEM_COUNT) {
         tag->errcode = APETAG_LIMITEXCEEDED;
         tag->error = "tag item count larger than allowed";
         return -1;
     }
-    if(tag->file_item_count > (tag->size - APE_MINIMUM_TAG_SIZE)/APE_ITEM_MINIMUM_SIZE) {
+    if (tag->file_item_count > (tag->size - APE_MINIMUM_TAG_SIZE)/APE_ITEM_MINIMUM_SIZE) {
         tag->errcode = APETAG_CORRUPTTAG;
         tag->error = "tag item count larger than possible";
         return -1;
     }
-    if(fseeko(tag->file, (-(long)tag->size - id3_length), SEEK_END) == -1) {
+    if (fseeko(tag->file, (-(long)tag->size - id3_length), SEEK_END) == -1) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fseeko";
         return -1;
     }
-    if((tag->offset = ftello(tag->file)) == -1) {
+    if ((tag->offset = ftello(tag->file)) == -1) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "ftello";
         return -1;
@@ -705,43 +705,43 @@ static int ApeTag__get_tag_information(struct ApeTag *tag) {
     
     /* Read tag header and data */
     free(tag->tag_header);
-    if((tag->tag_header = malloc(32)) == NULL) {
+    if ((tag->tag_header = malloc(32)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         return -1;
     }
-    if(fread(tag->tag_header, 1, 32, tag->file) < 32) {
+    if (fread(tag->tag_header, 1, 32, tag->file) < 32) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fread";
         return -1;
     }
     free(tag->tag_data);
-    if((tag->tag_data = malloc(tag->size-64)) == NULL) {
+    if ((tag->tag_data = malloc(tag->size-64)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         return -1;
     }
-    if(fread(tag->tag_data, 1, tag->size-64, tag->file) < tag->size-64) {
+    if (fread(tag->tag_data, 1, tag->size-64, tag->file) < tag->size-64) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fread";
         return -1;
     }
     
     /* Check tag header for validity */
-    if(memcmp(APE_PREAMBLE, tag->tag_header, 12) || memcmp(APE_HEADER_FLAGS, tag->tag_header+21, 3) \
+    if (memcmp(APE_PREAMBLE, tag->tag_header, 12) || memcmp(APE_HEADER_FLAGS, tag->tag_header+21, 3) \
       || ((char)*(tag->tag_header+20) != '\0' && (char)*(tag->tag_header+20) != '\1')) {
         tag->errcode = APETAG_CORRUPTTAG;
         tag->error = "missing APE header";
         return -1;
     }
     memcpy(&header_check, tag->tag_header+12, 4);
-    if(tag->size != LE2H32(header_check)+32) {
+    if (tag->size != LE2H32(header_check)+32) {
         tag->errcode = APETAG_CORRUPTTAG;
         tag->error = "header and footer size does not match";
         return -1;
     }
     memcpy(&header_check, tag->tag_header+16, 4);
-    if(tag->file_item_count != LE2H32(header_check)) {
+    if (tag->file_item_count != LE2H32(header_check)) {
         tag->errcode = APETAG_CORRUPTTAG;
         tag->error = "header and footer item count does not match";
         return -1;
@@ -764,24 +764,24 @@ static int ApeTag__parse_items(struct ApeTag *tag) {
     
     assert(tag != NULL);
     
-    if(tag->items != NULL) {
-        if(ApeTag_clear_items(tag) != 0) {
+    if (tag->items != NULL) {
+        if (ApeTag_clear_items(tag) != 0) {
             return -1;
         }
     }
     
-    for(i=0; i < tag->file_item_count; i++) {
-        if(offset > last_possible_offset) {
+    for (i=0; i < tag->file_item_count; i++) {
+        if (offset > last_possible_offset) {
             tag->errcode = APETAG_CORRUPTTAG;
             tag->error = "end of tag reached but more items specified";
             return -1;
         }
 
-        if(ApeTag__parse_item(tag, &offset) != 0) {
+        if (ApeTag__parse_item(tag, &offset) != 0) {
             return -1;
         }
     }
-    if(offset != tag->size - APE_MINIMUM_TAG_SIZE) {
+    if (offset != tag->size - APE_MINIMUM_TAG_SIZE) {
         tag->errcode = APETAG_CORRUPTTAG;
         tag->error = "data remaining after specified number of items parsed";
         return -1;
@@ -807,7 +807,7 @@ static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset) {
     
     assert(tag != NULL);
 
-    if((item = malloc(sizeof(struct ApeItem))) == NULL) {
+    if ((item = malloc(sizeof(struct ApeItem))) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         return -1;
@@ -821,16 +821,16 @@ static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset) {
     item->value = NULL;
     
     /* Find and check start of value */
-    if(item->size + *offset + APE_ITEM_MINIMUM_SIZE > data_size) {
+    if (item->size + *offset + APE_ITEM_MINIMUM_SIZE > data_size) {
         tag->errcode = APETAG_CORRUPTTAG;
         tag->error = "impossible item length (greater than remaining space)";
         goto parse_error;
     }
-    for(value_start=key_start; value_start < key_start+256 && \
+    for (value_start=key_start; value_start < key_start+256 && \
         *value_start != '\0'; value_start++) {
         /* Left Blank */
     }
-    if(*value_start != '\0') {
+    if (*value_start != '\0') {
         tag->errcode = APETAG_CORRUPTTAG;
         tag->error = "invalid item key length (too long or no end)";
         goto parse_error;
@@ -838,19 +838,19 @@ static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset) {
     value_start++;
     key_length = (uint32_t)(value_start - key_start);
     *offset += 8 + key_length + item->size;
-    if(*offset > data_size) {
+    if (*offset > data_size) {
         tag->errcode = APETAG_CORRUPTTAG;
         tag->error = "invalid item length (longer than remaining data)";
         goto parse_error;
     }
     
     /* Copy key and value from tag data to item */
-    if((item->key = malloc(key_length)) == NULL) {
+    if ((item->key = malloc(key_length)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         goto parse_error;
     }
-    if((item->value = malloc(item->size)) == NULL) {
+    if ((item->value = malloc(item->size)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         goto parse_error;
@@ -859,7 +859,7 @@ static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset) {
     memcpy(item->value, value_start, item->size);
     
     /* Add item to the database */
-    if(ApeTag_add_item(tag, item) != 0) {
+    if (ApeTag_add_item(tag, item) != 0) {
         goto parse_error;
     }
 
@@ -888,14 +888,14 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
     
     free(tag->id3);
     
-    if(tag->flags & APE_NO_ID3 || 
+    if (tag->flags & APE_NO_ID3 || 
        (tag->flags & APE_HAS_APE && !(tag->flags & APE_HAS_ID3))) {
         tag->id3 = NULL;
         return 0;
     }
     
     /* Initialize id3 */
-    if((tag->id3 = malloc(128)) == NULL) {
+    if ((tag->id3 = malloc(128)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         return -1;
@@ -904,25 +904,25 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
     memset(tag->id3+3, 0, 124);
     *(tag->id3+127) = '\377';
     
-    if(tag->items == NULL) {
+    if (tag->items == NULL) {
         return 0;
     }
 
     /* Easier to use a macro than a function in this case */
     #define APE_FIELD_TO_ID3_FIELD(FIELD, LENGTH, OFFSET) do { \
-        if((item = ApeTag__get_item(tag, FIELD)) != NULL) { \
+        if ((item = ApeTag__get_item(tag, FIELD)) != NULL) { \
             size = (item->size < (uint32_t)LENGTH ? item->size : (uint32_t)LENGTH); \
             end = tag->id3 + OFFSET + size; \
             memcpy(tag->id3 + OFFSET, item->value, size); \
-            for(c=tag->id3 + OFFSET; c < end; c++) { \
-                if(*c == '\0') { \
+            for (c=tag->id3 + OFFSET; c < end; c++) { \
+                if (*c == '\0') { \
                     *c = ','; \
                 } \
             } \
         } else if (tag->errcode != APETAG_NOTPRESENT) { \
             return -1; \
         } \
-    } while(0);
+    } while (0);
 
     
     /* 
@@ -944,14 +944,14 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
     #undef APE_FIELD_TO_ID3_FIELD
     
     /* Need to handle the track and genre differently, as they are just bytes */
-    if((item = ApeTag__get_item(tag, "track")) != NULL) { 
+    if ((item = ApeTag__get_item(tag, "track")) != NULL) { 
         *(tag->id3+126) = (char)ApeItem__parse_track(item->size, item->value);
     } else if (tag->errcode != APETAG_NOTPRESENT) {
         return -1;
     }
 
-    if((item = ApeTag__get_item(tag, "genre")) != NULL) { 
-        if(ApeTag__lookup_genre(tag, item, (unsigned char *)(tag->id3+127)) != 0) {
+    if ((item = ApeTag__get_item(tag, "genre")) != NULL) { 
+        if (ApeTag__lookup_genre(tag, item, (unsigned char *)(tag->id3+127)) != 0) {
             return -1;
         }
     } else if (tag->errcode != APETAG_NOTPRESENT) {
@@ -979,7 +979,7 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     assert(tag != NULL);
     
     /* Check that the total number of items in the tag is ok */
-    if(tag->item_count > APE_MAXIMUM_ITEM_COUNT) {
+    if (tag->item_count > APE_MAXIMUM_ITEM_COUNT) {
         tag->errcode = APETAG_LIMITEXCEEDED;
         tag->error = "tag item count larger than allowed";
         return -1;
@@ -995,8 +995,8 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     qsort(items, num_items, sizeof(struct ApeItem *), ApeItem__compare);
 
     /* Check all of the items for validity and update the total size of the tag*/
-    for(i=0; i < num_items; i++) {
-        if(ApeItem__check_validity(tag, items[i]) != 0) {
+    for (i=0; i < num_items; i++) {
+        if (ApeItem__check_validity(tag, items[i]) != 0) {
             goto update_ape_error;
         }
         tag_size += items[i]->size + (uint32_t)strlen(items[i]->key);
@@ -1004,7 +1004,7 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     
     /* Check that the total size of the tag is ok */
     tag->size = tag_size;
-    if(tag->size > APE_MAXIMUM_TAG_SIZE) {
+    if (tag->size > APE_MAXIMUM_TAG_SIZE) {
         tag->errcode = APETAG_LIMITEXCEEDED;
         tag->error = "tag larger than maximum possible size";
         goto update_ape_error;
@@ -1012,12 +1012,12 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     
     /* Write all of the tag items to the internal tag item string */
     free(tag->tag_data);
-    if((tag->tag_data = malloc(tag->size-64)) == NULL) {
+    if ((tag->tag_data = malloc(tag->size-64)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         goto update_ape_error;
     }
-    for(i=0, c=tag->tag_data; i < num_items; i++) {
+    for (i=0, c=tag->tag_data; i < num_items; i++) {
         key_size = (uint32_t)strlen(items[i]->key) + 1;
         size = H2LE32(items[i]->size);
         flags = H2LE32(items[i]->flags);
@@ -1027,20 +1027,20 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
         memcpy(c+=key_size, items[i]->value, items[i]->size);
         c += items[i]->size;
     }
-    if((uint32_t)(c - tag->tag_data) != tag_size - 64) {
+    if ((uint32_t)(c - tag->tag_data) != tag_size - 64) {
         tag->errcode = APETAG_INTERNALERR;
         tag->error = "internal inconsistancy in creating new tag data";
         goto update_ape_error;
     }
     
     free(tag->tag_footer);
-    if((tag->tag_footer = malloc(32)) == NULL) {
+    if ((tag->tag_footer = malloc(32)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         goto update_ape_error;
     }
     free(tag->tag_header);
-    if((tag->tag_header = malloc(32)) == NULL) {
+    if ((tag->tag_header = malloc(32)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         goto update_ape_error;
@@ -1081,29 +1081,29 @@ static int ApeTag__write_tag(struct ApeTag *tag) {
     assert(tag->tag_data != NULL);
     assert(tag->tag_footer != NULL);
     
-    if(fseeko(tag->file, tag->offset, SEEK_SET) == -1) {
+    if (fseeko(tag->file, tag->offset, SEEK_SET) == -1) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fseeko";
         return -1;
     }
     
-    if(fwrite(tag->tag_header, 1, 32, tag->file) != 32) {
+    if (fwrite(tag->tag_header, 1, 32, tag->file) != 32) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fwrite";
         return -1;
     }
-    if(fwrite(tag->tag_data, 1, tag->size-64, tag->file) != tag->size-64) {
+    if (fwrite(tag->tag_data, 1, tag->size-64, tag->file) != tag->size-64) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fwrite";
         return -1;
     }
-    if(fwrite(tag->tag_footer, 1, 32, tag->file) != 32) {
+    if (fwrite(tag->tag_footer, 1, 32, tag->file) != 32) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fwrite";
         return -1;
     }
-    if(tag->id3 != NULL && !(tag->flags & APE_NO_ID3)) {
-        if(fwrite(tag->id3, 1, 128, tag->file) != 128) {
+    if (tag->id3 != NULL && !(tag->flags & APE_NO_ID3)) {
+        if (fwrite(tag->id3, 1, 128, tag->file) != 128) {
             tag->errcode = APETAG_FILEERR;
             tag->error = "fwrite";
             return -1;
@@ -1111,12 +1111,12 @@ static int ApeTag__write_tag(struct ApeTag *tag) {
         tag->flags |= APE_HAS_ID3;
     }
 
-    if(fflush(tag->file) != 0) {
+    if (fflush(tag->file) != 0) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "fflush";
         return -1;
     }
-    if(ftruncate(fileno(tag->file), (tag->offset + ApeTag__tag_length(tag))) == -1) {
+    if (ftruncate(fileno(tag->file), (tag->offset + ApeTag__tag_length(tag))) == -1) {
         tag->errcode = APETAG_FILEERR;
         tag->error = "ftruncate";
         return -1;
@@ -1132,7 +1132,7 @@ Frees an struct ApeItem and it's key and value, given a pointer to a pointer to 
 */
 static void ApeItem__free(struct ApeItem **item) {
     assert(item != NULL);
-    if(*item == NULL) {
+    if (*item == NULL) {
         return;
     }
     
@@ -1159,13 +1159,13 @@ static char* ApeTag__strcasecpy(const char *src, size_t size) {
     
     assert(src != NULL);
     
-    if((dest = malloc(size)) == NULL) {
+    if ((dest = malloc(size)) == NULL) {
         return NULL;
     }
     
     memcpy(dest, src, size);
-    for(c = dest; size > 0; size--, c++) {
-        if(*c >= 'A' && *c <= 'Z') {
+    for (c = dest; size > 0; size--, c++) {
+        if (*c >= 'A' && *c <= 'Z') {
             *c |= 0x20;
         }
     } 
@@ -1183,12 +1183,12 @@ Returns unsigned char.
 static unsigned char ApeItem__parse_track(uint32_t size, char *value) {
     assert(value != NULL);
     
-    if(size != 0 && size < 4) {
-        if(size == 3) {
-            if(*(value) >= '0' && *(value) <= '2' && 
+    if (size != 0 && size < 4) {
+        if (size == 3) {
+            if (*(value) >= '0' && *(value) <= '2' && 
                *(value+1) >= '0' && *(value+1) <= '9' &&
                *(value+2) >= '0' && *(value+2) <= '9') {
-                if(*(value) == '2' && ((*(value+1) > '5') ||
+                if (*(value) == '2' && ((*(value+1) > '5') ||
                    (*(value+1) == '5' && *(value+2) > '5'))) {
                     /* 3 digit number > 255 won't fit in a char */
                     return 0;
@@ -1197,14 +1197,14 @@ static unsigned char ApeItem__parse_track(uint32_t size, char *value) {
                        (10 * (*(value+1) & ~0x30)) + 
                        (*(value+2) & ~0x30));                        
             }
-        } else if(size == 2) {
-            if(*(value) >= '0' && *(value) <= '9' && 
+        } else if (size == 2) {
+            if (*(value) >= '0' && *(value) <= '9' && 
                *(value+1) >= '0' && *(value+1) <= '9') {
                 return (unsigned char)(10 * (*(value) & ~0x30) + 
                        (*(value+1) & ~0x30));
             }
-        } else if(size == 1) {
-            if(*(value) >= '0' && *(value) <= '9') {
+        } else if (size == 1) {
+            if (*(value) >= '0' && *(value) <= '9') {
                  return (unsigned char)(*(value) & ~0x30);
             }
         }
@@ -1228,7 +1228,7 @@ static int ApeItem__check_validity(struct ApeTag *tag, struct ApeItem *item) {
     assert(item->value != NULL);
     
     /* Check valid flags */
-    if(item->flags > 7) {
+    if (item->flags > 7) {
         tag->errcode = APETAG_INVALIDITEM;
         tag->error = "invalid item flags";
         return -1;
@@ -1237,17 +1237,17 @@ static int ApeItem__check_validity(struct ApeTag *tag, struct ApeItem *item) {
     /* Check valid key */
     key_length = strlen(item->key);
     key_end = item->key + (long)key_length;
-    if(key_length < 2) {
+    if (key_length < 2) {
         tag->errcode = APETAG_INVALIDITEM;
         tag->error = "invalid item key (too short)";
         return -1;
     }
-    if(key_length > 255) {
+    if (key_length > 255) {
         tag->errcode = APETAG_INVALIDITEM;
         tag->error = "invalid item key (too long)";
         return -1;
     }
-    if(key_length == 3 ? ApeTag__strncasecmp(item->key, "id3", 3) == 0 || 
+    if (key_length == 3 ? ApeTag__strncasecmp(item->key, "id3", 3) == 0 || 
                          ApeTag__strncasecmp(item->key, "tag", 3) == 0 || 
                          ApeTag__strncasecmp(item->key, "mp+", 3) == 0
        : (key_length == 4 ? ApeTag__strncasecmp(item->key, "oggs", 4) == 0 : 0)) {
@@ -1255,8 +1255,8 @@ static int ApeItem__check_validity(struct ApeTag *tag, struct ApeItem *item) {
         tag->error = "invalid item key (id3|tag|mp+|oggs)";
         return -1;
     }
-    for(c=item->key; c<key_end; c++) {
-        if((unsigned char)(*c) < 0x20 || (unsigned char)(*c) > 0x7f) {
+    for (c=item->key; c<key_end; c++) {
+        if ((unsigned char)(*c) < 0x20 || (unsigned char)(*c) > 0x7f) {
             tag->errcode = APETAG_INVALIDITEM;
             tag->error = "invalid item key character";
             return -1;
@@ -1264,7 +1264,7 @@ static int ApeItem__check_validity(struct ApeTag *tag, struct ApeItem *item) {
     }
     
     /* Check value is utf-8 if flags specify utf8 or external format*/
-    if(((item->flags & APE_ITEM_TYPE_FLAGS) & 2) == 0 && 
+    if (((item->flags & APE_ITEM_TYPE_FLAGS) & 2) == 0 && 
         ApeTag__check_valid_utf8((unsigned char *)(item->value), item->size) != 0) {
         tag->errcode = APETAG_INVALIDITEM;
         tag->error = "invalid utf8 value";
@@ -1285,32 +1285,32 @@ static int ApeTag__check_valid_utf8(unsigned char *utf8_string, uint32_t size) {
     
     assert(utf8_string != NULL);
     
-    for(; c < (utf8_string + size); c++) {
-        if((*c & 128) != 0) {
+    for (; c < (utf8_string + size); c++) {
+        if ((*c & 128) != 0) {
             /* Non ASCII */
-            if((*c < 194) || (*c > 245)) {
+            if ((*c < 194) || (*c > 245)) {
                 /* Outside of UTF8 Range */
                 return -1;
             }
-            if((*c & 224) == 192) {
+            if ((*c & 224) == 192) {
                 /* 2 byte UTF8 char */
                 utf_last_char = c + 1;
-            } else if((*c & 240) == 224) {
+            } else if ((*c & 240) == 224) {
                 /* 3 byte UTF8 char */
                 utf_last_char = c + 2;
-            } else if((*c & 248) == 240) {
+            } else if ((*c & 248) == 240) {
                 /* 4 byte UTF8 char */
                 utf_last_char = c + 3;
             } else {
                 return -1;
             }
             
-            if(utf_last_char >= (utf8_string + size)) {
+            if (utf_last_char >= (utf8_string + size)) {
                 return -1;
             }
             /* Check remaining bytes of character */
-            for(c++; c <= utf_last_char; c++) {
-                if((*c & 192) != 128) {
+            for (c++; c <= utf_last_char; c++) {
+                if ((*c & 192) != 128) {
                     return -1;
                 }
             }
@@ -1335,10 +1335,10 @@ static int ApeItem__compare(const void *a, const void *b) {
     
     size_a = ai_a->size + (uint32_t)strlen(ai_a->key);
     size_b = ai_b->size + (uint32_t)strlen(ai_b->key);
-    if(size_a < size_b) {
+    if (size_a < size_b) {
         return -1;
     }
-    if(size_a > size_b) {
+    if (size_a > size_b) {
         return 1;
     }
     return strncmp(ai_a->key, ai_b->key, strlen(ai_a->key));
@@ -1361,13 +1361,13 @@ static int ApeTag__lookup_genre(struct ApeTag *tag, struct ApeItem *item, unsign
     
     assert(tag != NULL);
     
-    if(ApeTag__load_ID3_GENRES(tag) != 0) {
+    if (ApeTag__load_ID3_GENRES(tag) != 0) {
         return -1;
     }
     
     ret = ID3_GENRES->get(ID3_GENRES, &key_dbt, &value_dbt, 0);
-    if(ret != 0) {
-        if(ret == -1) {
+    if (ret != 0) {
+        if (ret == -1) {
             tag->errcode = APETAG_INTERNALERR;
             tag->error = "db->get";
             return -1;
@@ -1396,11 +1396,11 @@ static int ApeTag__load_ID3_GENRES(struct ApeTag *tag) {
     
     assert(tag != NULL);
     
-    if(ID3_GENRES != NULL) {
+    if (ID3_GENRES != NULL) {
         return 0;
     }
 
-    if((ID3_GENRES = genres = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
+    if ((ID3_GENRES = genres = dbopen(NULL, O_RDWR|O_CREAT, 0777, DB_HASH, NULL)) == NULL) {
         tag->errcode = APETAG_INTERNALERR;
         tag->error = "dbopen";
         return -1;
@@ -1410,7 +1410,7 @@ static int ApeTag__load_ID3_GENRES(struct ApeTag *tag) {
         key_dbt.data = (GENRE); \
         key_dbt.size = strlen(GENRE); \
         value_dbt.data = (VALUE); \
-        if(genres->put(genres, &key_dbt, &value_dbt, 0) == -1) { \
+        if (genres->put(genres, &key_dbt, &value_dbt, 0) == -1) { \
             tag->errcode = APETAG_INTERNALERR; \
             tag->error = "db->put"; \
             goto load_genres_error; \
@@ -1572,8 +1572,8 @@ static int ApeTag__load_ID3_GENRES(struct ApeTag *tag) {
     return 0;
     
     load_genres_error:
-    if(genres != NULL){
-        if(genres->close(genres) == -1) {
+    if (genres != NULL){
+        if (genres->close(genres) == -1) {
             tag->errcode = APETAG_INTERNALERR;
             tag->error = "db->close";
         }
@@ -1626,11 +1626,11 @@ static struct ApeItem * ApeTag__get_item(struct ApeTag *tag, const char *key) {
 
     ret = tag->items->get(tag->items, &key_dbt, &value_dbt, 0);
     free(key_dbt.data);
-    if(ret == -1) { 
+    if (ret == -1) { 
         tag->errcode = APETAG_INTERNALERR;
         tag->error = "db->get"; 
         return NULL; 
-    } else if(ret != 0) { 
+    } else if (ret != 0) { 
         tag->errcode = APETAG_NOTPRESENT;
         tag->error = "get_item"; 
         return NULL; 
@@ -1654,7 +1654,7 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
         *num_items = 0;
     }
 
-    if((is = calloc(nitems + 1, sizeof(struct ApeItem *))) == NULL) {
+    if ((is = calloc(nitems + 1, sizeof(struct ApeItem *))) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "calloc";
         return NULL;
@@ -1664,7 +1664,7 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
         uint32_t i = 0;
         DBT key_dbt, value_dbt;
 
-        if(tag->items == NULL) {
+        if (tag->items == NULL) {
             tag->errcode = APETAG_INTERNALERR;
             tag->error = "internal consistency error: num_items > 0 but items is NULL";
             free(is);
@@ -1672,9 +1672,9 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
         }
         
         /* Get all ape items from the database */
-        if(tag->items->seq(tag->items, &key_dbt, &value_dbt, R_FIRST) == 0) {
+        if (tag->items->seq(tag->items, &key_dbt, &value_dbt, R_FIRST) == 0) {
             is[i++] = *(struct ApeItem **)(value_dbt.data);
-            while(tag->items->seq(tag->items, &key_dbt, &value_dbt, R_NEXT) == 0) {
+            while (tag->items->seq(tag->items, &key_dbt, &value_dbt, R_NEXT) == 0) {
                 if (i >= nitems) {
                     tag->errcode = APETAG_INTERNALERR;
                     tag->error = "internal consistency error: more items in database than num_items";

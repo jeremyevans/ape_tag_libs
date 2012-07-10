@@ -6,7 +6,7 @@
 
 int assertions = 0;
 
-#define CHECK(RESULT) assertions++; if(!(RESULT)) { return __LINE__; }
+#define CHECK(RESULT) assertions++; if (!(RESULT)) { return __LINE__; }
 
 int run_tests(void);
 int test_ApeTag_new_free(void);
@@ -32,12 +32,12 @@ int main(void) {
 
     CHECK(ApeTag_mt_init() == 0);
     
-    if(chdir("tags") != 0) {
+    if (chdir("tags") != 0) {
         err(1, NULL);
     }
     num_failures = run_tests();
     
-    if(num_failures == 0) {
+    if (num_failures == 0) {
         printf("\nAll Tests Successful (%i assertions).\n", assertions);
     } else {
         printf("\n%i Failed Tests (%i assertions).\n", num_failures, assertions);
@@ -50,7 +50,7 @@ int run_tests(void) {
     int line = 0;
     
     #define CHECK_FAILURE(FUNCTION) \
-        if((line = FUNCTION())) { \
+        if ((line = FUNCTION())) { \
             failures ++; \
             printf(#FUNCTION " failed on line %i\n", line) ; \
         }
@@ -382,7 +382,7 @@ int test_ApeTag_filesizes(void) {
     #define TEST_FILESIZE(SIZE) \
         CHECK(tag = ApeTag_new(file, 0)); \
         CHECK(ftruncate(fileno(tag->file), 0) == 0); \
-        for(i=0; i<SIZE; i++) { \
+        for (i=0; i<SIZE; i++) { \
             CHECK(1 == fwrite(" ", 1, 1, file)); \
         } \
         CHECK(ApeTag_exists(tag) == 0); \
@@ -453,15 +453,15 @@ int test_ApeItem_validity(void) {
     item.key=malloc(260);
     memcpy(item.key, "TAGS", 5);
     CHECK_VALIDITY(0);
-    for(i=0; i < 0x20; i++) {
+    for (i=0; i < 0x20; i++) {
         *(item.key+3) = (char)i;
         CHECK_VALIDITY(-1);
     }
-    for(i=0xff; i >= 0x80; i--) {
+    for (i=0xff; i >= 0x80; i--) {
         *(item.key+3) = (char)i;
         CHECK_VALIDITY(-1);
     }
-    for(i=0; i<9; i++) {
+    for (i=0; i<9; i++) {
         memcpy(item.key+(26*i), "qwertyuiopasdfghjklzxcvbnm", 27);
         CHECK_VALIDITY(0);
     }
@@ -521,7 +521,7 @@ int test_bad_tags(void) {
         
     #define RESET_FILE(FILE, RAW, LENGTH, PADDING) \
         CHECK(fseek(FILE, 0, SEEK_SET) == 0); \
-        for(i = 0; i < PADDING; i++){ \
+        for (i = 0; i < PADDING; i++){ \
             CHECK(1 == fwrite(" ", 1, 1, FILE)); \
         } \
         CHECK(LENGTH == fwrite(RAW, 1, LENGTH, FILE)); \
@@ -542,14 +542,14 @@ int test_bad_tags(void) {
     /* Check works with read only flag, but not other flags */
     WRITE_BYTES(empty, 20, "\1", 1);
     CHECK_PARSE(empty, 0, APETAG_NOERR);
-    for(c=255;c>1;c--) {
+    for (c=255;c>1;c--) {
         WRITE_BYTES(empty, 20, &c, 1);
         CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
     } 
     WRITE_BYTES(empty, 20, "\1", 1);
     WRITE_BYTES(empty, 52, "\1", 1);
     CHECK_PARSE(empty, 0, APETAG_NOERR);
-    for(c=255;c>1;c--) {
+    for (c=255;c>1;c--) {
         WRITE_BYTES(empty, 52, &c, 1);
         CHECK_PARSE(empty, -1, APETAG_CORRUPTTAG);
         WRITE_BYTES(empty, 20, &c, 1);
@@ -774,7 +774,7 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     
     /* Check adding more items than allowed */
     CHECK(ApeTag_clear_items(tag) == 0);
-    for(i=0; i < 64; i++) {
+    for (i=0; i < 64; i++) {
         CHECK(item = malloc(sizeof(struct ApeItem)));
         CHECK(item->key = malloc(6));
         CHECK(item->value = malloc(3));
@@ -803,7 +803,7 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     item->size = 8112;
     item->flags = 0;
     memcpy(item->key, "Too Big!", 9);
-    for(i=0; i < 507; i++) {
+    for (i=0; i < 507; i++) {
         memcpy(item->value+i*16, "0123456789abcdef", 16);
     }
     CHECK(ApeTag_add_item(tag, item) == 0);
@@ -834,7 +834,7 @@ int test_no_id3(void) {
         CHECK(ApeTag_exists(tag) >= 0); \
         CHECK((tag->flags & (APE_HAS_APE|APE_HAS_ID3)) == (NO_ID3_FLAGS)); \
         CHECK(0 == ApeTag__id3_length(tag)); \
-        if(NO_ID3_FLAGS & APE_HAS_APE) { \
+        if (NO_ID3_FLAGS & APE_HAS_APE) { \
             CHECK(0 == fseek(file, 0, SEEK_SET)); \
             CHECK(file_contents = malloc(ApeTag_size(tag))); \
             CHECK(raw = malloc(ApeTag_size(tag))); \
@@ -875,7 +875,7 @@ int test_ApeTag__strcasecpy(void) {
     TEST_STRCASECPY("Album", 6);
     TEST_STRCASECPY("ALBUM", 6);
     
-    for(i=1; i <= 255; i++) {
+    for (i=1; i <= 255; i++) {
         snprintf(s, 10, "0%caZ9", i);
         CHECK(strcasecmp(ApeTag__strcasecpy(s, 6), s) == 0);
     }
@@ -891,21 +891,21 @@ int test_ApeItem__parse_track(void) {
     CHECK(ApeItem__parse_track(4, "1") == 0)
     CHECK(ApeItem__parse_track(1, "a") == 0)
     
-    for(i=0; i<10; i++) {
+    for (i=0; i<10; i++) {
         memset(s, 0, 4);
         s[0] = '0' + i;
         CHECK(i == ApeItem__parse_track(1, s));
-        for(j=0; j<10; j++) {
+        for (j=0; j<10; j++) {
             s[1] = '0' + j;
             CHECK(j+10*i == ApeItem__parse_track(2, s));
-            for(k=0; k<10; k++) {
+            for (k=0; k<10; k++) {
                 s[2] = '0' + k;
-                if(i > 2 || (i == 2 && (j > 5 || (j == 5 && k > 5)))) {
+                if (i > 2 || (i == 2 && (j > 5 || (j == 5 && k > 5)))) {
                     CHECK(0 == ApeItem__parse_track(3, s));
                 } else {
                     CHECK(k+10*j+100*i == ApeItem__parse_track(3, s));
                 }
-                if(k+10*j+100*i < '0' || k+10*j+100*i > '9') {
+                if (k+10*j+100*i < '0' || k+10*j+100*i > '9') {
                     s[2] = k+10*j+100*i;
                     CHECK(0 == ApeItem__parse_track(3, s+2));
                 }

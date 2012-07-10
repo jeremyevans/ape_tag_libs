@@ -13,9 +13,9 @@ int main(int argc, char *argv[]) {
     int ret = 0;
     int i;
     
-    if(argc > 1) {
-        for(i=1; i<argc; i++) {
-            if(ApeInfo_process(argv[i]) != 0) {
+    if (argc > 1) {
+        for (i=1; i<argc; i++) {
+            if (ApeInfo_process(argv[i]) != 0) {
                 ret = 1;
             }
         }
@@ -34,32 +34,32 @@ int ApeInfo_process(char *filename) {
     FILE *file;
     struct ApeTag *tag = NULL;
     
-    if((file = fopen(filename, "r")) == NULL) {
+    if ((file = fopen(filename, "r")) == NULL) {
         warn("%s", filename);
         ret = 1;
         goto apeinfo_process_error;
     }
     
-    if((tag = ApeTag_new(file, 0)) == NULL) {
+    if ((tag = ApeTag_new(file, 0)) == NULL) {
         warn(NULL);
         ret = 1;
         goto apeinfo_process_error;
     }
     
     status = ApeTag_parse(tag);
-    if(status == 0) {
+    if (status == 0) {
         
-    } else if(status == -1 || (status == -2 && (ferror(file) != 0))) {
+    } else if (status == -1 || (status == -2 && (ferror(file) != 0))) {
         warn(NULL);
         ret = 1;
         goto apeinfo_process_error;
-    } else if(status == -3) {
+    } else if (status == -3) {
         warnx("%s", ApeTag_error(tag));
         ret = 1;
         goto apeinfo_process_error;
     }
     
-    if(ApeTag_exists(tag)) {
+    if (ApeTag_exists(tag)) {
         printf("%s (%i items):\n", filename, ApeTag_item_count(tag));
         ApeTag_print(tag);
     } else {
@@ -70,8 +70,8 @@ int ApeInfo_process(char *filename) {
     
     apeinfo_process_error:
     ApeTag_free(tag);
-    if(file != NULL) {
-        if(fclose(file) != 0) {
+    if (file != NULL) {
+        if (fclose(file) != 0) {
             warn(NULL);
         }
     }
@@ -112,28 +112,28 @@ void ApeItem_print(struct ApeItem *item) {
     assert(item->value != NULL);
 
     printf("%s: ", item->key);
-    if((item->flags & APE_ITEM_TYPE_FLAGS) == APE_ITEM_BINARY) {
+    if ((item->flags & APE_ITEM_TYPE_FLAGS) == APE_ITEM_BINARY) {
         printf("[BINARY DATA]");
-    } else if((item->flags & APE_ITEM_TYPE_FLAGS) == APE_ITEM_RESERVED) {
+    } else if ((item->flags & APE_ITEM_TYPE_FLAGS) == APE_ITEM_RESERVED) {
         printf("[RESERVED]");
     } else {
-        if((item->flags & APE_ITEM_TYPE_FLAGS) == APE_ITEM_EXTERNAL) {
+        if ((item->flags & APE_ITEM_TYPE_FLAGS) == APE_ITEM_EXTERNAL) {
             printf("[EXTERNAL LOCATION] ");
         }
-        for(i=0; i < item->size; i++) {
+        for (i=0; i < item->size; i++) {
             c = *((char *)(item->value)+i);
-            if(c == '\0') {
+            if (c == '\0') {
                 printf(", ");
-            } else if(c < '\40') {
+            } else if (c < '\40') {
                 printf("\\%o", c);
-            } else if(c == '\\') {
+            } else if (c == '\\') {
                 printf("\\\\");
             } else {
                 printf("%c", c);
             }
         }
     }
-    if(item->flags & APE_ITEM_READ_ONLY) {
+    if (item->flags & APE_ITEM_READ_ONLY) {
         printf(" [READ_ONLY]");
     }
     printf("\n");
