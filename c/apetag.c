@@ -137,7 +137,7 @@ static int ApeTag__get_item(struct ApeTag *tag, const char *key, struct ApeItem 
 static struct ApeItem **ApeTag__get_items(struct ApeTag *tag, uint32_t *item_count);
 
 static void ApeItem__free(struct ApeItem **item);
-static char * ApeTag__strcasecpy(const char *src, unsigned char size);
+static char * ApeTag__strcasecpy(const char *src, size_t size);
 static unsigned char ApeItem__parse_track(uint32_t size, char *value);
 static int ApeItem__check_validity(struct ApeTag *tag, struct ApeItem *item);
 static int ApeTag__check_valid_utf8(unsigned char *utf8_string, uint32_t size);
@@ -359,7 +359,7 @@ int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item) {
     }
     
     /* Apetag keys are case insensitive but case preserving */
-    if((key_dbt.data = ApeTag__strcasecpy(item->key, (unsigned char)key_dbt.size)) == NULL) {
+    if((key_dbt.data = ApeTag__strcasecpy(item->key, key_dbt.size)) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         goto add_item_error;
@@ -434,7 +434,7 @@ int ApeTag_remove_item(struct ApeTag *tag, const char *key) {
     }
     
     /* APE item keys are case insensitive but case preserving */
-    if((key_dbt.data = ApeTag__strcasecpy(key, (unsigned char)key_dbt.size)) == NULL)  {
+    if((key_dbt.data = ApeTag__strcasecpy(key, key_dbt.size)) == NULL)  {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
         return -1;
@@ -1192,9 +1192,8 @@ The caller is responsible for freeing the returned pointer.
 
 Returns pointer to copy on success, NULL pointer on error.
 */
-static char* ApeTag__strcasecpy(const char *src, unsigned char size) {
-    unsigned char i;
-    char *dest;
+static char* ApeTag__strcasecpy(const char *src, size_t size) {
+    char *c, *dest;
     
     assert(src != NULL);
     
@@ -1202,10 +1201,10 @@ static char* ApeTag__strcasecpy(const char *src, unsigned char size) {
         return NULL;
     }
     
-    memcpy(dest, src, (unsigned long)size);
-    for(i=0; i < size; i++) {
-        if(*(dest+i) >= 'A' && *(dest+i) <= 'Z') {
-            *(dest+i) |= 0x20;
+    memcpy(dest, src, size);
+    for(c = dest; size > 0; size--, c++) {
+        if(*c >= 'A' && *c <= 'Z') {
+            *c |= 0x20;
         }
     } 
     
