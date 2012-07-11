@@ -805,8 +805,6 @@ static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset) {
     uint32_t key_length;
     struct ApeItem *item = NULL;
     
-    assert(tag != NULL);
-
     if ((item = malloc(sizeof(struct ApeItem))) == NULL) {
         tag->errcode = APETAG_MEMERR;
         tag->error = "malloc";
@@ -976,8 +974,6 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     uint32_t num_items;
     struct ApeItem **items;
     
-    assert(tag != NULL);
-    
     /* Check that the total number of items in the tag is ok */
     if (tag->item_count > APE_MAXIMUM_ITEM_COUNT) {
         tag->errcode = APETAG_LIMITEXCEEDED;
@@ -1076,7 +1072,6 @@ Writes the tag to the file using the internal tag strings.
 Returns 0 on success, <0 on error.
 */
 static int ApeTag__write_tag(struct ApeTag *tag) {
-    assert(tag != NULL);
     assert(tag->tag_header != NULL);
     assert(tag->tag_data != NULL);
     assert(tag->tag_footer != NULL);
@@ -1358,8 +1353,6 @@ static int ApeTag__lookup_genre(struct ApeTag *tag, struct ApeItem *item, unsign
 
     key_dbt.size = item->size;
     key_dbt.data = item->value;
-    
-    assert(tag != NULL);
     
     if (ApeTag__load_ID3_GENRES(tag) != 0) {
         return -1;
