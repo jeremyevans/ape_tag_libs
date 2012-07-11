@@ -1,10 +1,13 @@
 AC_INIT([libapetag], [1.1.1], [code@jeremyevans.net])
 AC_CONFIG_AUX_DIR([build-aux])
-AM_INIT_AUTOMAKE([foreign silent-rules subdir-objects])
+m4_ifdef([AM_SILENT_RULES],
+  [AM_INIT_AUTOMAKE([foreign silent-rules subdir-objects])],
+  [AM_INIT_AUTOMAKE([foreign subdir-objects])])
 AC_CONFIG_SRCDIR([apetag.h])
 AC_PREREQ([2.59])
 
-AC_PROG_CC_C99
+m4_ifdef([AC_PROG_CC_C99], [AC_PROG_CC_C99], [])
+AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 PKG_PROG_PKG_CONFIG
 
