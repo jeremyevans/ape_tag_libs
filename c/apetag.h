@@ -47,7 +47,7 @@ enum ApeTag_errcode {
     APETAG_CORRUPTTAG,
     APETAG_INVALIDITEM,
     APETAG_ARGERR,
-    APETAG_NOTPRESENT,
+    APETAG_NOTPRESENT
 };
 
 /* Public functions */
