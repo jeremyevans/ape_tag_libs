@@ -80,7 +80,7 @@ AC_SUBST([DB185_LIB])
 # Detect a few extra CFLAGS
 TRY_CFLAGS='-W -Wshadow -Wpointer-arith -Wcast-align -Wstrict-prototypes
 	-Wsign-compare -Wmissing-prototypes -Wmissing-declarations
-	-Wpadded -Wredundant-decls -Wunreachable-code -Wlong-long
+	-Wpadded -Wunreachable-code -Wlong-long
 	-Wundef -Wcast-qual -Waggregate-return
 	-pedantic'
 
