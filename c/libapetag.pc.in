@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libapetag
+Description: APEv2 tag reader/writer library
+Version: @VERSION@
+URL: http://www.sourceforge.net/projects/pylibape/
+Libs: -L${libdir} -lapetag
+Libs.private:
+Cflags: -I${includedir}

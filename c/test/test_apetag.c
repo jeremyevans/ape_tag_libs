@@ -27,12 +27,16 @@ int test_ApeItem__parse_track(void);
 int test_ApeItem__compare(void);
 int test_ApeTag__lookup_genre(void);
 
+#ifndef TEST_TAGS_DIR
+#  define TEST_TAGS_DIR "test/tags"
+#endif
+
 int main(void) {
     int num_failures = 0;
 
     CHECK(ApeTag_mt_init() == 0);
-    
-    if (chdir("tags") != 0) {
+
+    if (chdir(TEST_TAGS_DIR) != 0) {
         err(1, NULL);
     }
     num_failures = run_tests();
