@@ -507,7 +507,7 @@ int test_bad_tags(void) {
     FILE *example1;
     char *empty_raw;
     char *example1_raw;
-    char c;
+    unsigned char c;
     int i;
     uint32_t raw_size;
     
@@ -947,14 +947,14 @@ int test_ApeItem__compare(void) {
 int test_ApeTag__lookup_genre(void) {
     struct ApeTag tag;
     struct ApeItem item;
-    char genre_id;
+    unsigned char genre_id;
 
     #define LOOKUP_GENRE(GENRE, VALUE) \
         memset(&item, 0, sizeof(struct ApeItem)); \
         item.value = (GENRE); \
         item.size = strlen(GENRE); \
         CHECK(ApeTag__lookup_genre(&tag, &item, &genre_id) == 0); \
-        CHECK((VALUE) == genre_id);
+        CHECK((unsigned char)(VALUE) == genre_id);
     
     LOOKUP_GENRE("Blues", '\0');
     LOOKUP_GENRE("Classic Rock", '\1');
