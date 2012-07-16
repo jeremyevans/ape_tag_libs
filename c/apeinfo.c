@@ -79,23 +79,18 @@ int ApeInfo_process(char *filename) {
     return ret;
 }
 
+int ApeTag_iter_print(struct ApeTag *tag, struct ApeItem *item, void *data) {
+    ApeItem_print(item);
+}
+
 /* Prints all items in the tag, one per line. */
 void ApeTag_print(struct ApeTag *tag) {
-    uint32_t item_count;
-    struct ApeItem **items, **is;
-    
     assert(tag != NULL);
 
-    items = ApeTag_get_items(tag, &item_count);
-    if (items == NULL) {
+    if (ApeTag_iter_items(tag, ApeTag_iter_print, NULL) < 0) {
        printf("Error getting items: %s", ApeTag_error(tag));
-    } else {
-        for (is = items; *is; is++) {
-            ApeItem_print(*is);
-        }
     }
 
-    free(items);
     printf("\n");
 }
 

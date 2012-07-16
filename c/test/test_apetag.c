@@ -26,6 +26,7 @@ int test_ApeTag__strcasecpy(void);
 int test_ApeItem__parse_track(void);
 int test_ApeItem__compare(void);
 int test_ApeTag__lookup_genre(void);
+int test_ApeTag_iter_items(struct ApeTag *tag, struct ApeItem *item, void *data);
 
 #ifndef TEST_TAGS_DIR
 #  define TEST_TAGS_DIR "test/tags"
@@ -659,12 +660,30 @@ int test_bad_tags(void) {
     return 0;
 }
 
+struct iter_items {
+    struct ApeTag *tag;
+    struct ApeItem *items[64];
+    int times_called;
+};
+
+int test_ApeTag_iter_items(struct ApeTag *tag, struct ApeItem *item, void *data) {
+    struct iter_items *ii = data;
+    ii->tag = tag;
+    ii->items[ii->times_called] = item;
+    if (ii->times_called >= 0) {
+      ii->times_called++;
+      return 0;
+    }
+    return 1;
+}
+
 int test_ApeTag_add_remove_clear_items_update(void) {
     struct ApeTag *tag;
     FILE *file;
     struct ApeItem *item;
     struct ApeItem *check_item;
     struct ApeItem **items;
+    struct iter_items data;
     uint32_t items_size;
     int i;
     
@@ -711,6 +730,19 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     CHECK(strcmp(items[0]->key, "ALBUM") == 0);
     CHECK(memcmp(items[0]->value, "VALUE", 5) == 0);
     free(items);
+
+    memset(&data, 0, sizeof(data));
+    CHECK(ApeTag_iter_items(tag, test_ApeTag_iter_items, &data) == 0); 
+    CHECK(data.times_called == 1);
+    CHECK(data.tag == tag);
+    CHECK(data.items[0]->size == 5);
+    CHECK(data.items[0]->flags == 0);
+    CHECK(strcmp(data.items[0]->key, "ALBUM") == 0);
+    CHECK(memcmp(data.items[0]->value, "VALUE", 5) == 0);
+
+    data.times_called = -1;
+    CHECK(ApeTag_iter_items(tag, test_ApeTag_iter_items, &data) == 1); 
+    CHECK(data.times_called == -1);
 
     /* ensure we don't crash if we don't care about the item count */
     items = ApeTag_get_items(tag, NULL);
@@ -779,6 +811,10 @@ int test_ApeTag_add_remove_clear_items_update(void) {
     /* Check adding more items than allowed */
     CHECK(ApeTag_clear_items(tag) == 0);
     for (i=0; i < 64; i++) {
+        memset(&data, 0, sizeof(data));
+        CHECK(ApeTag_iter_items(tag, test_ApeTag_iter_items, &data) == 0); 
+        CHECK(data.times_called == i);
+
         CHECK(item = malloc(sizeof(struct ApeItem)));
         CHECK(item->key = malloc(6));
         CHECK(item->value = malloc(3));

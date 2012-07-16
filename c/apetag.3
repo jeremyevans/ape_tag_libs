@@ -33,6 +33,8 @@
 .P
 .B struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count);
 .P
+.B int ApeTag_iter_items(struct ApeTag *tag, int iterator(struct ApeTag *tag, struct ApeItem *item, void *data), void *data);
+.P
 .B uint32_t ApeTag_size(struct ApeTag *tag);
 .P
 .B uint32_t ApeTag_item_count(struct ApeTag *tag);
@@ -205,7 +207,7 @@ Checks if the file associated with
 .I tag
 already contains a valid APE tag.
 .P
-Returns 1 if an APE tag exists, 0 if it does not, <0 on error.  
+Returns 1 if an APE tag exists, 0 if it does not, -1 on error.  
 .P
 .B int ApeTag_exists_id3(struct ApeTag *tag);
 .P
@@ -213,7 +215,7 @@ Checks if the file associated with
 .I tag
 already contains a valid ID3v1 tag.
 .P
-Returns 1 if an ID3v1 tag exists, 0 if it does not, <0 on error.  
+Returns 1 if an ID3v1 tag exists, 0 if it does not, -1 on error.  
 .P
 .B int ApeTag_remove(struct ApeTag *tag);
 .P
@@ -225,7 +227,7 @@ This function parses the header and footer of the tag and will error instead
 of removing a tag if the header or footer of the tag is corrupt.
 .P
 Returns 1 if the tag doesn't exist, 0 if it does exist and the tag was
-removed successfully, <0 on error. 
+removed successfully, -1 on error. 
 .P
 .B int ApeTag_raw(struct ApeTag *tag, char **raw, uint32_t *raw_size);
 .P
@@ -240,7 +242,7 @@ The caller is responsible for
 freeing 
 .IR *raw.
 .P
-Returns 0 on success, <0 on error.
+Returns 0 on success, -1 on error.
 .P
 .B int ApeTag_parse(struct ApeTag *tag);
 .P
@@ -255,7 +257,7 @@ This is basically the same as calling
 .BR ApeTag_add_item
 manually with each item already in the tag.
 .P
-Returns 0 on success, <0 on error.
+Returns 0 on success, -1 on error.
 .P
 .B int ApeTag_update(struct ApeTag *tag);
 .P
@@ -276,7 +278,7 @@ Writes an ID3v1 tag as well as an APEv2 tag unless the
 flag is used or the file already has an APEv2
 tag but doesn't have an ID3v1 tag.  
 .P
-Returns 0 on success, <0 on error.
+Returns 0 on success, -1 on error.
 .P
 .B int ApeTag_add_item(struct ApeTag *tag, struct ApeItem *item);
 .P
@@ -295,7 +297,7 @@ must be created on the heap, as they are all freed when calling
 or
 .BR ApeTag_remove_item .
 .P
-Returns 0 on success, <0 on error.
+Returns 0 on success, -1 on error.
 .P
 .B int ApeTag_replace_item(struct ApeTag *tag, struct ApeItem *item);
 .P
@@ -306,13 +308,13 @@ Otherwise, if the item already exists, remove the existing item
 and replace it with the given item.
 .P
 Returns 0 on success if the item doesn't exist, 1 on success if it already
-existed, <0 on error.
+existed, -1 on error.
 .P
 .B int ApeTag_remove_item(struct ApeTag *tag, const char *key);
 .P
 Removes the item with a matching key from the tag.
 .P
-Returns 0 on success, 1 if the item did not exist in the tag, <0 on error.
+Returns 0 on success, 1 if the item did not exist in the tag, -1 on error.
 .P
 .B int ApeTag_clear_items(struct ApeTag *tag);
 .P
@@ -346,7 +348,21 @@ The returned array is always terminated by NULL, and always contains at least
 It is the caller's responsibility to free the returned array, but the individual
 items in the array should not be freed by the caller.
 .P
-Returns 0 on success, <0 on error.
+Returns 0 on success, -1 on error.
+.P
+.B int ApeTag_iter_items(struct ApeTag *tag, int iterator(struct ApeTag *tag, struct ApeItem *item, void *data), void *data);
+.P
+Iterates over all of the items in the tag.
+For each item in the tag, calls the iterator function with the tag,
+a pointer to the item, and the data pointer passed to the function.
+The data pointer is not used by the library, but it allows the iterator
+function to communicate back to the calling function.
+.P
+The iterator function should return 0 to continue iteration.  Any other value
+will signal the library to stop iterating.
+.P
+Returns 0 if iteration completed successfully, 1 if the iteration was
+terminated early, and -1 if there was an error.
 .P
 .B uint32_t ApeTag_size(struct ApeTag *tag);
 .P
@@ -417,7 +433,7 @@ If this function is called before creating threads, then libapetag
 is thread-safe assuming you do not have multiple threads operating
 on the same ApeTag or ApeItem struct concurrently.
 .P
-Returns 0 on success, <0 on error.
+Returns 0 on success, -1 on error.
 .SH AUTHOR
 .B apetag
 is written by Jeremy Evans.  You can contact the author at

@@ -135,6 +135,7 @@ static uint32_t ApeTag__tag_length(struct ApeTag *tag);
 static uint32_t ApeTag__id3_length(struct ApeTag *tag);
 static struct ApeItem * ApeTag__get_item(struct ApeTag *tag, const char *key);
 static struct ApeItem **ApeTag__get_items(struct ApeTag *tag, uint32_t *item_count);
+static int ApeTag__iter_items(struct ApeTag *tag, int iterator(struct ApeTag *tag, struct ApeItem *item, void *data), void *data);
 
 static void ApeItem__free(struct ApeItem **item);
 static char * ApeTag__strcasecpy(const char *src, size_t size);
@@ -503,6 +504,14 @@ struct ApeItem ** ApeTag_get_items(struct ApeTag *tag, uint32_t *item_count) {
     }
 
     return ApeTag__get_items(tag, item_count);
+}
+
+int ApeTag_iter_items(struct ApeTag *tag, int iterator(struct ApeTag *tag, struct ApeItem *item, void *data), void *data) {
+    if (ApeTag__get_tag_information(tag) != 0) {
+        return -1;
+    }
+
+    return ApeTag__iter_items(tag, iterator, data);
 }
 
 int ApeTag_mt_init(void) {
@@ -1587,13 +1596,11 @@ static uint32_t ApeTag__id3_length(struct ApeTag *tag) {
 }
 
 /* 
-Update the passed in **item pointer to point to a struct ApeItem * for the matching
-item in the database.
+Return an ApeItem * corresponding to the passed key, which the caller should not free.
 
 The caller is expected to have checked that tag->items is not NULL.
 
-Returns -1 on error, 1 if the item was not in the database, and 0 if the
-item was not in the database.
+Returns NULL on error.
 */
 static struct ApeItem * ApeTag__get_item(struct ApeTag *tag, const char *key) {
     int ret = 0;
@@ -1633,11 +1640,10 @@ static struct ApeItem * ApeTag__get_item(struct ApeTag *tag, const char *key) {
 }
 
 /* 
-Update the passed in ***items pointer to point to a new array of ApeItem*
-pointers, which the caller is responsible for freeing.
+Return an array of ApeItem * for all items in the tag database,
+which the caller is responsible for freeing.
 
-Returns <0 on error, 1 if the tag has no items, and 0 if the
-array was set sucessfully.
+Returns NULL on error.
 */
 static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_items) {
     uint32_t nitems = tag->item_count;
@@ -1659,7 +1665,7 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
 
         if (tag->items == NULL) {
             tag->errcode = APETAG_INTERNALERR;
-            tag->error = "internal consistency error: num_items > 0 but items is NULL";
+            tag->error = "internal consistency error: item_count > 0 but items is NULL";
             free(is);
             return NULL;
         }
@@ -1670,7 +1676,7 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
             while (tag->items->seq(tag->items, &key_dbt, &value_dbt, R_NEXT) == 0) {
                 if (i >= nitems) {
                     tag->errcode = APETAG_INTERNALERR;
-                    tag->error = "internal consistency error: more items in database than num_items";
+                    tag->error = "internal consistency error: more items in database than item_count";
                     free(is);
                     return NULL;
                 }
@@ -1679,7 +1685,7 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
         }
         if (i != nitems) {
             tag->errcode = APETAG_INTERNALERR;
-            tag->error = "internal consistency error: fewer items in database than num_items";
+            tag->error = "internal consistency error: fewer items in database than item_count";
             free(is);
             return NULL;
         }
@@ -1690,6 +1696,39 @@ static struct ApeItem ** ApeTag__get_items(struct ApeTag *tag, uint32_t *num_ite
     }
 
     return is;
+}
+
+/* 
+Iterate over all items in the database, calling the iterator function
+with the given tag, the current item, and the given data pointer.
+
+Returns 0 if iteration completes successfully, 1 if iteration is stopped
+early, -1 on error.
+*/
+static int ApeTag__iter_items(struct ApeTag *tag, int iterator(struct ApeTag *tag, struct ApeItem *item, void *data), void *data) {
+    if (tag->item_count > 0) {
+        DBT key_dbt, value_dbt;
+
+        if (tag->items == NULL) {
+            tag->errcode = APETAG_INTERNALERR;
+            tag->error = "internal consistency error: item_count > 0 but items is NULL";
+            return -1;
+        }
+        
+        /* Call iterator with each item in the database */
+        if (tag->items->seq(tag->items, &key_dbt, &value_dbt, R_FIRST) == 0) {
+            if (iterator(tag, *(struct ApeItem **)(value_dbt.data), data) != 0) {
+                return 1;
+            }
+            while (tag->items->seq(tag->items, &key_dbt, &value_dbt, R_NEXT) == 0) {
+                if (iterator(tag, *(struct ApeItem **)(value_dbt.data), data) != 0) {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
 }
 
 /* 
