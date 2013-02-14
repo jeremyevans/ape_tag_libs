@@ -1,0 +1,66 @@
+io-apetag
+----------
+
+io-apetag is an io library for reading and writing APEv2 tags.  
+
+It aims for standards compliance with the APE spec (1). APEv2 is the standard
+tagging format for Musepack (.mpc) and Monkey's Audio files (.ape), and it can
+also be used with mp3s as an alternative to ID3v2.x (technically, it can be
+used on any file type and is not limited to storing just audio file metadata).
+
+(1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
+
+Example Usage
+-------------
+
+tag = ApeTag withFile("file.mp3")
+
+tag hasApe
+  # whether file already has an APEv2 tag
+
+tag hasId3
+  # whether file already has an ID3v1 tag
+
+tag removeTag
+  # remove the APEv2 and ID3v1 tags from the file
+
+tag fields
+  # An object used as a hash table for the fields in the tag.
+  # slotNames gives the keys, and getSlot(key) gives the array
+  # of values for the keys.
+
+tag fields title at(0)
+  # First value for the title field
+
+tag items
+  # A list of ApeItems representing the items in the tag.
+  # This is an alternate representation of the fields that gives
+  # more information about the fields, such as the flags and the
+  # read only field. Each ApeItem has key, values, flags, and
+  # readOnly slots.
+
+tag items map(key)
+  # List of item keys for all items in the tag
+
+tag addItem(key, values, flags, readOnly)
+  # Add an item to the tag with the given key and values, and
+  # option type flag and readOnly flag.  Returns self for
+  # easy method chaining.
+
+tag removeItem(key)
+  # Removes the item with the given key from the tag.  Returns
+  # self for easy method chaining.
+
+tag update
+  # Writes the updated tag back to the file.
+
+Source
+------
+
+The most current source code can be accessed via github
+(http://github.com/jeremyevans/ape_tag_libs/tree/master/io/).
+
+Author
+------
+
+Jeremy Evans <code@jeremyevans.net>
