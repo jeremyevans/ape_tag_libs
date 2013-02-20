@@ -39,8 +39,6 @@ t/test-files/good-simple-1-ro-external.tag
 t/test-files/good-simple-1-uc.tag
 t/test-files/good-simple-1-utf8.tag
 t/test-files/good-simple-1.tag
-t/test-files/good-simple-2.tag
-t/test-files/good-simple-3.tag
 t/test-files/good-simple-4-date.tag
 t/test-files/good-simple-4-long.tag
 t/test-files/good-simple-4.tag
