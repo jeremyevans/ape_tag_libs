@@ -67,6 +67,13 @@ is(scalar(@$items), 1, 'items length: 1');
 is($items->[0]->read_only, 1, 'read only value parsed correctly');
 is($items->[0]->type, 2, 'type parsed correctly');
 
+$items = at("good-binary-non-utf8-value.tag")->items;
+is(scalar(@$items), 1, 'items length: 1');
+is($items->[0]->key, 'name', 'items key 1');
+is(@{$items->[0]->values}[0], "v\x81lue", 'items value 1');
+is($items->[0]->read_only, 0, 'read only value parsed correctly');
+is($items->[0]->type, 1, 'type parsed correctly');
+
 $items = at("good-many-items.tag")->items;
 my @sitems = sort { length($a->values->[0]) <=> length($b->values->[0]) } @$items;
 is(scalar(@sitems), 63, 'items length: 63');

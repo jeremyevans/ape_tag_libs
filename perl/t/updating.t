@@ -57,6 +57,10 @@ $tag->add_item(1, 2, 'name', 'value');
 $tag->update;
 is(compare(fn("good-simple-1-ro-external.tag"), fn('test.tag')), 0, 'update writes correct tag after adding item');
 
+$tag->add_item(0, 1, 'name', "v\x81lue");
+$tag->update;
+is(compare(fn("good-binary-non-utf8-value.tag"), fn('test.tag')), 0, 'update writes correct tag after adding item');
+
 copy(fn("missing-ok.tag"), fn('test.tag'));
 $tag = at('test.tag');
 for(my $i = 0; $i < 63; $i++) {
