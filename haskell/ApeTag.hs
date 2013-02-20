@@ -29,7 +29,8 @@ module ApeTag
 
 import Text.ParserCombinators.Parsec (GenParser, ParseError, count, anyChar,
        many, noneOf, oneOf, string, char, getState, setState, runParser)
-import Char (toLower, chr, ord, isDigit)
+import Data.Char (toLower, chr, ord, isDigit)
+import qualified Data.Char as Char
 import Data.Bits ((.&.), shift)
 import Data.List (sortBy, intercalate)
 import System.IO (hSeek, hGetChar, hFileSize, openFile, hClose, hPutStr,

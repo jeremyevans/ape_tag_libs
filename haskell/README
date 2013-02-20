@@ -8,7 +8,7 @@ tagging format for Musepack (.mpc) and Monkey's Audio files (.ape), and it can
 also be used with mp3s as an alternative to ID3v2.x (technically, it can be
 used on any file type and is not limited to storing just audio file metadata).
 
-The module is in written in pure haskell, and is tested on ghc 7.0.4.
+The module is in written in pure haskell, and is tested on ghc 7.4.2.
 
 (1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
 
