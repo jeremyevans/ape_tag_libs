@@ -197,6 +197,7 @@ tests = TestList [ corruptTest "header"
                  , sameAfterTest "good-empty" "good-empty" (\at -> at)
                  , sameAfterTest "good-empty" "good-simple-1" (\at -> addApeItem at $ aiKV1 "name" "value")
                  , sameAfterTest "good-empty" "good-simple-1-ro-external" (\at -> addApeItem at $ ai "name" ["value"] FlagExternal True)
+                 , sameAfterTest "good-empty" "good-binary-non-utf8-value" (\at -> addApeItem at $ ai "name" ["v\129lue"] FlagBinary False)
                  , sameAfterTest "good-simple-1" "good-empty" (\at -> removeApeItem at "name")
                  , sameAfterTest "good-empty" "good-many-items" $ addManyItems 63 0 "" 
                  , sameAfterTest "good-empty" "good-multiple-values" (\at -> addApeItem at $ aiKV "name" ["va", "ue"])
