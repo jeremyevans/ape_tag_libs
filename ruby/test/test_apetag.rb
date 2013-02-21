@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'apetag'
-require 'stringio'
 require 'test/unit'
+require 'stringio'
+require 'fileutils'
 
 EMPTY_APE_TAG = "APETAGEX\320\a\0\0 \0\0\0\0\0\0\0\0\0\0\240\0\0\0\0\0\0\0\0APETAGEX\320\a\0\0 \0\0\0\0\0\0\0\0\0\0\200\0\0\0\0\0\0\0\0TAG\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\377"
 EXAMPLE_APE_TAG = "APETAGEX\xd0\x07\x00\x00\xb0\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\xa0\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00Track\x001\x04\x00\x00\x00\x00\x00\x00\x00Date\x002007\t\x00\x00\x00\x00\x00\x00\x00Comment\x00XXXX-0000\x0b\x00\x00\x00\x00\x00\x00\x00Title\x00Love Cheese\x0b\x00\x00\x00\x00\x00\x00\x00Artist\x00Test Artist\x16\x00\x00\x00\x00\x00\x00\x00Album\x00Test Album\x00Other AlbumAPETAGEX\xd0\x07\x00\x00\xb0\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00TAGLove Cheese\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Artist\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Album, Other Album\x00\x00\x00\x00\x00\x00\x002007XXXX-0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\xff"
@@ -13,19 +14,169 @@ EXAMPLE_APE_FIELDS = {"Track"=>["1"], "Comment"=>["XXXX-0000"], "Album"=>["Test 
 EXAMPLE_APE_FIELDS2 = {"Blah"=>["Blah"], "Comment"=>["XXXX-0000"], "Album"=>["Test Album", "Other Album"], "Artist"=>["Test Artist"], "Date"=>["2007"]}
 EXAMPLE_APE_TAG_PRETTY_PRINT = "Album: Test Album, Other Album\nArtist: Test Artist\nComment: XXXX-0000\nDate: 2007\nTitle: Love Cheese\nTrack: 1"
 
-class String
-  if RUBY_VERSION > '1.9.0'
-    def binary
-      force_encoding('binary')
-    end
+class ApeTagTest < Test::Unit::TestCase
+  def binary(str)
+    str.force_encoding('BINARY') if str.respond_to?(:force_encoding)
+    str
+  end
+
+  def utf8(str)
+    str.force_encoding('UTF-8') if str.respond_to?(:force_encoding)
+    str
+  end
+
+  def tagname(name)
+    "../test-files/#{name}#{'.tag' unless name =~ /\./}"
+  end
+
+  def tag(name)
+    ApeTag.new(tagname(name))
+  end
+
+  def assert_apetag_raised(name, msg)
+    yield tag(name)
+  rescue ApeTagError => e
+    assert(e.message.include?(msg), "Expected: #{msg.inspect}, received: #{e.message.inspect}")
   else
-    def binary
-      self
+    assert(false, "#{name} did not raise ApeTagError: #{msg}")
+  end
+
+  def corrupt(name, msg)
+    assert_apetag_raised(name, msg){|tag| tag.fields}
+  end
+
+  def with_test_file(before, opts={})
+    temp_name = tagname(opts[:name] || 'test')
+    FileUtils.copy(tagname(before), temp_name)
+    yield temp_name
+    File.delete(temp_name)
+  end
+
+  def assert_files_equal(before, after, opts={})
+    with_test_file(before, opts) do |temp_name|
+      yield(opts[:yield] == :name ? temp_name : ApeTag.new(temp_name))
+      assert_equal(File.read(tagname(after)), File.read(temp_name))
     end
   end
-end
 
-class ApeTagTest < Test::Unit::TestCase
+  def test_corrupt
+    corrupt("corrupt-count-larger-than-possible", "Item count (1) is larger than possible")
+    corrupt("corrupt-count-mismatch", "Header and footer item count does not match")
+    corrupt("corrupt-count-over-max-allowed", "Item count (97) is larger than 64")
+    corrupt("corrupt-data-remaining", "Data remaining after specified number of items parsed")
+    corrupt("corrupt-duplicate-item-key", "Multiple items with same key (\"name\")")
+    corrupt("corrupt-finished-without-parsing-all-items", "End of tag reached but more items specified")
+    corrupt("corrupt-footer-flags", "Tag has bad footer flags")
+    corrupt("corrupt-header", "Missing header")
+    corrupt("corrupt-item-flags-invalid", "Invalid item flags at offset 0")
+    corrupt("corrupt-item-length-invalid", "Invalid item length at offset 0")
+    corrupt("corrupt-key-invalid", "Invalid APE key")
+    corrupt("corrupt-key-too-short", "Invalid APE key")
+    corrupt("corrupt-key-too-long", "Invalid APE key")
+    corrupt("corrupt-min-size", "Tag size (57) smaller than minimum size")
+    corrupt("corrupt-missing-key-value-separator", "Missing key-value separator at offset 8")
+    corrupt("corrupt-next-start-too-large", "Invalid item length at offset 8")
+    corrupt("corrupt-size-larger-than-possible", "Tag size (65) larger than possible")
+    corrupt("corrupt-size-mismatch", "Header and footer size does not match")
+    corrupt("corrupt-size-over-max-allowed", "Tag size (61504) larger than possible")
+    corrupt("corrupt-value-not-utf8", "Invalid item value encoding (non UTF-8)")
+  end
+
+  def test_exists?
+    assert_equal(false, tag("missing-ok").exists?)
+    assert_equal(true, tag("good-empty").exists?)
+    assert_equal(false, tag("good-empty-id3-only").exists?)
+    assert_equal(true, tag("good-empty-id3").exists?)
+  end
+
+  def test_has_id3?
+    assert_equal(false, tag("missing-ok").has_id3?)
+    assert_equal(false, tag("good-empty").has_id3?)
+    assert_equal(true, tag("good-empty-id3-only").has_id3?)
+    assert_equal(true, tag("good-empty-id3").has_id3?)
+  end
+
+  def test_parsing
+    assert_equal({}, tag("good-empty").fields)
+    assert_equal({'name'=>['value']}, tag("good-simple-1").fields)
+    assert_equal(['value'], tag("good-simple-1").fields['Name'])
+
+    assert_equal(63, tag("good-many-items").fields.size)
+    assert_equal([''], tag("good-many-items").fields['0n'])
+    assert_equal(['a'], tag("good-many-items").fields['1n'])
+    assert_equal(['a' * 62], tag("good-many-items").fields['62n'])
+
+    assert_equal({'name'=>['va', 'ue']}, tag("good-multiple-values").fields)
+
+    assert_equal('name', tag("good-simple-1").fields['name'].key)
+    assert_equal('utf8', tag("good-simple-1").fields['name'].ape_type)
+    assert_equal(false, tag("good-simple-1").fields['name'].read_only)
+
+    assert_equal('name', tag("good-simple-1-ro-external").fields['name'].key)
+    assert_equal(['value'], tag("good-simple-1-ro-external").fields['name'])
+    assert_equal('external', tag("good-simple-1-ro-external").fields['name'].ape_type)
+    assert_equal(true, tag("good-simple-1-ro-external").fields['name'].read_only)
+
+    assert_equal('name', tag("good-binary-non-utf8-value").fields['name'].key)
+    assert_equal(binary("v\x81lue"), tag("good-binary-non-utf8-value").fields['name'][0])
+    assert_equal('binary', tag("good-binary-non-utf8-value").fields['name'].ape_type)
+    assert_equal(false, tag("good-binary-non-utf8-value").fields['name'].read_only)
+
+    assert_equal({'name'=>['value']}, ApeTag.new(File.open(tagname("good-simple-1"), 'rb')).fields)
+  end
+
+  def test_remove!
+    assert_files_equal('good-empty', 'missing-ok'){|tag| tag.remove!}
+    assert_files_equal('good-empty-id3', 'missing-ok'){|tag| tag.remove!}
+    assert_files_equal('good-empty-id3-only', 'missing-ok'){|tag| tag.remove!}
+    assert_files_equal('missing-10k', 'missing-10k'){|tag| tag.remove!}
+    assert_files_equal('good-empty-id3', 'missing-ok', :yield=>:name){|temp_name| ApeTag.new(File.open(temp_name, 'rb+')).remove!}
+  end
+
+  def test_update
+    assert_files_equal('good-empty', 'good-empty'){|tag| tag.update{|f|}}
+    assert_files_equal('missing-ok', 'good-empty'){|tag| tag.update{|f|}}
+    assert_files_equal('good-empty', 'good-simple-1'){|tag| tag.update{|f| f['name'] = 'value'}}
+    assert_files_equal('good-simple-1', 'good-empty'){|tag| tag.update{|f| f.delete('name')}}
+    assert_files_equal('good-simple-1', 'good-empty'){|tag| tag.update{|f| f.delete('Name')}}
+    assert_files_equal('good-empty', 'good-simple-1-ro-external'){|tag| tag.update{|f| ai = ApeItem.new('name', ['value']); ai.read_only = true; ai.ape_type = 'external'; f['name'] = ai}}
+    assert_files_equal('good-empty', 'good-binary-non-utf8-value'){|tag| tag.update{|f| ai = ApeItem.new('name', [binary("v\x81lue")]); ai.ape_type = 'binary'; f['name'] = ai}}
+    assert_files_equal('good-empty', 'good-many-items'){|tag| tag.update{|f| 63.times{|i| f["#{i}n"] = "a" * i}}}
+    assert_files_equal('good-empty', 'good-multiple-values'){|tag| tag.update{|f| f['name'] = ['va', 'ue']}}
+    assert_files_equal('good-multiple-values', 'good-simple-1-uc'){|tag| tag.update{|f| f['NAME'] = 'value'}}
+    assert_files_equal('good-empty', 'good-simple-1-utf8'){|tag| tag.update{|f| f['name'] = [utf8("v\xc3\x82\xc3\x95")]}}
+
+    assert_apetag_raised('good-empty', 'Updated tag has too many items (65)'){|tag| tag.update{|f| 65.times{|i| f["#{i}n"] = "a" * i}}}
+    assert_apetag_raised('good-empty', 'Updated tag too large (8193)'){|tag| tag.update{|f| f['xn'] = "a" * 8118}}
+    assert_apetag_raised('good-empty', 'Invalid APE key'){|tag| tag.update{|f| f['n'] = "a"}}
+    assert_apetag_raised('good-empty', 'Invalid APE key'){|tag| tag.update{|f| f['n' * 256] = "a"}}
+    assert_apetag_raised('good-empty', 'Invalid APE key'){|tag| tag.update{|f| f["n\0"] = "a"}}
+    assert_apetag_raised('good-empty', 'Invalid APE key'){|tag| tag.update{|f| f["n\x1f"] = "a"}}
+    assert_apetag_raised('good-empty', 'Invalid APE key'){|tag| tag.update{|f| f[binary("n\x80")] = "a"}}
+    assert_apetag_raised('good-empty', 'Invalid APE key'){|tag| tag.update{|f| f[binary("n\xff")] = "a"}}
+    assert_apetag_raised('good-empty', 'Invalid APE key'){|tag| tag.update{|f| f["tag"] = "a"}}
+    assert_apetag_raised('good-empty', 'Invalid key, value, APE type, or Read-Only Flag'){|tag| tag.update{|f| f["ab"] = utf8("v\xff")}}
+    assert_apetag_raised('good-empty', 'Invalid APE type'){|tag| tag.update{|f| ai = ApeItem.new('name', [binary("v\x81lue")]); ai.ape_type = 'foo'; f['name'] = ai}}
+
+    assert_files_equal('good-empty', 'good-simple-1', :yield=>:name){|temp_name| ApeTag.new(File.open(temp_name, 'rb+'), false).update{|f| f["name"] = 'value'}}
+  end
+
+  def test_id3
+    assert_files_equal('missing-ok', 'good-empty'){|tag| tag.update{|f|}}
+    assert_files_equal('missing-ok', 'good-empty-id3', :yield=>:name){|temp_name| ApeTag.new(temp_name, true).update{|f|}}
+    assert_files_equal('missing-ok', 'good-empty-id3', :name=>'test.mp3'){|tag| tag.update{|f|}}
+    assert_files_equal('missing-ok', 'good-empty', :name=>'test.mp3', :yield=>:name){|temp_name| ApeTag.new(temp_name, false).update{|f|}}
+
+    assert_files_equal('good-empty-id3-only', 'good-empty-id3'){|tag| tag.update{|f|}}
+    assert_files_equal('good-empty-id3', 'good-simple-4'){|tag| tag.update{|f| f.merge!('track'=>'1', 'genre'=>'Game', 'year'=>'1999', 'title'=>'Test Title', 'artist'=>'Test Artist', 'album'=>'Test Album', 'comment'=>'Test Comment')}}
+    assert_files_equal('good-empty-id3', 'good-simple-4-uc'){|tag| tag.update{|f| f.merge!('Track'=>'1', 'Genre'=>'Game', 'Year'=>'1999', 'Title'=>'Test Title', 'Artist'=>'Test Artist', 'Album'=>'Test Album', 'Comment'=>'Test Comment')}}
+    assert_files_equal('good-empty-id3', 'good-simple-4-date'){|tag| tag.update{|f| f.merge!('track'=>'1', 'genre'=>'Game', 'date'=>'12/31/1999', 'title'=>'Test Title', 'artist'=>'Test Artist', 'album'=>'Test Album', 'comment'=>'Test Comment')}}
+    assert_files_equal('good-empty-id3', 'good-simple-4-long'){|tag| tag.update{|f| f.merge!('track'=>'1', 'genre'=>'Game', 'year'=>'1999'*2, 'title'=>'Test Title'*5, 'artist'=>'Test Artist'*5, 'album'=>'Test Album'*5, 'comment'=>'Test Comment'*5)}}
+
+    assert_equal(false, ApeTag.new(tagname('good-empty-id3'), false).exists?)
+    assert_equal(false, ApeTag.new(tagname('good-empty-id3'), false).has_id3?)
+  end
+
   def get_ape_tag(f, check_id3)
     f.is_a?(ApeTag) ? f : ApeTag.new(f, check_id3)
   end
@@ -165,8 +316,6 @@ class ApeTagTest < Test::Unit::TestCase
     
     # Test create fails with invalid key
     assert_raises(ApeTagError){ApeItem.create('', ai)}
-    # Test create fails with invalid UTF-8 value
-    assert_raises(ApeTagError){ApeItem.create('xx',["\xfe"])}
     # Test create doesn't fail with valid UTF-8 value
     assert_nothing_raised{ApeItem.create('xx',[[12345, 1345].pack('UU')])}
     

@@ -21,3 +21,9 @@ desc "Package ruby-apetag"
 task :package do
   sh %{gem build apetag.gemspec}
 end
+
+desc "Run the specs"
+task :test do
+  sh %{#{FileUtils::RUBY} -I. test/test_apetag.rb}
+end
+task :default => :test

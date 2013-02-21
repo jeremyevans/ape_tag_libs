@@ -69,7 +69,9 @@ class ApeItem < Array
       return value
     end
     value = [value] unless value.is_a?(Array)
-    new(key, value)
+    item = new(key, value)
+    item.valid?
+    item
   end
   
   # Parse an ApeItem from the given data string starting at the provided offset.
@@ -84,12 +86,10 @@ class ApeItem < Array
     raise ApeTagError, "Missing key-value separator at offset #{offset}" unless key_end
     raise ApeTagError, "Invalid item length at offset #{offset}" if (next_item_start=length + key_end + 1) > data.length
     begin
-      item = ApeItem.new_from_parse(data[offset...key_end], data[(key_end+1)...next_item_start].split("\0"))
+      item = ApeItem.new_from_parse(data[offset...key_end], data[(key_end+1)...next_item_start].split("\0"), flags)
     rescue ArgumentError =>e
       raise ApeTagError, "ArgumentError: #{e.message}"
     end
-    item.read_only = flags & 1 > 0
-    item.ape_type = ITEM_TYPES[flags/2]
     return [item, next_item_start]
   end
   
@@ -101,7 +101,6 @@ class ApeItem < Array
     self.read_only = false
     self.ape_type = ITEM_TYPES[0]
     super(value)
-    raise ApeTagError, "Invalid item value encoding (non UTF-8)" unless valid_value?
   end
   
   # Set ape_type if valid, otherwise raise ApeTagError.
@@ -162,14 +161,16 @@ class ApeItem < Array
   # Check if the string value is valid UTF-8.
   def valid_value?
     begin
-      if RUBY_VERSION >= '1.9'
-        begin
-          map!{|v| v.to_s.encode('UTF-8')}
-        rescue EncodingError
-          return false
+      if ape_type == 'utf8' || ape_type == 'external'
+        if RUBY_VERSION >= '1.9'
+          begin
+            map!{|v| v.to_s.encode('UTF-8')}
+          rescue EncodingError
+            return false
+          end
         end
+        string_value.unpack('U*')
       end
-      string_value.unpack('U*') if ape_type == 'utf8' || ape_type == 'external'
     rescue ArgumentError
       false
     else
@@ -177,11 +178,26 @@ class ApeItem < Array
     end
   end
 
-  if RUBY_VERSION >= '1.9.0'
-    def self.new_from_parse(key, value)
-      new(key.force_encoding('US-ASCII'), value.map{|v| v.to_s.force_encoding('UTF-8')})
+  def self.new_from_parse(key, value, flags)
+    ape_type = flags/2
+    if RUBY_VERSION >= '1.9.0'
+      key.force_encoding('US-ASCII') 
+      case ape_type
+      when 0, 2
+        value = value.map{|v| v.to_s.force_encoding('UTF-8')}
+      when 1
+        value = value.map{|v| v.to_s.force_encoding('BINARY')}
+      end
     end
+    value = [''] if value.empty?
+    item = new(key, value)
+    item.read_only = flags & 1 > 0
+    item.ape_type = ITEM_TYPES[ape_type]
+    raise ApeTagError, "Invalid item value encoding (non UTF-8)" unless item.valid_value?
+    item
+  end
 
+  if RUBY_VERSION >= '1.9.0'
     def encoded_key(key)
       begin
         key.encode('US-ASCII')
@@ -191,14 +207,12 @@ class ApeItem < Array
     end
 
     def normalize_encodings
-      map!{|v| v.to_s.encode('UTF-8')}
+      map!{|v| v.to_s.encode('UTF-8')} if ape_type == 'utf8' || ape_type == 'external'
       self
+    rescue Encoding::UndefinedConversionError => e
+      raise ApeTagError, "#{e.class}: #{e.message}"
     end
   else
-    def self.new_from_parse(key, value)
-      new(key, value)
-    end
-
     def encoded_key(key)
       key
     end
@@ -275,7 +289,7 @@ class ApeTag
       @check_id3 = check_id3.nil? ? @@check_id3 : check_id3 
     else
       @filename = filename.to_s
-      @check_id3 = check_id3.nil? ? !MP3_RE.match(@filename).nil? : check_id3 
+      @check_id3 = check_id3.nil? ? (MP3_RE.match(@filename) ? true : nil) : check_id3 
     end
   end
   
@@ -284,10 +298,16 @@ class ApeTag
     @has_tag.nil? ? access_file('rb'){has_tag} : @has_tag
   end
   
+  # Check the file for an ID3 tag.  Returns true or false. Raises ApeTagError for corrupt tags.  
+  def has_id3?
+    exists?
+    id3 != ''
+  end
+  
   # Remove an APE tag from a file, if one exists.
   # Returns true.  Raises ApeTagError for corrupt tags.
   def remove!
-    access_file('rb+'){file.truncate(tag_start) if has_tag}
+    access_file('rb+'){file.truncate(tag_start) if has_tag || has_id3?}
     @has_tag, @fields, @id3, @tag_size, @tag_start, @tag_data, @tag_header, @tag_footer, @tag_item_count = []
     true
   end
@@ -302,8 +322,8 @@ class ApeTag
   def pretty_print
     begin
       fields.values.sort_by{|value| value.key}.collect{|value| "#{value.key}: #{value.join(', ')}"}.join("\n")
-    rescue ApeTagError
-      "CORRUPT TAG!"
+    rescue ApeTagError => e
+      "CORRUPT TAG!: #{e.message}"
     rescue Errno::ENOENT, Errno::EINVAL
       "FILE NOT FOUND!"
     end
@@ -464,27 +484,29 @@ class ApeTag
     # If the file doesn't have an ID3 and the file already has an APE tag or
     # check_id3 is not set, an ID3 won't be added.
     def update_id3
-      return if id3.length == 0 && (has_tag || check_id3 == false)
-      id3_fields = CICPHash.new('')
-      id3_fields['genre'] = 255.chr
-      fields.values.each do |value|
-        case value.key
-          when /\Atrack/i
-            id3_fields['track'] = value.string_value.to_i
-            id3_fields['track'] = 0 if id3_fields['track'] > 255
-            id3_fields['track'] = id3_fields['track'].chr
-          when /\Agenre/i
-            id3_fields['genre'] = ID3_GENRES_HASH[value.first]
-          when /\Adate\z/i
-            match = YEAR_RE.match(value.string_value)
-            id3_fields['year'] = match[0] if match 
-          when /\A(title|artist|album|year|comment)\z/i
-            id3_fields[value.key] = value.join(', ')
+      return if id3.empty? && has_tag
+      if !id3.empty? || check_id3
+        id3_fields = CICPHash.new('')
+        id3_fields['genre'] = 255.chr
+        fields.values.each do |value|
+          case value.key
+            when /\Atrack/i
+              id3_fields['track'] = value.string_value.to_i
+              id3_fields['track'] = 0 if id3_fields['track'] > 255
+              id3_fields['track'] = id3_fields['track'].chr
+            when /\Agenre/i
+              id3_fields['genre'] = ID3_GENRES_HASH[value.first]
+            when /\Adate\z/i
+              match = YEAR_RE.match(value.string_value)
+              id3_fields['year'] = match[0] if match 
+            when /\A(title|artist|album|year|comment)\z/i
+              id3_fields[value.key] = value.join(', ')
+          end
         end
+        @id3 = ["TAG", id3_fields['title'], id3_fields['artist'], id3_fields['album'],
+                id3_fields['year'], id3_fields['comment'], "\0", id3_fields['track'],
+                id3_fields['genre']].pack("a3a30a30a30a4a28a1a1a1")
       end
-      @id3 = ["TAG", id3_fields['title'], id3_fields['artist'], id3_fields['album'],
-              id3_fields['year'], id3_fields['comment'], "\0", id3_fields['track'],
-              id3_fields['genre']].pack("a3a30a30a30a4a28a1a1a1")
     end
     
     # Write the APEv2 and ID3v1.1 tags to disk.
