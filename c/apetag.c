@@ -1334,7 +1334,8 @@ static int ApeTag__check_valid_utf8(unsigned char *utf8_string, uint32_t size) {
                 return -1;
             }
             /* Check remaining bytes of character */
-            for (c++; c <= utf_last_char; c++) {
+            for (; c + 1 <= utf_last_char;) {
+                c++;
                 if ((*c & 192) != 128) {
                     return -1;
                 }
