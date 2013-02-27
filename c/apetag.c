@@ -49,17 +49,21 @@
 #endif
 #endif
 /* From OpenBSD */
-#ifdef IS_BIG_ENDIAN
 #define SWAPEND32(x) \
     (uint32_t)(((uint32_t)(x) & 0xff) << 24 | \
     ((uint32_t)(x) & 0xff00) << 8 | \
     ((uint32_t)(x) & 0xff0000) >> 8 | \
     ((uint32_t)(x) & 0xff000000) >> 24)
+#ifdef IS_BIG_ENDIAN
 #define H2LE32(X) SWAPEND32(X) 
+#define H2BE32(X) (X) 
 #define LE2H32(X) SWAPEND32(X) 
+#define BE2H32(X) (X) 
 #else
 #define H2LE32(X) (X)
+#define H2BE32(X) SWAPEND32(X) 
 #define LE2H32(X) (X)
+#define BE2H32(X) SWAPEND32(X) 
 #endif
 
 /* Global Variables */
@@ -823,7 +827,7 @@ static int ApeTag__parse_item(struct ApeTag *tag, uint32_t *offset) {
     memcpy(&item->size, data+(*offset), 4);
     memcpy(&item->flags, data+(*offset)+4, 4);
     item->size = LE2H32(item->size);
-    item->flags = LE2H32(item->flags);
+    item->flags = BE2H32(item->flags);
     item->key = NULL;
     item->value = NULL;
     
@@ -1025,7 +1029,7 @@ static int ApeTag__update_ape(struct ApeTag *tag) {
     for (i=0, c=tag->tag_data; i < num_items; i++) {
         key_size = (uint32_t)strlen(items[i]->key) + 1;
         size = H2LE32(items[i]->size);
-        flags = H2LE32(items[i]->flags);
+        flags = H2BE32(items[i]->flags);
         memcpy(c, &size, 4);
         memcpy(c+=4, &flags, 4);
         memcpy(c+=4, items[i]->key, key_size);
