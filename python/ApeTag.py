@@ -311,7 +311,7 @@ def _ape(fil, action, callback = None, callbackkwargs = {}, updateid3 = False):
         return newtag
     
     if len(newtag) > _maxapesize:
-        raise TagError, 'New tag is too large: %i bytes' % len(data)
+        raise TagError, 'New tag is too large: %i bytes' % len(newtag)
     
     if updateid3:
         if action == 'replace':
@@ -549,7 +549,7 @@ def _parseapetag(data):
     tagitemend = len(data) - 32
     for x in range(numitems):
         if curpos >= tagitemend:
-            raise TagError, 'Corrupt tag, end of tag reached with more items' \
+            raise TagError, 'Corrupt tag, end of tag reached with more items ' \
                             'specified'
         item = ApeItem()
         curpos = item.parsetag(data, curpos)
