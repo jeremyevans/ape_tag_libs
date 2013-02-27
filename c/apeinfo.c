@@ -47,14 +47,8 @@ int ApeInfo_process(char *filename) {
     }
     
     status = ApeTag_parse(tag);
-    if (status == 0) {
-        
-    } else if (status == -1 || (status == -2 && (ferror(file) != 0))) {
-        warn(NULL);
-        ret = 1;
-        goto apeinfo_process_error;
-    } else if (status == -3) {
-        warnx("%s", ApeTag_error(tag));
+    if (status == -1) {
+        warnx("%s: %s", filename, ApeTag_error(tag));
         ret = 1;
         goto apeinfo_process_error;
     }
@@ -72,7 +66,7 @@ int ApeInfo_process(char *filename) {
     ApeTag_free(tag);
     if (file != NULL) {
         if (fclose(file) != 0) {
-            warn(NULL);
+            warn("%s", filename);
         }
     }
     
