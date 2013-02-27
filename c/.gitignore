@@ -22,3 +22,4 @@ libapetag.pc
 libtool
 test/.dirstamp
 test/test_apetag
+test/test_apetag_files
