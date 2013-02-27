@@ -949,9 +949,26 @@ static int ApeTag__update_id3(struct ApeTag *tag) {
     APE_FIELD_TO_ID3_FIELD("title", 30, 3);
     APE_FIELD_TO_ID3_FIELD("artist", 30, 33);
     APE_FIELD_TO_ID3_FIELD("album", 30, 63);
-    APE_FIELD_TO_ID3_FIELD("year", 4, 93);
     APE_FIELD_TO_ID3_FIELD("comment", 28, 97);
     
+    if ((item = ApeTag__get_item(tag, "year")) != NULL) {
+      APE_FIELD_TO_ID3_FIELD("year", 4, 93);
+    } else if ((item = ApeTag__get_item(tag, "date")) != NULL) {
+      char *last;
+      int digits = 0;
+      for(c = item->value, last = c + item->size; c < last; c++) {
+        if(*c >= '0' && *c <= '9') {
+          digits++;
+          if (digits == 4) {
+            memcpy(tag->id3 + 93, c-3, 4);
+            break;
+          }
+        } else if (digits) {
+          digits = 0;
+        }
+      }
+    }
+
     #undef APE_FIELD_TO_ID3_FIELD
     
     /* Need to handle the track and genre differently, as they are just bytes */
