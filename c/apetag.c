@@ -1289,7 +1289,7 @@ static int ApeItem__check_validity(struct ApeTag *tag, struct ApeItem *item) {
     }
     
     /* Check value is utf-8 if flags specify utf8 or external format*/
-    if (((item->flags & APE_ITEM_TYPE_FLAGS) & 2) == 0 && 
+    if (((item->flags & APE_ITEM_TYPE_FLAGS) & APE_ITEM_BINARY) == 0 && 
         ApeTag__check_valid_utf8((unsigned char *)(item->value), item->size) != 0) {
         tag->errcode = APETAG_INVALIDITEM;
         tag->error = "invalid utf8 value";
