@@ -46,6 +46,7 @@ int main(void) {
         printf("\nAll Tests Successful (%i assertions).\n", assertions);
     } else {
         printf("\n%i Failed Tests (%i assertions).\n", num_failures, assertions);
+        return 1;
     }
     return 0;
 }
