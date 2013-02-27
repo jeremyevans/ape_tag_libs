@@ -17,10 +17,12 @@ libapetag_la_SOURCES = apetag.c
 apeinfo_LDADD = libapetag.la
 apeinfo_SOURCES = apeinfo.c
 
-check_PROGRAMS = test/test_apetag
+check_PROGRAMS = test/test_apetag test/test_apetag_files
 TESTS = $(check_PROGRAMS)
 test_test_apetag_SOURCES = test/test_apetag.c
 test_test_apetag_CFLAGS = -DTEST_TAGS_DIR=\"$(top_srcdir)/test/tags\"
+test_test_apetag_files_SOURCES = test/test_apetag_files.c
+test_test_apetag_files_CFLAGS = -DTEST_TAGS_DIR=\"$(top_srcdir)/../test-files\"
 
 dist_man1_MANS = apeinfo.1
 dist_man3_MANS = apetag.3
