@@ -109,6 +109,7 @@ from struct import pack as _pack, unpack as _unpack
 
 __version__ = '1.2'
 _maxapesize = 8192
+_maxapeitems = 64
 _commands = '''create update replace delete getfields getrawtag getnewrawtag
   hastag'''.split()
 _tagmustexistcommands = 'update getfields getrawtag'.split()
@@ -299,6 +300,9 @@ def _ape(fil, action, callback = None, callbackkwargs = {}, updateid3 = False):
     if callable(callback):
         apeitems = callback(apeitems, **callbackkwargs)
             
+    if len(apeitems) > _maxapeitems:
+      raise TagError, 'New tag has too many items: %s items' % len(apeitems)
+    
     newtag = _makeapev2tag(apeitems)
     
     if action == "getnewrawtag":
@@ -533,6 +537,8 @@ def _parseapetag(data):
     '''Parse an APEv2 tag and return a dictionary of tag fields'''
     apeitems = {}
     numitems = _unpack("<i",data[16:20])[0]
+    if numitems > _maxapeitems:
+        raise TagError, 'Tag exceeds maximum allowed item count' 
     if numitems != _unpack("<i",data[-16:-12])[0]:
         raise TagError, 'Corrupt tag, mismatched header and footer item count' 
     # 32 is size of footer, 11 is minimum item length item
