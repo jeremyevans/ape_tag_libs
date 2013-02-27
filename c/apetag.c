@@ -213,7 +213,7 @@ int ApeTag_remove(struct ApeTag *tag) {
         return -1;
     }
     
-    if (!(tag->flags & APE_HAS_APE)) {
+    if (!(tag->flags & (APE_HAS_APE|APE_HAS_ID3))) {
         return 1;
     }
 

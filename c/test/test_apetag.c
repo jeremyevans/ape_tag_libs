@@ -201,7 +201,7 @@ int test_ApeTag_remove(void) {
     TEST_REMOVE("empty_ape.tag", 0);
     TEST_REMOVE("empty_ape_id3.tag", 0);
     TEST_REMOVE("empty_file.tag", 1);
-    TEST_REMOVE("empty_id3.tag", 1);
+    TEST_REMOVE("empty_id3.tag", 0);
     TEST_REMOVE("example1.tag", 0);
     TEST_REMOVE("example1_id3.tag", 0);
     TEST_REMOVE("example2.tag", 0);
