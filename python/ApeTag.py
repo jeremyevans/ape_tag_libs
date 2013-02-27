@@ -357,7 +357,15 @@ def _apefieldstoid3fields(fields):
                 id3fields[key] = ''
         elif key == 'date':
             try:
-                id3fields['year'] = str(int(value))
+                year = []
+                for c in value:
+                    if c >= '0' and c <= '9':
+                      year.append(c)
+                      if len(year) == 4:
+                          id3fields['year'] = "".join(year)
+                          break
+                    else:
+                      year = []
             except ValueError:
                 pass
         elif key in _id3fields:
