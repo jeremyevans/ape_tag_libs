@@ -27,7 +27,6 @@ end
 function assert_files_equal(from, to, f)
     os.execute("cp " .. tagname(from) .. ' ' .. tagname('test'))
     f(tag('test'))
-    os.execute("hexdiff " .. tagname(to) .. ' ' .. tagname('test'))
     local ret
     if _VERSION == 'Lua 5.1' then
       ret = 0
