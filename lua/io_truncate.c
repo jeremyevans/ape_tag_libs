@@ -26,7 +26,7 @@ static int lua_io_truncate(lua_State *L) {
     return 0;
 }
 
-static const struct luaL_reg io_truncate [] = {
+static const struct luaL_Reg io_truncate [] = {
     {"truncate", lua_io_truncate},
     {NULL, NULL}
 };

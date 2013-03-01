@@ -14,7 +14,7 @@ The module is in written mostly in pure Lua.  It does require a small C
 extension because file truncation is not supported in the Lua standard library.
 It should be useable on all platforms that Lua supports, though the C file may
 need to be modified (it assumes ftruncate is found in unistd.h).  It is
-developed and tested on OpenBSD.  It has only been tested on Lua 5.1.1.  It
+developed and tested on OpenBSD.  It has been tested on Lua 5.1 and 5.2.  It
 includes a full unit test suite.
 
 (1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
@@ -72,6 +72,12 @@ latest release.
 
 Changelog
 ---------
+
+1.0.2
+- Work on Lua 5.2
+- Fix error message for item missing a key-value separator
+- Fix creation of ID3 tags where the genre matches
+- Have ApeTag:remove remove an ID3 tag even if no APE tag exists
 
 1.0.1
 - Allow use of read only flag on tag itself

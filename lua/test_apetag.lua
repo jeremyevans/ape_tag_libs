@@ -1,4 +1,4 @@
-require('apetag')
+require('test_shared')
 
 EMPTY_APE_TAG = "APETAGEX\208\7\0\0 \0\0\0\0\0\0\0\0\0\0\160\0\0\0\0\0\0\0\0APETAGEX\208\7\0\0 \0\0\0\0\0\0\0\0\0\0\128\0\0\0\0\0\0\0\0TAG\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\255"
 EXAMPLE_APE_TAG = "APETAGEX\208\7\0\0\176\0\0\0\6\0\0\0\0\0\0\160\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0Track\0001\4\0\0\0\0\0\0\0Date\0002007\9\0\0\0\0\0\0\0Comment\0XXXX-0000\11\0\0\0\0\0\0\0Title\0Love Cheese\11\0\0\0\0\0\0\0Artist\0Test Artist\22\0\0\0\0\0\0\0Album\0Test Album\0Other AlbumAPETAGEX\208\7\0\0\176\0\0\0\6\0\0\0\0\0\0\128\0\0\0\0\0\0\0\0TAGLove Cheese\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0Test Artist\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0Test Album\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0002007XXXX-0000\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\255"
@@ -9,7 +9,6 @@ EXAMPLE_APE_ONLY_TAG2 =  string.sub(EXAMPLE_APE_TAG2, 1,-129)
 EXAMPLE_APE_FIELDS = {Track={"1"}, Comment={"XXXX-0000"}, Album={"Test Album", "Other Album"}, Title={"Love Cheese"}, Artist={"Test Artist"}, Date={"2007"}}
 EXAMPLE_APE_FIELDS2 = {Blah={"Blah"}, Comment={"XXXX-0000"}, Album={"Test Album", "Other Album"}, Artist={"Test Artist"}, Date={"2007"}}
 EXAMPLE_APE_TAG_PRETTY_PRINT = "Album: Test Album, Other Album\nArtist: Test Artist\nComment: XXXX-0000\nDate: 2007\nTitle: Love Cheese\nTrack: 1"
-ASSERTIONS = 0
 FILENAME = 'test.apetag'
 
 function AT(t)
@@ -22,79 +21,6 @@ end
 
 function SIZE(t)
     return AT(t):file_size()
-end
-
---- String representation of table suitable for printing.
--- Gives outside similar to ruby's Hash#inspect.
--- @param t The table to print
--- @param l How many recursive levels to use (default 3)
--- @param p The parent table of the current table
--- @param gp The grandparent table of the current table
--- @return string
-function table.print(t,level,p,gp)
-    local typ = type(t)
-    if typ == 'table' then
-        local res = {}
-        if type(level) == 'nil' then
-            level = 3
-        end
-        if level < 0 then
-            return tostring(t)
-        end
-        table.insert(res, '{')
-        local first_item = true
-        for k,v in pairs(t) do
-            if first_item == false then
-                table.insert(res, ', ')
-            end
-            table.insert(res, table.print(k, level - 1, t, p))
-            table.insert(res, "=")
-            if v == t then
-                table.insert(res, '..')
-            elseif p and v == p then
-                table.insert(res, '...')
-            elseif gp  and v == gp then
-                table.insert(res, '....')
-            else
-                table.insert(res, table.print(v, level - 1, t, p))
-            end
-            first_item = false
-        end
-        table.insert(res, '}')
-        return table.concat(res)
-    elseif typ == 'string' then
-        return string.format('%q', t)
-    else
-        return tostring(t)
-    end
-end
-
-function table.equal(a,b)
-    for k,v in pairs(a) do
-        if b[k] ~= v then
-            return false
-        end
-    end
-    for k,v in pairs(b) do
-        if a[k] ~= v then
-            return false
-        end
-    end
-    return true
-end
-
-function table.array_equals(a,b)
-    for k,v in pairs(a) do
-        if type(k) == 'number' and b[k] ~= v then
-            return false
-        end
-    end
-    for k,v in pairs(b) do
-        if type(k) == 'number' and a[k] ~= v then
-            return false
-        end
-    end
-    return true
 end
 
 function table.replace(start, finish)
@@ -117,34 +43,7 @@ function write_tag_file(data, changes)
         end
     end
     f:close()
-    return io.open(FILENAME, 'rb+')
-end
-
-function assert_tables_equal(a, b)
-    assert(table.equal(a,b), string.format("Tables not equal:\n%s\n%s", table.print(a), table.print(b)))
-    ASSERTIONS = ASSERTIONS + 1
-end
-
-function assert_arrays_equal(a, b)
-    assert(table.array_equals(a,b), string.format("Arrays not equal:\n%s\n%s", table.print(a), table.print(b)))
-    ASSERTIONS = ASSERTIONS + 1
-end
-
-function assert_equal(a, b)
-    assert(a == b, string.format("Values not equal:\n%q\n%q", tostring(a), tostring(b)))
-    ASSERTIONS = ASSERTIONS + 1
-end
-
-function assert_error(f)
-    r, f = pcall(f)
-    assert(not r, 'No error occured')
-    ASSERTIONS = ASSERTIONS + 1
-end
-
-function assert_no_error(f)
-    r, reason = pcall(f)
-    assert(r, reason)
-    ASSERTIONS = ASSERTIONS + 1
+    return io.open(FILENAME, 'r+b')
 end
 
 function item_test(tag)
@@ -524,11 +423,4 @@ function TestApeTag.test_check_id3()
     os.remove(filename)
 end
 
--- If called on the command line, run all tests
-if arg and string.find(arg[0], 'test_apetag.lua') then
-    for i,f in pairs(TestApeTag) do
-        ASSERTIONS = 0
-        f()
-        print(i, 'No errors, ' .. tostring(ASSERTIONS) .. ' assertions')
-    end
-end
+run_tests('test_apetag.lua')

@@ -165,10 +165,11 @@ function ApeItem:parse(data, offset)
         error('Invalid item flags')
     end
     offset = offset + 8
-    local key_end = string.find(data, '\0', offset, true) - 1
+    local key_end = string.find(data, '\0', offset, true)
     if not key_end then
         error('Missing key-value separator')
     end
+    key_end = key_end - 1
     local next_item_start = length + key_end + 2
     if next_item_start > data_length + 1 then
         error('Invalid item length after taking key length into account')
@@ -293,7 +294,7 @@ ApeTag = {
     CHECK_ID3 = true
 }
 for k,v in ipairs(ApeTag.ID3_GENRES) do
-    ApeTag.ID3_GENRES_HASH[v] = k - 1
+    ApeTag.ID3_GENRES_HASH[v] = string.char(k - 1)
 end
 ApeTag.__index = ApeTag
 
@@ -379,8 +380,8 @@ end
 --- Remove the tag from the string
 -- @return nil
 function ApeTag:remove()
-    if self:has_tag() then
-        self:access_file('rb+', function() io.truncate(self.file, self._tag_start) end)
+    if self:has_tag() or (string.len(self._id3) ~= 0) then
+        self:access_file('r+b', function() io.truncate(self.file, self._tag_start) end)
     end
     for i,v in pairs({'_has_tag', '_fields', '_id3', '_tag_size', '_tag_start', 
             '_tag_data', '_tag_header', '_tag_footer', '_tag_item_count', '_file_size'}) do
@@ -394,7 +395,7 @@ end
 --          return a new table with fields
 -- @return ApeFields
 function ApeTag:update(f)
-    self:access_file('rb+', function()
+    self:access_file('r+b', function()
         f(self:fields())
         self:validate_items()
         self:update_id3()

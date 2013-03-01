@@ -13,3 +13,5 @@ c/apeinfo
 c/apetag.o
 c/libapetag.*
 c/test/test_apetag
+lua/io_truncate.o
+lua/io_truncate.so
