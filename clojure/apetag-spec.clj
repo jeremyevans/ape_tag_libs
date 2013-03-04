@@ -6,8 +6,7 @@
     (java.nio CharBuffer)
     (java.nio.charset Charset)
     (java.nio.channels FileChannel)
-    (java.nio.file StandardOpenOption)
-    (java.nio.file.attribute FileAttribute)))
+    (java.nio.file StandardOpenOption)))
 
 (use 'apetag)
 (use 'clojure.test)
@@ -64,7 +63,7 @@
       
 (defn- file-from-string [filename string]
   (.delete (File. filename))
-  (.createFile (.toPath (File. filename)) (into-array FileAttribute '()))
+  (.createNewFile (File. filename))
   (seek-write-truncate filename 0 string))
 
 (defn- empty-string [size]
