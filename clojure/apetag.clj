@@ -298,11 +298,21 @@
 (defn- -generate-apetag-id3-string [hash]
   (str "TAG" (hash :title) (hash :artist) (hash :album) (hash :year) (hash :comment) "\0" (char (hash :track)) (char (hash :genre))))
 
+(defn- -generate-apetag-id3-year [hash]
+  (let [year (-apetag-item-value hash "year" nil)]
+    (if year
+      year
+      (let [date (-apetag-item-value hash "date" nil)]
+        (if date
+          (let [date-year  (first (re-seq #"[0-9][0-9][0-9][0-9]" date))]
+            (if date-year date-year ""))
+          "")))))
+
 (defn- -generate-apetag-id3 [items]
   (-generate-apetag-id3-string {:title (-apetag-item-padded-value 30 items "title"),
    :artist (-apetag-item-padded-value 30 items "artist"),
    :album (-apetag-item-padded-value 30 items "album"),
-   :year (-apetag-rzpad (or (-apetag-item-value items "date" nil) (-apetag-item-value items "year")) 4),
+   :year (-apetag-rzpad (-generate-apetag-id3-year items) 4),
    :comment (-apetag-item-padded-value 28 items "comment"),
    :genre (or (ID3-GENRES-HASH (.toLowerCase (-apetag-item-value items "genre"))) 255),
    :track (try (Integer/valueOf (-apetag-item-value items "track" "0")) (catch NumberFormatException e 0)),
