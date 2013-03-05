@@ -27,7 +27,7 @@ test_test_apetag_files_CFLAGS = -DTEST_TAGS_DIR=\"$(top_srcdir)/../test-files\"
 dist_man1_MANS = apeinfo.1
 dist_man3_MANS = apetag.3
 
-EXTRA_DIST = CHANGELOG LICENSE \
+EXTRA_DIST = CHANGELOG MIT-LICENSE \
 	test/tags/example2.tag \
 	test/tags/empty_ape.tag \
 	test/tags/empty_id3.tag \
