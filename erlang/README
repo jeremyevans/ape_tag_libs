@@ -41,7 +41,7 @@ AT2 = apetag:get_fields(AT1). # parse the tag body into individual items, which
             # Use Value#apeitem.key to get the real key.
 apetag:pretty_print(AT3). # string suitable for pretty printing
 AT4 = apetag:update(AT3, fun(Fields) ->
-      apetag:add_apeitem("Artist", "Test Artist",  # Add item with key "Artist"
+      apetag:add_apeitem("Artist", "Test Artist", Fields)  # Add item with key "Artist"
       apetag:remove_apeitem("Year", Fields))   # Remove item with key "Year"
 end). # Update the tag using a function that returns a new set of fields, by
       # modifying the current fields with add_apeitem and remove_apeitem.
