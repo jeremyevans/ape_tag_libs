@@ -293,9 +293,9 @@ update_id3(ApeTag) when is_record(ApeTag, apetag) ->
             if (Key == "title") or (Key == "artist") or (Key == "album") or (Key == "year") or (Key == "comment") ->
                 dict:store(Key, Value, Dict);
             Key == "date" ->
-                case regexp:match(Value, ?APE_YEAR_RE) of
-                    {match, Start, 4} ->
-                        dict:store("year", string:substr(Value, Start, 4), Dict);
+              case re:run(Value, ?APE_YEAR_RE, [{capture, first, list}]) of
+                    {match, [Match]} ->
+                        dict:store("year", Match, Dict);
                     nomatch ->
                         Dict;
                     {error, _} ->

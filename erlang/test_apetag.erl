@@ -106,6 +106,7 @@ tag_test(AT, F) ->
     AT1 = F(AT),
     Size = siz(F(AT1)),
     CID3 = atv(F(AT1), check_id3),
+    EMPTY_DICT = dict:new(),
     if CID3 == true ->
         ID3Size = 128;
     ?ELSE ->
@@ -116,14 +117,14 @@ tag_test(AT, F) ->
     Size = siz(F(AT1)),
     AT2 = apetag:remove(F(AT1)),
     Size = siz(F(AT2)),
-    dict:new() == atv(F(AT2), fields),
+    EMPTY_DICT = atv(F(AT2), fields),
     AT3 = apetag:update(F(AT2), fun(Fields) -> Fields end),
     Size1 = Size + 64 + ID3Size,
     Size1 = siz(F(AT3)),
     true = atv(F(AT3), has_tag),
     EMPTY_APE_TAG = rid(?EMPTY_APE_TAG, CID3),
     EMPTY_APE_TAG = apetag:raw(F(AT3)),
-    dict:new() == atv(F(AT3), fields),
+    EMPTY_DICT = atv(F(AT3), fields),
     AT4 = apetag:update(F(AT3), fun(Fields) -> Fields end),
     Size1 = siz(F(AT4)),
     AT5 = apetag:remove(F(AT4)),

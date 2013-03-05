@@ -9,7 +9,7 @@ also be used with mp3s as an alternative to ID3v2.x (technically, it can be
 used on any file type and is not limited to storing just audio file metadata).
 
 The module is in written in pure Erlang.  The minimum required version is
-Erlang 11b5, mostly because of the use of string:to_lower.  It is developed and
+Erlang 13b, mostly because of the use of re module.  It is developed and
 tested on OpenBSD.  It includes a full unit test suite.
 
 (1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
@@ -41,8 +41,8 @@ AT2 = apetag:get_fields(AT1). # parse the tag body into individual items, which
             # Use Value#apeitem.key to get the real key.
 apetag:pretty_print(AT3). # string suitable for pretty printing
 AT4 = apetag:update(AT3, fun(Fields) ->
-    apetag:add_apeitem("Artist", "Test Artist",  # Add item with key "Artist"
-        apetag:remove_apeitem("Year", Fields))   # Remove item with key "Year"
+      apetag:add_apeitem("Artist", "Test Artist",  # Add item with key "Artist"
+      apetag:remove_apeitem("Year", Fields))   # Remove item with key "Year"
 end). # Update the tag using a function that returns a new set of fields, by
       # modifying the current fields with add_apeitem and remove_apeitem.
 AT5 = apetag:remove(AT4). # remove the APEv2 and ID3v1 tags.
