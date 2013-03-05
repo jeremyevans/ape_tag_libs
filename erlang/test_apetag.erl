@@ -273,13 +273,13 @@ fun() ->
     E = binary_to_list(?EMPTY_APE_TAG),
     E2 = binary_to_list(?EXAMPLE_APE_TAG),
     apetag:raw(#apetag{file=write_tag_file(E)}),
-    apetag:raw(#apetag{file=write_tag_file(E, [{20, [1]}])})  end),
-    apetag:raw(#apetag{file=write_tag_file(E, [{52, [1]}])})  end),
+    apetag:raw(#apetag{file=write_tag_file(E, [{20, [1]}])}),
+    apetag:raw(#apetag{file=write_tag_file(E, [{52, [1]}])}),
 
     lists:foreach(fun(Num) ->
-        apetag:raw(#apetag{file=write_tag_file(E, [{20, [Num]}])})  end),
-        apetag:raw(#apetag{file=write_tag_file(E, [{52, [Num]}])})  end),
-        apetag:raw(#apetag{file=write_tag_file(E, [{20, [Num]}, {52, [Num]}])})  end),
+        assert_error(fun() -> apetag:raw(#apetag{file=write_tag_file(E, [{20, [Num]}])}) end),
+        assert_error(fun() -> apetag:raw(#apetag{file=write_tag_file(E, [{52, [Num]}])}) end),
+        assert_error(fun() -> apetag:raw(#apetag{file=write_tag_file(E, [{20, [Num]}, {52, [Num]}])}) end)
     end, lists:seq(2, 255)),
     
     lists:foreach(fun(Changes) ->
