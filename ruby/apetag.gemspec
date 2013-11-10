@@ -10,7 +10,6 @@ spec = Gem::Specification.new do |s|
   s.test_files = Dir["test/test_apetag.rb"]
   s.has_rdoc = true
   s.add_dependency('cicphash', [">= 1.0.0"])
-  s.rubyforge_project = 'apetag'
-  s.homepage = 'http://apetag.rubyforge.org'
+  s.homepage = 'http://ruby-apetag.jeremyevans.net'
 end
 

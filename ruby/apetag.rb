@@ -32,9 +32,9 @@
 # To run the tests for the library, run test_apetag.rb.
 #
 # If you find any bugs, would like additional documentation, or want to submit a
-# patch, please use Rubyforge (http://rubyforge.org/projects/apetag/).
+# patch, please use GitHub (https://github.com/jeremyevans/ape_tag_libs/issues)
 #
-# The RDoc for the project is available at http://apetag.rubyforge.org.
+# The RDoc for the project is available at http://ruby-apetag.jeremyevans.net.
 #
 # The most current source code can be accessed via github
 # (http://github.com/jeremyevans/ape_tag_libs).  Note that the 
