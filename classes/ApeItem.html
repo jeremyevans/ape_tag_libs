@@ -1,0 +1,437 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang='en'>
+  <head>
+    <title>ApeItem</title>
+    <meta content='text/html; charset=US-ASCII' http-equiv='Content-Type'>
+    <link href='../css/style.css' media='screen' rel='stylesheet' type='text/css'>
+    <script type='text/javascript'>
+      //<![CDATA[
+        function popupCode(url) {
+          window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+        }
+        
+        function toggleCode(id) {
+          var code = document.getElementById(id)
+        
+          code.style.display = code.style.display != 'block' ? 'block' : 'none'
+          return true
+        }
+        
+        // Make codeblocks hidden by default
+        document.writeln('<' + 'style type="text/css">.method .source pre { display: none }<\/style>')
+      //]]>
+    </script>
+  </head>
+  <body class='page'>
+    <div class='class' id='wrapper'>
+      <div class='header'>
+        <h1 class='name'>
+          <span class='type'>class</span>
+          ApeItem
+        </h1>
+        <ol class='paths'>
+          <li>
+            <a target="docwin" href="../files/apetag_rb.html">apetag.rb</a>
+          </li>
+        </ol>
+        <div class='parent'>
+          Parent:
+          <strong><a target="docwin" href="../files/apetag_rb.html">apetag.rb</a></strong>
+        </div>
+      </div>
+      <div id='content'>
+        <div id='text'>
+          <div id='description'>
+            
+            <p>The individual items in the APE tag. Because all items can contain a list
+            of values, this is a subclass of Array.</p>
+          </div>
+          <div id='method-list'>
+            <h2>Methods</h2>
+            <h3>Public Class</h3>
+            <ol>
+              <li><a target="docwin" href="#method-c-create">create</a></li>
+              <li><a target="docwin" href="#method-c-new">new</a></li>
+              <li><a target="docwin" href="#method-c-new_from_parse">new_from_parse</a></li>
+              <li><a target="docwin" href="#method-c-parse">parse</a></li>
+            </ol>
+            <h3>Public Instance</h3>
+            <ol>
+              <li><a target="docwin" href="#attribute-i-ape_type">ape_type</a></li>
+              <li><a target="docwin" href="#method-i-ape_type-3D">ape_type=</a></li>
+              <li><a target="docwin" href="#method-i-encoded_key">encoded_key</a></li>
+              <li><a target="docwin" href="#attribute-i-key">key</a></li>
+              <li><a target="docwin" href="#method-i-key-3D">key=</a></li>
+              <li><a target="docwin" href="#method-i-normalize_encodings">normalize_encodings</a></li>
+              <li><a target="docwin" href="#method-i-raw">raw</a></li>
+              <li><a target="docwin" href="#attribute-i-read_only">read_only</a></li>
+              <li><a target="docwin" href="#method-i-read_only-3D">read_only=</a></li>
+              <li><a target="docwin" href="#method-i-string_value">string_value</a></li>
+              <li><a target="docwin" href="#method-i-valid-3F">valid?</a></li>
+              <li><a target="docwin" href="#method-i-valid_ape_type-3F">valid_ape_type?</a></li>
+              <li><a target="docwin" href="#method-i-valid_key-3F">valid_key?</a></li>
+              <li><a target="docwin" href="#method-i-valid_read_only-3F">valid_read_only?</a></li>
+              <li><a target="docwin" href="#method-i-valid_value-3F">valid_value?</a></li>
+            </ol>
+          </div>
+          <div id='context'>
+          </div>
+          <div id='section'>
+            <div id='constants-list'>
+              <h2>Constants</h2>
+              <div class='name-list'>
+                <table summary='Constants'>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>BAD_KEY_RE</td>
+                    <td>=</td>
+                    <td class='context-item-value'>/[\0-\x1f\x80-\xff]|\A(?:id3|tag|oggs|mp\+)\z/i</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'></td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>ITEM_TYPES</td>
+                    <td>=</td>
+                    <td class='context-item-value'>%w'utf8 binary external reserved'</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'></td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>MIN_SIZE</td>
+                    <td>=</td>
+                    <td class='context-item-value'>11</td>
+                    <td>&nbsp;</td>
+                    <td class='context-item-desc'></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            <div id='attribute-list'>
+              <h2 class='section-bar'>Attributes</h2>
+              <div class='name-list'>
+                <table>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>
+                      <a name='attribute-i-ape_type'>ape_type</a>
+                    </td>
+                    <td class='context-item-value'>[R]</td>
+                    <td class='context-item-desc'></td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>
+                      <a name='attribute-i-key'>key</a>
+                    </td>
+                    <td class='context-item-value'>[R]</td>
+                    <td class='context-item-desc'></td>
+                  </tr>
+                  <tr class='top-aligned-row context-row'>
+                    <td class='context-item-name'>
+                      <a name='attribute-i-read_only'>read_only</a>
+                    </td>
+                    <td class='context-item-value'>[R]</td>
+                    <td class='context-item-desc'></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+            <div id='methods'>
+              <h2>Public Class methods</h2>
+              <div class='method public-class' id='method-method-c-create'>
+                <a name='method-c-create'></a>
+                <div class='synopsis'>
+                  <span class='name'>create</span>
+                  <span class='arguments'>(key, value)</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Creates an APE tag with the appropriate key and value. If value is a valid
+                  <a href="ApeItem.html">ApeItem</a>, just updates the key. If value is an
+                  Array, creates an <a href="ApeItem.html">ApeItem</a> with the key and all
+                  of its values. Otherwise, creates an <a href="ApeItem.html">ApeItem</a>
+                  with the key and the singular value. Raise <a
+                  href="ApeTagError.html">ApeTagError</a> if key or or value is invalid.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-c-create-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-c-create-source'><span class="ruby-comment"># File apetag.rb, line 64</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">create</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span>)&#x000A;  <span class="ruby-keyword">if</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-keyword">self</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">valid?</span>&#x000A;    <span class="ruby-identifier">value</span>.<span class="ruby-identifier">key</span> = <span class="ruby-identifier">key</span>&#x000A;    <span class="ruby-keyword">return</span> <span class="ruby-identifier">value</span>&#x000A;  <span class="ruby-keyword">end</span>&#x000A;  <span class="ruby-identifier">value</span> = [<span class="ruby-identifier">value</span>] <span class="ruby-keyword">unless</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Array</span>)&#x000A;  <span class="ruby-identifier">item</span> = <span class="ruby-identifier">new</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span>)&#x000A;  <span class="ruby-identifier">item</span>.<span class="ruby-identifier">valid?</span>&#x000A;  <span class="ruby-identifier">item</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-class' id='method-method-c-new'>
+                <a name='method-c-new'></a>
+                <div class='synopsis'>
+                  <span class='name'>new</span>
+                  <span class='arguments'>(key, value)</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Set key and value. Set <a
+                  href="ApeItem.html#attribute-i-read_only">#read_only</a> to false and <a
+                  href="ApeItem.html#attribute-i-ape_type">#ape_type</a> to utf8. Raise <a
+                  href="ApeTagError.html">ApeTagError</a> if key or value is invalid.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-c-new-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-c-new-source'><span class="ruby-comment"># File apetag.rb, line 97</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span>)&#x000A;  <span class="ruby-keyword">self</span>.<span class="ruby-identifier">key</span> = <span class="ruby-identifier">key</span>&#x000A;  <span class="ruby-keyword">self</span>.<span class="ruby-identifier">read_only</span> = <span class="ruby-keyword">false</span>&#x000A;  <span class="ruby-keyword">self</span>.<span class="ruby-identifier">ape_type</span> = <span class="ruby-constant">ITEM_TYPES</span>[<span class="ruby-value">0</span>]&#x000A;  <span class="ruby-keyword">super</span>(<span class="ruby-identifier">value</span>)&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-class' id='method-method-c-new_from_parse'>
+                <a name='method-c-new_from_parse'></a>
+                <div class='synopsis'>
+                  <span class='name'>new_from_parse</span>
+                  <span class='arguments'>(key, value, flags)</span>
+                </div>
+                <div class='description'>
+                  
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-c-new_from_parse-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-c-new_from_parse-source'><span class="ruby-comment"># File apetag.rb, line 179</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">new_from_parse</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span>, <span class="ruby-identifier">flags</span>)&#x000A;  <span class="ruby-identifier">ape_type</span> = <span class="ruby-identifier">flags</span><span class="ruby-operator">/</span><span class="ruby-value">2</span>&#x000A;  <span class="ruby-keyword">if</span> <span class="ruby-constant">RUBY_VERSION</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-string">&#39;1.9.0&#39;</span>&#x000A;    <span class="ruby-identifier">key</span>.<span class="ruby-identifier">force_encoding</span>(<span class="ruby-string">&#39;US-ASCII&#39;</span>) &#x000A;    <span class="ruby-keyword">case</span> <span class="ruby-identifier">ape_type</span>&#x000A;    <span class="ruby-keyword">when</span> <span class="ruby-value">0</span>, <span class="ruby-value">2</span>&#x000A;      <span class="ruby-identifier">value</span> = <span class="ruby-identifier">value</span>.<span class="ruby-identifier">map</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-identifier">v</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">force_encoding</span>(<span class="ruby-string">&#39;UTF-8&#39;</span>)}&#x000A;    <span class="ruby-keyword">when</span> <span class="ruby-value">1</span>&#x000A;      <span class="ruby-identifier">value</span> = <span class="ruby-identifier">value</span>.<span class="ruby-identifier">map</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-identifier">v</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">force_encoding</span>(<span class="ruby-string">&#39;BINARY&#39;</span>)}&#x000A;    <span class="ruby-keyword">end</span>&#x000A;  <span class="ruby-keyword">end</span>&#x000A;  <span class="ruby-identifier">value</span> = [<span class="ruby-string">&#39;&#39;</span>] <span class="ruby-keyword">if</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">empty?</span>&#x000A;  <span class="ruby-identifier">item</span> = <span class="ruby-identifier">new</span>(<span class="ruby-identifier">key</span>, <span class="ruby-identifier">value</span>)&#x000A;  <span class="ruby-identifier">item</span>.<span class="ruby-identifier">read_only</span> = <span class="ruby-identifier">flags</span> &amp; <span class="ruby-value">1</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">0</span>&#x000A;  <span class="ruby-identifier">item</span>.<span class="ruby-identifier">ape_type</span> = <span class="ruby-constant">ITEM_TYPES</span>[<span class="ruby-identifier">ape_type</span>]&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-string">&quot;Invalid item value encoding (non UTF-8)&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">item</span>.<span class="ruby-identifier">valid_value?</span>&#x000A;  <span class="ruby-identifier">item</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-class' id='method-method-c-parse'>
+                <a name='method-c-parse'></a>
+                <div class='synopsis'>
+                  <span class='name'>parse</span>
+                  <span class='arguments'>(data, offset)</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Parse an <a href="ApeItem.html">ApeItem</a> from the given data string
+                  starting at the provided offset. Check for validity and populate the object
+                  with the parsed data. Return the offset of the next item (or end of
+                  string). Raise <a href="ApeTagError.html">ApeTagError</a> if the parsed
+                  data is invalid.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-c-parse-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-c-parse-source'><span class="ruby-comment"># File apetag.rb, line 79</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">parse</span>(<span class="ruby-identifier">data</span>, <span class="ruby-identifier">offset</span>)&#x000A;  <span class="ruby-identifier">length</span>, <span class="ruby-identifier">flags</span> = <span class="ruby-identifier">data</span>[<span class="ruby-identifier">offset</span><span class="ruby-operator">...</span>(<span class="ruby-identifier">offset</span><span class="ruby-operator">+</span><span class="ruby-value">8</span>)].<span class="ruby-identifier">unpack</span>(<span class="ruby-string">&#39;VN&#39;</span>)&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-node">&quot;Invalid item length at offset #{offset}&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">length</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">offset</span> <span class="ruby-operator">+</span> <span class="ruby-constant">MIN_SIZE</span> <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">data</span>.<span class="ruby-identifier">length</span>&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-node">&quot;Invalid item flags at offset #{offset}&quot;</span> <span class="ruby-keyword">if</span> <span class="ruby-identifier">flags</span> <span class="ruby-operator">&gt;</span> <span class="ruby-value">7</span>&#x000A;  <span class="ruby-identifier">key_end</span> = <span class="ruby-identifier">data</span>.<span class="ruby-identifier">index</span>(<span class="ruby-string">&quot;\00&quot;&quot;</span>, <span class="ruby-identifier">offset</span> <span class="ruby-operator">+=</span> <span class="ruby-value">8</span>)&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-node">&quot;Missing key-value separator at offset #{offset}&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">key_end</span>&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-node">&quot;Invalid item length at offset #{offset}&quot;</span> <span class="ruby-keyword">if</span> (<span class="ruby-identifier">next_item_start</span>=<span class="ruby-identifier">length</span> <span class="ruby-operator">+</span> <span class="ruby-identifier">key_end</span> <span class="ruby-operator">+</span> <span class="ruby-value">1</span>) <span class="ruby-operator">&gt;</span> <span class="ruby-identifier">data</span>.<span class="ruby-identifier">length</span>&#x000A;  <span class="ruby-keyword">begin</span>&#x000A;    <span class="ruby-identifier">item</span> = <span class="ruby-constant">ApeItem</span>.<span class="ruby-identifier">new_from_parse</span>(<span class="ruby-identifier">data</span>[<span class="ruby-identifier">offset</span><span class="ruby-operator">...</span><span class="ruby-identifier">key_end</span>], <span class="ruby-identifier">data</span>[(<span class="ruby-identifier">key_end</span><span class="ruby-operator">+</span><span class="ruby-value">1</span>)<span class="ruby-operator">...</span><span class="ruby-identifier">next_item_start</span>].<span class="ruby-identifier">split</span>(<span class="ruby-string">&quot;\00&quot;&quot;</span>), <span class="ruby-identifier">flags</span>)&#x000A;  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">ArgumentError</span> =<span class="ruby-operator">&gt;</span><span class="ruby-identifier">e</span>&#x000A;    <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-node">&quot;ArgumentError: #{e.message}&quot;</span>&#x000A;  <span class="ruby-keyword">end</span>&#x000A;  <span class="ruby-keyword">return</span> [<span class="ruby-identifier">item</span>, <span class="ruby-identifier">next_item_start</span>]&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <h2>Public Instance methods</h2>
+              <div class='method public-instance' id='method-method-i-ape_type-3D'>
+                <a name='method-i-ape_type-3D'></a>
+                <div class='synopsis'>
+                  <span class='name'>ape_type=</span>
+                  <span class='arguments'>(type)</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Set <a href="ApeItem.html#attribute-i-ape_type">#ape_type</a> if valid,
+                  otherwise raise <a href="ApeTagError.html">ApeTagError</a>.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-ape_type-3D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-ape_type-3D-source'><span class="ruby-comment"># File apetag.rb, line 105</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">ape_type=</span>(<span class="ruby-identifier">type</span>)&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-string">&quot;Invalid APE type&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">valid_ape_type?</span>(<span class="ruby-identifier">type</span>)&#x000A;  <span class="ruby-ivar">@ape_type</span>=<span class="ruby-identifier">type</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-encoded_key'>
+                <a name='method-i-encoded_key'></a>
+                <div class='synopsis'>
+                  <span class='name'>encoded_key</span>
+                  <span class='arguments'>(key)</span>
+                </div>
+                <div class='description'>
+                  
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-encoded_key-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-encoded_key-source'><span class="ruby-comment"># File apetag.rb, line 199</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">encoded_key</span>(<span class="ruby-identifier">key</span>)&#x000A;  <span class="ruby-keyword">begin</span>&#x000A;    <span class="ruby-identifier">key</span>.<span class="ruby-identifier">encode</span>(<span class="ruby-string">&#39;US-ASCII&#39;</span>)&#x000A;  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">EncodingError</span>&#x000A;    <span class="ruby-keyword">return</span> <span class="ruby-keyword">false</span>&#x000A;  <span class="ruby-keyword">end</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-key-3D'>
+                <a name='method-i-key-3D'></a>
+                <div class='synopsis'>
+                  <span class='name'>key=</span>
+                  <span class='arguments'>(key)</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Set key if valid, otherwise raise <a
+                  href="ApeTagError.html">ApeTagError</a>.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-key-3D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-key-3D-source'><span class="ruby-comment"># File apetag.rb, line 111</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">key=</span>(<span class="ruby-identifier">key</span>)&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-string">&quot;Invalid APE key&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">valid_key?</span>(<span class="ruby-identifier">key</span>)&#x000A;  <span class="ruby-ivar">@key</span> = <span class="ruby-identifier">encoded_key</span>(<span class="ruby-identifier">key</span>)&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-normalize_encodings'>
+                <a name='method-i-normalize_encodings'></a>
+                <div class='synopsis'>
+                  <span class='name'>normalize_encodings</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-normalize_encodings-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-normalize_encodings-source'><span class="ruby-comment"># File apetag.rb, line 207</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">normalize_encodings</span>&#x000A;  <span class="ruby-identifier">map!</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-identifier">v</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">encode</span>(<span class="ruby-string">&#39;UTF-8&#39;</span>)} <span class="ruby-keyword">if</span> <span class="ruby-identifier">ape_type</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;utf8&#39;</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">ape_type</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;external&#39;</span>&#x000A;  <span class="ruby-keyword">self</span>&#x000A;<span class="ruby-keyword">rescue</span> <span class="ruby-constant">Encoding</span><span class="ruby-operator">::</span><span class="ruby-constant">UndefinedConversionError</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-node">&quot;#{e.class}: #{e.message}&quot;</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-raw'>
+                <a name='method-i-raw'></a>
+                <div class='synopsis'>
+                  <span class='name'>raw</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>The on disk representation of the entire <a
+                  href="ApeItem.html">ApeItem</a>. Raise <a
+                  href="ApeTagError.html">ApeTagError</a> if <a
+                  href="ApeItem.html">ApeItem</a> is invalid.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-raw-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-raw-source'><span class="ruby-comment"># File apetag.rb, line 118</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">raw</span>&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-string">&quot;Invalid key, value, APE type, or Read-Only Flag&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">valid?</span> &#x000A;  <span class="ruby-identifier">flags</span> = <span class="ruby-constant">ITEM_TYPES</span>.<span class="ruby-identifier">index</span>(<span class="ruby-identifier">ape_type</span>) * <span class="ruby-value">2</span> <span class="ruby-operator">+</span> (<span class="ruby-identifier">read_only</span> <span class="ruby-operator">?</span> <span class="ruby-value">1</span> <span class="ruby-operator">:</span> <span class="ruby-value">0</span>)&#x000A;  <span class="ruby-identifier">k</span> = <span class="ruby-constant">RUBY_VERSION</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-string">&#39;1.9&#39;</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">dup</span>.<span class="ruby-identifier">force_encoding</span>(<span class="ruby-string">&#39;BINARY&#39;</span>) <span class="ruby-operator">:</span> <span class="ruby-identifier">key</span>&#x000A;  <span class="ruby-identifier">sv</span> = <span class="ruby-constant">RUBY_VERSION</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-string">&#39;1.9&#39;</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">string_value</span>.<span class="ruby-identifier">dup</span>.<span class="ruby-identifier">force_encoding</span>(<span class="ruby-string">&#39;BINARY&#39;</span>) <span class="ruby-operator">:</span> <span class="ruby-identifier">string_value</span>&#x000A;  <span class="ruby-node">&quot;#{[sv.length, flags].pack(&#39;VN&#39;)}#{k}\00##{sv}&quot;</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-read_only-3D'>
+                <a name='method-i-read_only-3D'></a>
+                <div class='synopsis'>
+                  <span class='name'>read_only=</span>
+                  <span class='arguments'>(flag)</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Set read only flag if valid, otherwise raise <a
+                  href="ApeTagError.html">ApeTagError</a>.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-read_only-3D-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-read_only-3D-source'><span class="ruby-comment"># File apetag.rb, line 127</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">read_only=</span>(<span class="ruby-identifier">flag</span>)&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-string">&quot;Invalid Read-Only Flag&quot;</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">valid_read_only?</span>(<span class="ruby-identifier">flag</span>)&#x000A;  <span class="ruby-ivar">@read_only</span> = <span class="ruby-identifier">flag</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-string_value'>
+                <a name='method-i-string_value'></a>
+                <div class='synopsis'>
+                  <span class='name'>string_value</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>The on disk representation of the ApeItem&#39;s values.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-string_value-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-string_value-source'><span class="ruby-comment"># File apetag.rb, line 133</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">string_value</span>&#x000A;  <span class="ruby-identifier">join</span>(<span class="ruby-string">&quot;\00&quot;&quot;</span>)&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-valid-3F'>
+                <a name='method-i-valid-3F'></a>
+                <div class='synopsis'>
+                  <span class='name'>valid?</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Check if current item is valid</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-valid-3F-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-valid-3F-source'><span class="ruby-comment"># File apetag.rb, line 138</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">valid?</span>&#x000A;  <span class="ruby-identifier">valid_ape_type?</span>(<span class="ruby-identifier">ape_type</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">valid_read_only?</span>(<span class="ruby-identifier">read_only</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">valid_key?</span>(<span class="ruby-identifier">key</span>) <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">valid_value?</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-valid_ape_type-3F'>
+                <a name='method-i-valid_ape_type-3F'></a>
+                <div class='synopsis'>
+                  <span class='name'>valid_ape_type?</span>
+                  <span class='arguments'>(type)</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Check if given type is a valid APE type (a member of ApeItem::ITEM_TYPES).</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-valid_ape_type-3F-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-valid_ape_type-3F-source'><span class="ruby-comment"># File apetag.rb, line 143</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">valid_ape_type?</span>(<span class="ruby-identifier">type</span>)&#x000A;  <span class="ruby-constant">ITEM_TYPES</span>.<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">type</span>)&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-valid_key-3F'>
+                <a name='method-i-valid_key-3F'></a>
+                <div class='synopsis'>
+                  <span class='name'>valid_key?</span>
+                  <span class='arguments'>(key)</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Check if the given key is a valid APE key (string, 2 &lt;= length &lt;=
+                  255, not containing invalid characters or keys).</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-valid_key-3F-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-valid_key-3F-source'><span class="ruby-comment"># File apetag.rb, line 148</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">valid_key?</span>(<span class="ruby-identifier">key</span>)&#x000A;  <span class="ruby-keyword">return</span> <span class="ruby-keyword">false</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">String</span>)&#x000A;  <span class="ruby-keyword">return</span> <span class="ruby-keyword">false</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">key</span> = <span class="ruby-identifier">encoded_key</span>(<span class="ruby-identifier">key</span>)&#x000A;  <span class="ruby-identifier">key</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-value">2</span> <span class="ruby-operator">&amp;&amp;</span> <span class="ruby-identifier">key</span>.<span class="ruby-identifier">length</span> <span class="ruby-operator">&lt;=</span> <span class="ruby-value">255</span> <span class="ruby-operator">&amp;&amp;</span> (<span class="ruby-identifier">key</span> <span class="ruby-operator">!~</span> <span class="ruby-constant">BAD_KEY_RE</span> <span class="ruby-keyword">rescue</span> <span class="ruby-keyword">false</span>)&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-valid_read_only-3F'>
+                <a name='method-i-valid_read_only-3F'></a>
+                <div class='synopsis'>
+                  <span class='name'>valid_read_only?</span>
+                  <span class='arguments'>(flag)</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Check if the given read only flag is valid (boolean).</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-valid_read_only-3F-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-valid_read_only-3F-source'><span class="ruby-comment"># File apetag.rb, line 155</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">valid_read_only?</span>(<span class="ruby-identifier">flag</span>)&#x000A;  [<span class="ruby-keyword">true</span>, <span class="ruby-keyword">false</span>].<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">flag</span>)&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+              <div class='method public-instance' id='method-method-i-valid_value-3F'>
+                <a name='method-i-valid_value-3F'></a>
+                <div class='synopsis'>
+                  <span class='name'>valid_value?</span>
+                  <span class='arguments'>()</span>
+                </div>
+                <div class='description'>
+                  
+                  <p>Check if the string value is valid UTF-8.</p>
+                </div>
+                <div class='source'>
+                  <a class='source-toggle' href='#' onclick="toggleCode('method-i-valid_value-3F-source'); return false">
+                    [show source]
+                  </a>
+                  <pre id='method-i-valid_value-3F-source'><span class="ruby-comment"># File apetag.rb, line 160</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">valid_value?</span>&#x000A;  <span class="ruby-keyword">begin</span>&#x000A;    <span class="ruby-keyword">if</span> <span class="ruby-identifier">ape_type</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;utf8&#39;</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">ape_type</span> <span class="ruby-operator">==</span> <span class="ruby-string">&#39;external&#39;</span>&#x000A;      <span class="ruby-keyword">if</span> <span class="ruby-constant">RUBY_VERSION</span> <span class="ruby-operator">&gt;=</span> <span class="ruby-string">&#39;1.9&#39;</span>&#x000A;        <span class="ruby-keyword">begin</span>&#x000A;          <span class="ruby-identifier">map!</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">v</span><span class="ruby-operator">|</span> <span class="ruby-identifier">v</span>.<span class="ruby-identifier">to_s</span>.<span class="ruby-identifier">encode</span>(<span class="ruby-string">&#39;UTF-8&#39;</span>)}&#x000A;        <span class="ruby-keyword">rescue</span> <span class="ruby-constant">EncodingError</span>&#x000A;          <span class="ruby-keyword">return</span> <span class="ruby-keyword">false</span>&#x000A;        <span class="ruby-keyword">end</span>&#x000A;      <span class="ruby-keyword">end</span>&#x000A;      <span class="ruby-identifier">string_value</span>.<span class="ruby-identifier">unpack</span>(<span class="ruby-string">&#39;U*&#39;</span>)&#x000A;    <span class="ruby-keyword">end</span>&#x000A;  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">ArgumentError</span>&#x000A;    <span class="ruby-keyword">false</span>&#x000A;  <span class="ruby-keyword">else</span>&#x000A;    <span class="ruby-keyword">true</span>&#x000A;  <span class="ruby-keyword">end</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id='footer-push'></div>
+    </div>
+    <div id='footer'>
+      <a target="docwin" href="http://github.com/mislav/hanna/tree/master"><strong>Hanna</strong> RDoc template</a>
+    </div>
+  </body>
+</html>

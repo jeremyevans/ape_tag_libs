@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang='en'>
+  <head>
+    <title>apetag.rb</title>
+    <meta content='text/html; charset=US-ASCII' http-equiv='Content-Type'>
+    <link href='../css/style.css' media='screen' rel='stylesheet' type='text/css'>
+    <script type='text/javascript'>
+      //<![CDATA[
+        function popupCode(url) {
+          window.open(url, "Code", "resizable=yes,scrollbars=yes,toolbar=no,status=no,height=150,width=400")
+        }
+        
+        function toggleCode(id) {
+          var code = document.getElementById(id)
+        
+          code.style.display = code.style.display != 'block' ? 'block' : 'none'
+          return true
+        }
+        
+        // Make codeblocks hidden by default
+        document.writeln('<' + 'style type="text/css">.method .source pre { display: none }<\/style>')
+      //]]>
+    </script>
+  </head>
+  <body class='page'>
+    <div class='file' id='wrapper'>
+      <div class='header'>
+        <h1 class='name'>apetag.rb</h1>
+        <div class='paths'>
+          apetag.rb
+        </div>
+        <div class='last-update'>
+          Last Update:
+          <span class='datetime'>2013-11-10 15:43:18 -0800</span>
+        </div>
+      </div>
+      <div id='content'>
+        <div id='text'>
+          <div id='description'>
+            
+            <p>This library implements a APEv2 reader/writer. If called from the command
+            line, it prints out the contents of the APEv2 tag  for the given filename
+            arguments.</p>
+            
+            <p>ruby-apetag is a pure Ruby library for manipulating APEv2 tags. It aims for
+            standards compliance with the APE spec (1). APEv2 is the standard tagging
+            format for Musepack (.mpc) and Monkey&#39;s Audio files (.ape), and it can
+            also be used with mp3s as an alternative to ID3v2.x (technically, it can be
+            used on any file type and is not limited to storing just audio file
+            metadata).</p>
+            
+            <p>The module is in written in pure Ruby, so it should be useable on all 
+            platforms that Ruby supports.  It is developed and tested on OpenBSD with
+            ruby 1.8 and ruby 1.9.</p>
+            
+            <p>General Use:</p>
+            
+            <pre class="ruby"><span class="ruby-identifier">require</span> <span class="ruby-string">&#39;apetag&#39;</span>&#x000A;<span class="ruby-identifier">a</span> = <span class="ruby-constant">ApeTag</span>.<span class="ruby-identifier">new</span>(<span class="ruby-string">&#39;file.mp3&#39;</span>)&#x000A;<span class="ruby-identifier">a</span>.<span class="ruby-identifier">exists?</span> <span class="ruby-comment"># if it already has an APEv2 tag</span>&#x000A;<span class="ruby-identifier">a</span>.<span class="ruby-identifier">raw</span> <span class="ruby-comment"># the raw APEv2+ID3v1.1 tag string in the file</span>&#x000A;<span class="ruby-identifier">a</span>.<span class="ruby-identifier">fields</span> <span class="ruby-comment"># a CICPHash of fields, keys are strings, values are list of strings</span>&#x000A;<span class="ruby-identifier">a</span>.<span class="ruby-identifier">pretty_print</span> <span class="ruby-comment"># string suitable for pretty printing</span>&#x000A;<span class="ruby-identifier">a</span>.<span class="ruby-identifier">update</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">fields</span><span class="ruby-operator">|</span> <span class="ruby-identifier">fields</span>[<span class="ruby-string">&#39;Artist&#39;</span>]=<span class="ruby-string">&#39;Test Artist&#39;</span>; <span class="ruby-identifier">fields</span>.<span class="ruby-identifier">delete</span>(<span class="ruby-string">&#39;Year&#39;</span>)}&#x000A; <span class="ruby-comment"># Update the tag with the added/changed/deleted fields</span>&#x000A; <span class="ruby-comment"># Note that you should do: a.update{|fields| fields.replace(&#39;Test&#39;=&gt;&#39;Test&#39;)}</span>&#x000A; <span class="ruby-comment"># and NOT: a.update{|fields| fields = {&#39;Test&#39;=&gt;&#39;Test&#39;}}</span>&#x000A; <span class="ruby-comment"># You need to update/modify the fields given, not reassign it</span>&#x000A;<span class="ruby-identifier">a</span>.<span class="ruby-identifier">remove!</span> <span class="ruby-comment"># remove the APEv2 and ID3v1.1 tags.</span></pre>
+            
+            <p>To run the tests for the library, run test_apetag.rb.</p>
+            
+            <p>If you find any bugs, would like additional documentation, or want to
+            submit a patch, please use GitHub (<a
+            href="https://github.com/jeremyevans/ape_tag_libs/issues">github.com/jeremyevans/ape_tag_libs/issues</a>)</p>
+            
+            <p>The RDoc for the project is available at <a
+            href="http://ruby-apetag.jeremyevans.net.">ruby-apetag.jeremyevans.net.</a></p>
+            
+            <p>The most current source code can be accessed via github (<a
+            href="http://github.com/jeremyevans/ape_tag_libs">github.com/jeremyevans/ape_tag_libs</a>).
+            Note that the  library isn&#39;t modified on a regular basis, so it is
+            unlikely to be different from the latest release.</p>
+            
+            <p>(1) <a
+            href="http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification">wiki.hydrogenaudio.org/index.php?title=APEv2_specification</a></p>
+          </div>
+          <div id='context'>
+            <div id='requires'>
+              <h2>Required files</h2>
+              <ol>
+                <li>cicphash</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id='footer-push'></div>
+    </div>
+    <div id='footer'>
+      <a target="docwin" href="http://github.com/mislav/hanna/tree/master"><strong>Hanna</strong> RDoc template</a>
+    </div>
+  </body>
+</html>
