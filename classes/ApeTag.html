@@ -2,7 +2,7 @@
 <html lang='en'>
   <head>
     <title>ApeTag</title>
-    <meta content='text/html; charset=US-ASCII' http-equiv='Content-Type'>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type'>
     <link href='../css/style.css' media='screen' rel='stylesheet' type='text/css'>
     <script type='text/javascript'>
       //<![CDATA[
@@ -35,8 +35,8 @@
           </li>
         </ol>
         <div class='parent'>
-          Parent:
-          <strong><a target="docwin" href="../files/apetag_rb.html">apetag.rb</a></strong>
+          Superclass:
+          <strong>Object</strong>
         </div>
       </div>
       <div id='content'>
@@ -276,7 +276,7 @@
                   <a class='source-toggle' href='#' onclick="toggleCode('method-c-check_id3-3D-source'); return false">
                     [show source]
                   </a>
-                  <pre id='method-c-check_id3-3D-source'><span class="ruby-comment"># File apetag.rb, line 269</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">check_id3=</span>(<span class="ruby-identifier">flag</span>)&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-string">&quot;check_id3 must be boolean&quot;</span> <span class="ruby-keyword">unless</span> [<span class="ruby-keyword">true</span>, <span class="ruby-keyword">false</span>].<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">flag</span>)&#x000A;  <span class="ruby-identifier">@@check_id3</span> = <span class="ruby-identifier">flag</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                  <pre id='method-c-check_id3-3D-source'><span class="ruby-comment"># File apetag.rb, line 270</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-keyword">self</span>.<span class="ruby-identifier">check_id3=</span>(<span class="ruby-identifier">flag</span>)&#x000A;  <span class="ruby-identifier">raise</span> <span class="ruby-constant">ApeTagError</span>, <span class="ruby-string">&quot;check_id3 must be boolean&quot;</span> <span class="ruby-keyword">unless</span> [<span class="ruby-keyword">true</span>, <span class="ruby-keyword">false</span>].<span class="ruby-identifier">include?</span>(<span class="ruby-identifier">flag</span>)&#x000A;  <span class="ruby-identifier">@@check_id3</span> = <span class="ruby-identifier">flag</span>&#x000A;<span class="ruby-keyword">end</span></pre>
                 </div>
               </div>
               <div class='method public-class' id='method-method-c-new'>
@@ -298,7 +298,7 @@
                   href="ApeTag.html">ApeTag</a> default is used. If <a
                   href="ApeTag.html#attribute-i-check_id3">#check_id3</a> is not specified
                   and filename is a filename, it checks for ID3 tags only if  the filename
-                  ends with ".mp3". If files have APE tags but no ID3 tags, ID3 tags will
+                  ends with “.mp3”. If files have APE tags but no ID3 tags, ID3 tags will
                   never be added. If files have neither tag, <a
                   href="ApeTag.html#attribute-i-check_id3">#check_id3</a> will decide whether
                   to add an ID3 tag. If files have both tags, make sure <a
@@ -309,7 +309,7 @@
                   <a class='source-toggle' href='#' onclick="toggleCode('method-c-new-source'); return false">
                     [show source]
                   </a>
-                  <pre id='method-c-new-source'><span class="ruby-comment"># File apetag.rb, line 284</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-identifier">check_id3</span> = <span class="ruby-keyword">nil</span>)&#x000A;  <span class="ruby-keyword">if</span> <span class="ruby-constant">FILE_OBJ_METHODS</span>.<span class="ruby-identifier">each</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">method</span><span class="ruby-operator">|</span> <span class="ruby-keyword">break</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">filename</span>.<span class="ruby-identifier">respond_to?</span>(<span class="ruby-identifier">method</span>)}&#x000A;    <span class="ruby-ivar">@file</span> = <span class="ruby-identifier">filename</span>&#x000A;    <span class="ruby-ivar">@check_id3</span> = <span class="ruby-identifier">check_id3</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">@@check_id3</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">check_id3</span> &#x000A;  <span class="ruby-keyword">else</span>&#x000A;    <span class="ruby-ivar">@filename</span> = <span class="ruby-identifier">filename</span>.<span class="ruby-identifier">to_s</span>&#x000A;    <span class="ruby-ivar">@check_id3</span> = <span class="ruby-identifier">check_id3</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">?</span> (<span class="ruby-constant">MP3_RE</span>.<span class="ruby-identifier">match</span>(<span class="ruby-ivar">@filename</span>) <span class="ruby-operator">?</span> <span class="ruby-keyword">true</span> <span class="ruby-operator">:</span> <span class="ruby-keyword">nil</span>) <span class="ruby-operator">:</span> <span class="ruby-identifier">check_id3</span> &#x000A;  <span class="ruby-keyword">end</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                  <pre id='method-c-new-source'><span class="ruby-comment"># File apetag.rb, line 285</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">filename</span>, <span class="ruby-identifier">check_id3</span> = <span class="ruby-keyword">nil</span>)&#x000A;  <span class="ruby-keyword">if</span> <span class="ruby-constant">FILE_OBJ_METHODS</span>.<span class="ruby-identifier">each</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">method</span><span class="ruby-operator">|</span> <span class="ruby-keyword">break</span> <span class="ruby-keyword">unless</span> <span class="ruby-identifier">filename</span>.<span class="ruby-identifier">respond_to?</span>(<span class="ruby-identifier">method</span>)}&#x000A;    <span class="ruby-ivar">@file</span> = <span class="ruby-identifier">filename</span>&#x000A;    <span class="ruby-ivar">@check_id3</span> = <span class="ruby-identifier">check_id3</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">@@check_id3</span> <span class="ruby-operator">:</span> <span class="ruby-identifier">check_id3</span> &#x000A;  <span class="ruby-keyword">else</span>&#x000A;    <span class="ruby-ivar">@filename</span> = <span class="ruby-identifier">filename</span>.<span class="ruby-identifier">to_s</span>&#x000A;    <span class="ruby-ivar">@check_id3</span> = <span class="ruby-identifier">check_id3</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">?</span> (<span class="ruby-constant">MP3_RE</span>.<span class="ruby-identifier">match</span>(<span class="ruby-ivar">@filename</span>) <span class="ruby-operator">?</span> <span class="ruby-keyword">true</span> <span class="ruby-operator">:</span> <span class="ruby-keyword">nil</span>) <span class="ruby-operator">:</span> <span class="ruby-identifier">check_id3</span> &#x000A;  <span class="ruby-keyword">end</span>&#x000A;<span class="ruby-keyword">end</span></pre>
                 </div>
               </div>
               <h2>Public Instance methods</h2>
@@ -328,7 +328,7 @@
                   <a class='source-toggle' href='#' onclick="toggleCode('method-i-exists-3F-source'); return false">
                     [show source]
                   </a>
-                  <pre id='method-i-exists-3F-source'><span class="ruby-comment"># File apetag.rb, line 295</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">exists?</span>&#x000A;  <span class="ruby-ivar">@has_tag</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">access_file</span>(<span class="ruby-string">&#39;rb&#39;</span>){<span class="ruby-identifier">has_tag</span>} <span class="ruby-operator">:</span> <span class="ruby-ivar">@has_tag</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                  <pre id='method-i-exists-3F-source'><span class="ruby-comment"># File apetag.rb, line 296</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">exists?</span>&#x000A;  <span class="ruby-ivar">@has_tag</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">?</span> <span class="ruby-identifier">access_file</span>(<span class="ruby-string">&#39;rb&#39;</span>){<span class="ruby-identifier">has_tag</span>} <span class="ruby-operator">:</span> <span class="ruby-ivar">@has_tag</span>&#x000A;<span class="ruby-keyword">end</span></pre>
                 </div>
               </div>
               <div class='method public-instance' id='method-method-i-fields'>
@@ -347,7 +347,7 @@
                   <a class='source-toggle' href='#' onclick="toggleCode('method-i-fields-source'); return false">
                     [show source]
                   </a>
-                  <pre id='method-i-fields-source'><span class="ruby-comment"># File apetag.rb, line 315</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">fields</span>&#x000A;  <span class="ruby-ivar">@fields</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">access_file</span>(<span class="ruby-string">&#39;rb&#39;</span>){<span class="ruby-identifier">get_fields</span>}&#x000A;<span class="ruby-keyword">end</span></pre>
+                  <pre id='method-i-fields-source'><span class="ruby-comment"># File apetag.rb, line 316</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">fields</span>&#x000A;  <span class="ruby-ivar">@fields</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">access_file</span>(<span class="ruby-string">&#39;rb&#39;</span>){<span class="ruby-identifier">get_fields</span>}&#x000A;<span class="ruby-keyword">end</span></pre>
                 </div>
               </div>
               <div class='method public-instance' id='method-method-i-has_id3-3F'>
@@ -365,7 +365,7 @@
                   <a class='source-toggle' href='#' onclick="toggleCode('method-i-has_id3-3F-source'); return false">
                     [show source]
                   </a>
-                  <pre id='method-i-has_id3-3F-source'><span class="ruby-comment"># File apetag.rb, line 300</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">has_id3?</span>&#x000A;  <span class="ruby-identifier">exists?</span>&#x000A;  <span class="ruby-identifier">id3</span> <span class="ruby-operator">!=</span> <span class="ruby-string">&#39;&#39;</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                  <pre id='method-i-has_id3-3F-source'><span class="ruby-comment"># File apetag.rb, line 301</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">has_id3?</span>&#x000A;  <span class="ruby-identifier">exists?</span>&#x000A;  <span class="ruby-identifier">id3</span> <span class="ruby-operator">!=</span> <span class="ruby-string">&#39;&#39;</span>&#x000A;<span class="ruby-keyword">end</span></pre>
                 </div>
               </div>
               <div class='method public-instance' id='method-method-i-pretty_print'>
@@ -382,7 +382,7 @@
                   <a class='source-toggle' href='#' onclick="toggleCode('method-i-pretty_print-source'); return false">
                     [show source]
                   </a>
-                  <pre id='method-i-pretty_print-source'><span class="ruby-comment"># File apetag.rb, line 320</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">pretty_print</span>&#x000A;  <span class="ruby-keyword">begin</span>&#x000A;    <span class="ruby-identifier">fields</span>.<span class="ruby-identifier">values</span>.<span class="ruby-identifier">sort_by</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">value</span><span class="ruby-operator">|</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">key</span>}.<span class="ruby-identifier">collect</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">value</span><span class="ruby-operator">|</span> <span class="ruby-node">&quot;#{value.key}: #{value.join(&#39;, &#39;)}&quot;</span>}.<span class="ruby-identifier">join</span>(<span class="ruby-string">&quot;\n&quot;</span>)&#x000A;  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">ApeTagError</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>&#x000A;    <span class="ruby-node">&quot;CORRUPT TAG!: #{e.message}&quot;</span>&#x000A;  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">Errno</span><span class="ruby-operator">::</span><span class="ruby-constant">ENOENT</span>, <span class="ruby-constant">Errno</span><span class="ruby-operator">::</span><span class="ruby-constant">EINVAL</span>&#x000A;    <span class="ruby-string">&quot;FILE NOT FOUND!&quot;</span>&#x000A;  <span class="ruby-keyword">end</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                  <pre id='method-i-pretty_print-source'><span class="ruby-comment"># File apetag.rb, line 321</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">pretty_print</span>&#x000A;  <span class="ruby-keyword">begin</span>&#x000A;    <span class="ruby-identifier">fields</span>.<span class="ruby-identifier">values</span>.<span class="ruby-identifier">sort_by</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">value</span><span class="ruby-operator">|</span> <span class="ruby-identifier">value</span>.<span class="ruby-identifier">key</span>}.<span class="ruby-identifier">collect</span>{<span class="ruby-operator">|</span><span class="ruby-identifier">value</span><span class="ruby-operator">|</span> <span class="ruby-node">&quot;#{value.key}: #{value.join(&#39;, &#39;)}&quot;</span>}.<span class="ruby-identifier">join</span>(<span class="ruby-string">&quot;\n&quot;</span>)&#x000A;  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">ApeTagError</span> =<span class="ruby-operator">&gt;</span> <span class="ruby-identifier">e</span>&#x000A;    <span class="ruby-node">&quot;CORRUPT TAG!: #{e.message}&quot;</span>&#x000A;  <span class="ruby-keyword">rescue</span> <span class="ruby-constant">Errno</span><span class="ruby-operator">::</span><span class="ruby-constant">ENOENT</span>, <span class="ruby-constant">Errno</span><span class="ruby-operator">::</span><span class="ruby-constant">EINVAL</span>&#x000A;    <span class="ruby-string">&quot;FILE NOT FOUND!&quot;</span>&#x000A;  <span class="ruby-keyword">end</span>&#x000A;<span class="ruby-keyword">end</span></pre>
                 </div>
               </div>
               <div class='method public-instance' id='method-method-i-raw'>
@@ -401,7 +401,7 @@
                   <a class='source-toggle' href='#' onclick="toggleCode('method-i-raw-source'); return false">
                     [show source]
                   </a>
-                  <pre id='method-i-raw-source'><span class="ruby-comment"># File apetag.rb, line 332</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">raw</span>&#x000A;  <span class="ruby-identifier">exists?</span> &#x000A;  <span class="ruby-node">&quot;#{tag_header}#{tag_data}#{tag_footer}#{id3}&quot;</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                  <pre id='method-i-raw-source'><span class="ruby-comment"># File apetag.rb, line 333</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">raw</span>&#x000A;  <span class="ruby-identifier">exists?</span> &#x000A;  <span class="ruby-node">&quot;#{tag_header}#{tag_data}#{tag_footer}#{id3}&quot;</span>&#x000A;<span class="ruby-keyword">end</span></pre>
                 </div>
               </div>
               <div class='method public-instance' id='method-method-i-remove-21'>
@@ -419,7 +419,7 @@
                   <a class='source-toggle' href='#' onclick="toggleCode('method-i-remove-21-source'); return false">
                     [show source]
                   </a>
-                  <pre id='method-i-remove-21-source'><span class="ruby-comment"># File apetag.rb, line 307</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">remove!</span>&#x000A;  <span class="ruby-identifier">access_file</span>(<span class="ruby-string">&#39;rb+&#39;</span>){<span class="ruby-identifier">file</span>.<span class="ruby-identifier">truncate</span>(<span class="ruby-identifier">tag_start</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_tag</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">has_id3?</span>}&#x000A;  <span class="ruby-ivar">@has_tag</span>, <span class="ruby-ivar">@fields</span>, <span class="ruby-ivar">@id3</span>, <span class="ruby-ivar">@tag_size</span>, <span class="ruby-ivar">@tag_start</span>, <span class="ruby-ivar">@tag_data</span>, <span class="ruby-ivar">@tag_header</span>, <span class="ruby-ivar">@tag_footer</span>, <span class="ruby-ivar">@tag_item_count</span> = []&#x000A;  <span class="ruby-keyword">true</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                  <pre id='method-i-remove-21-source'><span class="ruby-comment"># File apetag.rb, line 308</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">remove!</span>&#x000A;  <span class="ruby-identifier">access_file</span>(<span class="ruby-string">&#39;rb+&#39;</span>){<span class="ruby-identifier">file</span>.<span class="ruby-identifier">truncate</span>(<span class="ruby-identifier">tag_start</span>) <span class="ruby-keyword">if</span> <span class="ruby-identifier">has_tag</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">has_id3?</span>}&#x000A;  <span class="ruby-ivar">@has_tag</span>, <span class="ruby-ivar">@fields</span>, <span class="ruby-ivar">@id3</span>, <span class="ruby-ivar">@tag_size</span>, <span class="ruby-ivar">@tag_start</span>, <span class="ruby-ivar">@tag_data</span>, <span class="ruby-ivar">@tag_header</span>, <span class="ruby-ivar">@tag_footer</span>, <span class="ruby-ivar">@tag_item_count</span> = []&#x000A;  <span class="ruby-keyword">true</span>&#x000A;<span class="ruby-keyword">end</span></pre>
                 </div>
               </div>
               <div class='method public-instance' id='method-method-i-update'>
@@ -445,7 +445,7 @@
                   <a class='source-toggle' href='#' onclick="toggleCode('method-i-update-source'); return false">
                     [show source]
                   </a>
-                  <pre id='method-i-update-source'><span class="ruby-comment"># File apetag.rb, line 345</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">update</span>(&amp;<span class="ruby-identifier">block</span>)&#x000A;  <span class="ruby-identifier">access_file</span>(<span class="ruby-string">&#39;rb+&#39;</span>) <span class="ruby-keyword">do</span> &#x000A;    <span class="ruby-keyword">yield</span> <span class="ruby-identifier">get_fields</span>&#x000A;    <span class="ruby-identifier">normalize_fields</span>&#x000A;    <span class="ruby-identifier">update_id3</span>&#x000A;    <span class="ruby-identifier">update_ape</span>&#x000A;    <span class="ruby-identifier">write_tag</span>&#x000A;  <span class="ruby-keyword">end</span>&#x000A;  <span class="ruby-identifier">fields</span>&#x000A;<span class="ruby-keyword">end</span></pre>
+                  <pre id='method-i-update-source'><span class="ruby-comment"># File apetag.rb, line 346</span>&#x000A;<span class="ruby-keyword">def</span> <span class="ruby-identifier">update</span>(<span class="ruby-operator">&amp;</span><span class="ruby-identifier">block</span>)&#x000A;  <span class="ruby-identifier">access_file</span>(<span class="ruby-string">&#39;rb+&#39;</span>) <span class="ruby-keyword">do</span> &#x000A;    <span class="ruby-keyword">yield</span> <span class="ruby-identifier">get_fields</span>&#x000A;    <span class="ruby-identifier">normalize_fields</span>&#x000A;    <span class="ruby-identifier">update_id3</span>&#x000A;    <span class="ruby-identifier">update_ape</span>&#x000A;    <span class="ruby-identifier">write_tag</span>&#x000A;  <span class="ruby-keyword">end</span>&#x000A;  <span class="ruby-identifier">fields</span>&#x000A;<span class="ruby-keyword">end</span></pre>
                 </div>
               </div>
             </div>
