@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'apetag'
-require 'test/unit'
+require 'minitest/autorun'
 require 'stringio'
 require 'fileutils'
 
@@ -14,7 +14,7 @@ EXAMPLE_APE_FIELDS = {"Track"=>["1"], "Comment"=>["XXXX-0000"], "Album"=>["Test 
 EXAMPLE_APE_FIELDS2 = {"Blah"=>["Blah"], "Comment"=>["XXXX-0000"], "Album"=>["Test Album", "Other Album"], "Artist"=>["Test Artist"], "Date"=>["2007"]}
 EXAMPLE_APE_TAG_PRETTY_PRINT = "Album: Test Album, Other Album\nArtist: Test Artist\nComment: XXXX-0000\nDate: 2007\nTitle: Love Cheese\nTrack: 1"
 
-class ApeTagTest < Test::Unit::TestCase
+class ApeTagTest < Minitest::Test
   def binary(str)
     str.force_encoding('BINARY') if str.respond_to?(:force_encoding)
     str
@@ -272,21 +272,21 @@ class ApeTagTest < Test::Unit::TestCase
     assert_equal true, ai.valid?
     
     # Test valid read_only settings
-    assert_nothing_raised{ai.read_only=true}
-    assert_nothing_raised{ai.read_only=false}
+    ai.read_only=true
+    ai.read_only=false
     assert_raises(ApeTagError){ai.read_only=nil}
     assert_raises(ApeTagError){ai.read_only='Blah'}
     assert_equal true, ai.valid?
     
     # Test valid ape_type settings
-    ApeItem::ITEM_TYPES.each{|type| assert_nothing_raised{ai.ape_type=type}}
+    ApeItem::ITEM_TYPES.each{|type| ai.ape_type=type}
     assert_raises(ApeTagError){ai.ape_type='Blah'}
     
     # Test valid key settings
     ((("\0".."\x1f").to_a+("\x80".."\xff").to_a).collect{|x|"#{x}  "} +
       [nil, 1, '', 'x', 'x'*256, 'id3', 'tag', 'oggs', 'mp+']).each{|x|assert_raises(ApeTagError){ai.key=x}}
     ("\x20".."\x7f").to_a.collect{|x|"#{x}  "}+['id3', 'tag', 'oggs', 'mp+'].collect{|x|"#{x}  "} +
-      ['xx', 'x'*255].each{|x| assert_nothing_raised{ai.key=x}}
+      ['xx', 'x'*255].each{|x| ai.key=x}
     
     # Test valid raw and string value for different settings
     ai.key="BlaH"
@@ -317,7 +317,7 @@ class ApeTagTest < Test::Unit::TestCase
     # Test create fails with invalid key
     assert_raises(ApeTagError){ApeItem.create('', ai)}
     # Test create doesn't fail with valid UTF-8 value
-    assert_nothing_raised{ApeItem.create('xx',[[12345, 1345].pack('UU')])}
+    ApeItem.create('xx',[[12345, 1345].pack('UU')])
     
     # Test create with empty array
     ac = ApeItem.create('Blah', [])
@@ -363,7 +363,7 @@ class ApeTagTest < Test::Unit::TestCase
     data[4,1] = 8.chr
     assert_raises(ApeTagError){ApeItem.parse(data, 0)}
     data[4,1] = 0.chr
-    assert_nothing_raised{ApeItem.parse(data, 0)}
+    ApeItem.parse(data, 0)
     
     # Test parsing with length longer than string
     data[0,1] = 9.chr
@@ -372,14 +372,14 @@ class ApeTagTest < Test::Unit::TestCase
     # Test parsing with length shorter than string gives valid ApeItem
     # Of course, the next item will probably be parsed incorrectly
     data[0,1] = 3.chr
-    assert_nothing_raised{ai, offset = ApeItem.parse(data, 0)}
+    ai, offset = ApeItem.parse(data, 0)
     assert_equal 16, offset
     assert_equal "BlaH", ai.key
     assert_equal "BlA", ai.string_value
     
     # Test parsing gets correct key end
     data[12,1] = "3"
-    assert_nothing_raised{ai, offset = ApeItem.parse(data, 0)}
+    ai, offset = ApeItem.parse(data, 0)
     assert_equal "BlaH3BlAh", ai.key
     assert_equal "XYZ", ai.string_value
     
@@ -392,11 +392,11 @@ class ApeTagTest < Test::Unit::TestCase
   def test_bad_tags
     data = EMPTY_APE_TAG.dup
     # Test default case OK
-    assert_nothing_raised{ApeTag.new(StringIO.new(data)).raw}
+    ApeTag.new(StringIO.new(data)).raw
 
     # Test read only tags work
     data[20,1] = 1.chr
-    assert_nothing_raised{ApeTag.new(StringIO.new(data)).raw}
+    ApeTag.new(StringIO.new(data)).raw
 
     # Test other flags values don't work
     2.upto(255) do |i|
@@ -509,14 +509,14 @@ class ApeTagTest < Test::Unit::TestCase
     assert_equal ['blah'], ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['ALbUM']='blah'}['albuM']
     
     # Test updating an existing ApeItem via various array methods
-    assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'] += ['blah']}}
-    assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'] << 'blah'}}
-    assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'].replace(['blah'])}}
-    assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'].pop}}
-    assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'].shift}}
+    ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'] += ['blah']}
+    ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'] << 'blah'}
+    ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'].replace(['blah'])}
+    ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'].pop}
+    ApeTag.new(StringIO.new(EXAMPLE_APE_TAG.dup)).update{|x| x['Album'].shift}
     
     # Test ID3v1.0 tag
-    assert_nothing_raised{ApeTag.new(StringIO.new(EXAMPLE_APE_TAG[0...-128] + EXAMPLE_APE_TAG[-128..-1].gsub("\0", " "))).update{|x| x}}
+    ApeTag.new(StringIO.new(EXAMPLE_APE_TAG[0...-128] + EXAMPLE_APE_TAG[-128..-1].gsub("\0", " "))).update{|x| x}
 
     # Test updating with an invalid value
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| x['Album']="\xfe"}}
@@ -527,12 +527,12 @@ class ApeTagTest < Test::Unit::TestCase
     # Test updating with too many items 
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| 65.times{|i|x["blah#{i}"]=""}}}
     # Test updating with just enough items
-    assert_nothing_raised{ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| 64.times{|i|x["blah#{i}"]=""}}}
+    ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| 64.times{|i|x["blah#{i}"]=""}}
     
     # Test updating with too large a tag
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| x['xx']=' '*8118}}
     # Test updating with a just large enough tag
-    assert_nothing_raised{ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| x['xx']=' '*8117}}
+    ApeTag.new(StringIO.new(EMPTY_APE_TAG.dup)).update{|x| x['xx']=' '*8117}
   end
   
   def test_check_id3
