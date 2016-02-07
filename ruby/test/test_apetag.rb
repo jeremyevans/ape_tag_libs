@@ -5,9 +5,9 @@ require 'minitest/autorun'
 require 'stringio'
 require 'fileutils'
 
-EMPTY_APE_TAG = "APETAGEX\320\a\0\0 \0\0\0\0\0\0\0\0\0\0\240\0\0\0\0\0\0\0\0APETAGEX\320\a\0\0 \0\0\0\0\0\0\0\0\0\0\200\0\0\0\0\0\0\0\0TAG\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\377"
-EXAMPLE_APE_TAG = "APETAGEX\xd0\x07\x00\x00\xb0\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\xa0\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00Track\x001\x04\x00\x00\x00\x00\x00\x00\x00Date\x002007\t\x00\x00\x00\x00\x00\x00\x00Comment\x00XXXX-0000\x0b\x00\x00\x00\x00\x00\x00\x00Title\x00Love Cheese\x0b\x00\x00\x00\x00\x00\x00\x00Artist\x00Test Artist\x16\x00\x00\x00\x00\x00\x00\x00Album\x00Test Album\x00Other AlbumAPETAGEX\xd0\x07\x00\x00\xb0\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00TAGLove Cheese\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Artist\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Album, Other Album\x00\x00\x00\x00\x00\x00\x002007XXXX-0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\xff"
-EXAMPLE_APE_TAG2 = "APETAGEX\xd0\x07\x00\x00\x99\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\xa0\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00Blah\x00Blah\x04\x00\x00\x00\x00\x00\x00\x00Date\x002007\t\x00\x00\x00\x00\x00\x00\x00Comment\x00XXXX-0000\x0b\x00\x00\x00\x00\x00\x00\x00Artist\x00Test Artist\x16\x00\x00\x00\x00\x00\x00\x00Album\x00Test Album\x00Other AlbumAPETAGEX\xd0\x07\x00\x00\x99\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00TAG\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Artist\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Album, Other Album\x00\x00\x00\x00\x00\x00\x002007XXXX-0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff"
+EMPTY_APE_TAG = "APETAGEX\320\a\0\0 \0\0\0\0\0\0\0\0\0\0\240\0\0\0\0\0\0\0\0APETAGEX\320\a\0\0 \0\0\0\0\0\0\0\0\0\0\200\0\0\0\0\0\0\0\0TAG\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\377".dup
+EXAMPLE_APE_TAG = "APETAGEX\xd0\x07\x00\x00\xb0\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\xa0\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00Track\x001\x04\x00\x00\x00\x00\x00\x00\x00Date\x002007\t\x00\x00\x00\x00\x00\x00\x00Comment\x00XXXX-0000\x0b\x00\x00\x00\x00\x00\x00\x00Title\x00Love Cheese\x0b\x00\x00\x00\x00\x00\x00\x00Artist\x00Test Artist\x16\x00\x00\x00\x00\x00\x00\x00Album\x00Test Album\x00Other AlbumAPETAGEX\xd0\x07\x00\x00\xb0\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00TAGLove Cheese\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Artist\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Album, Other Album\x00\x00\x00\x00\x00\x00\x002007XXXX-0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\xff".dup
+EXAMPLE_APE_TAG2 = "APETAGEX\xd0\x07\x00\x00\x99\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\xa0\x00\x00\x00\x00\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00Blah\x00Blah\x04\x00\x00\x00\x00\x00\x00\x00Date\x002007\t\x00\x00\x00\x00\x00\x00\x00Comment\x00XXXX-0000\x0b\x00\x00\x00\x00\x00\x00\x00Artist\x00Test Artist\x16\x00\x00\x00\x00\x00\x00\x00Album\x00Test Album\x00Other AlbumAPETAGEX\xd0\x07\x00\x00\x99\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00TAG\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Artist\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00Test Album, Other Album\x00\x00\x00\x00\x00\x00\x002007XXXX-0000\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff".dup
 [EMPTY_APE_TAG, EXAMPLE_APE_TAG, EXAMPLE_APE_TAG2].each{|x| x.force_encoding('binary')} if RUBY_VERSION >= '1.9.0'
 EMPTY_APE_ONLY_TAG, EXAMPLE_APE_ONLY_TAG, EXAMPLE_APE_ONLY_TAG2 = [EMPTY_APE_TAG, EXAMPLE_APE_TAG, EXAMPLE_APE_TAG2].collect{|x|x[0...-128]}
 EXAMPLE_APE_FIELDS = {"Track"=>["1"], "Comment"=>["XXXX-0000"], "Album"=>["Test Album", "Other Album"], "Title"=>["Love Cheese"], "Artist"=>["Test Artist"], "Date"=>["2007"]}
@@ -16,11 +16,13 @@ EXAMPLE_APE_TAG_PRETTY_PRINT = "Album: Test Album, Other Album\nArtist: Test Art
 
 class ApeTagTest < Minitest::Test
   def binary(str)
+    str = str.dup if str.frozen?
     str.force_encoding('BINARY') if str.respond_to?(:force_encoding)
     str
   end
 
   def utf8(str)
+    str = str.dup if str.frozen?
     str.force_encoding('UTF-8') if str.respond_to?(:force_encoding)
     str
   end
@@ -340,7 +342,7 @@ class ApeTagTest < Minitest::Test
   
   # Test ApeItem.parse
   def test_ape_item_parse
-    data = "\010\0\0\0\0\0\0\07BlaH\0BlAh\0XYZ"
+    data = "\010\0\0\0\0\0\0\07BlaH\0BlAh\0XYZ".dup
     # Test simple item parsing
     ai, offset = ApeItem.parse(data, 0)
     assert_equal 2, ai.length
@@ -434,7 +436,7 @@ class ApeTagTest < Minitest::Test
     
     # Test that header and footer size isn't too large for file, but doesn't
     # find the header
-    data=" #{data}"
+    data=" #{data}".dup
     assert_raises(ApeTagError){ApeTag.new(StringIO.new(data)).raw}
     
     # Test unmatching header and footer tag size, with header size wrong
@@ -613,12 +615,12 @@ class ApeTagTest < Minitest::Test
       utf16_values = File.read('test/utf-16be.values', :mode=>'rb:UTF-16BE')
       latin1_values = File.read('test/latin1.values', :mode=>'rb:ISO-8859-1')
       ApeTag.new(filename).update do |f|
-        f[utf16_key] = utf16_values.split('\n'.force_encoding('UTF-16BE'))
-        f['foo'] = latin1_values.split('\n'.force_encoding('ISO-8859-1'))
+        f[utf16_key] = utf16_values.split('\n'.dup.force_encoding('UTF-16BE'))
+        f['foo'] = latin1_values.split('\n'.dup.force_encoding('ISO-8859-1'))
       end
       f = ApeTag.new(filename).fields
-      assert_equal utf8_values.split('\n'.force_encoding('UTF-8')), f[utf8_key]
-      assert_equal utf8_values.split('\n'.force_encoding('UTF-8')), f['foo']
+      assert_equal utf8_values.split('\n'.dup.force_encoding('UTF-8')), f[utf8_key]
+      assert_equal utf8_values.split('\n'.dup.force_encoding('UTF-8')), f['foo']
       File.delete(filename)
     end
   end
