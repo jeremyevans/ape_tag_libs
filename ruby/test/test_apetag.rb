@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'apetag'
+ENV['MT_NO_PLUGINS'] = '1' # Work around stupid autoloading of plugins
 require 'minitest/autorun'
 require 'stringio'
 require 'fileutils'
