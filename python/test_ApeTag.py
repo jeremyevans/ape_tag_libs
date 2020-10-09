@@ -270,7 +270,7 @@ class TestApeTag(unittest.TestCase):
         # Test parsing with no key end
         self.assertRaises(ApeTag.TagError, ApeTag.ApeItem().parsetag, "\0\0\0\0\0\0\0\0xx", 0)
         
-        # Test prasing with bad start value
+        # Test parsing with bad start value
         self.assertRaises(ApeTag.TagError, ApeTag.ApeItem().parsetag, data, 1)
         
         # Test parsing with bad flags
