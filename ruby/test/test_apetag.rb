@@ -286,10 +286,15 @@ class ApeTagTest < Minitest::Test
     assert_raises(ApeTagError){ai.ape_type='Blah'}
     
     # Test valid key settings
-    ((("\0".."\x1f").to_a+("\x80".."\xff").to_a).collect{|x|"#{x}  "} +
-      [nil, 1, '', 'x', 'x'*256, 'id3', 'tag', 'oggs', 'mp+']).each{|x|assert_raises(ApeTagError){ai.key=x}}
-    ("\x20".."\x7f").to_a.collect{|x|"#{x}  "}+['id3', 'tag', 'oggs', 'mp+'].collect{|x|"#{x}  "} +
-      ['xx', 'x'*255].each{|x| ai.key=x}
+    (
+      (("\0".."\x1f").to_a + ("\x80".."\xff").to_a).collect{|x|"#{x}  "} +
+      [nil, 1, '', 'x', 'x'*256, 'id3', 'tag', 'oggs', 'mp+']
+    ).each{|x|assert_raises(ApeTagError){ai.key=x}}
+    (
+      ("\x20".."\x7f").to_a.collect{|x|"#{x}  "} +
+      ['id3', 'tag', 'oggs', 'mp+'].collect{|x|"#{x}  "} +
+      ['xx', 'x'*255]
+    ).each{|x| ai.key=x}
     
     # Test valid raw and string value for different settings
     ai.key="BlaH"
