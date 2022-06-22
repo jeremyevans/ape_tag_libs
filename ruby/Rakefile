@@ -1,36 +1,19 @@
-require 'rake'
-require 'rake/clean'
+require "rdoc/task"
 
-RDOC_OPTS = ["--line-numbers", "--inline-source", '--main', 'README']
+RDoc::Task.new do |rdoc|
+  rdoc.rdoc_dir = "rdoc"
+  rdoc.options += ["--quiet", "--line-numbers", "--inline-source", '--title', 'ruby-apetag: APEv2 Tag Reader/Writer', '--main', 'apetag.rb']
 
-begin
-  gem 'hanna-nouveau'
-  RDOC_OPTS.concat(['-f', 'hanna'])
-rescue Gem::LoadError
-end
-
-rdoc_task_class = begin
-  require "rdoc/task"
-  RDoc::Task
-rescue LoadError
   begin
-    require "rake/rdoctask"
-    Rake::RDocTask
-  rescue LoadError, StandardError
+    gem 'hanna-nouveau'
+    rdoc.options += ['-f', 'hanna']
+  rescue Gem::LoadError
   end
+
+  rdoc.rdoc_files.add %w"MIT-LICENSE apetag.rb"
 end
 
-if rdoc_task_class
-  rdoc_task_class.new do |rdoc|
-    rdoc.rdoc_dir = "rdoc"
-    rdoc.options += RDOC_OPTS
-    rdoc.main = "apetag.rb"
-    rdoc.title = "ruby-apetag: APEv2 Tag Reader/Writer"
-    rdoc.rdoc_files.add ["apetag.rb"]
-  end
-end
-
-desc "Package ruby-apetag"
+desc "Build apetag gem"
 task :package do
   sh %{gem build apetag.gemspec}
 end
