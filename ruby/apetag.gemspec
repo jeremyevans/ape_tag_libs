@@ -7,9 +7,11 @@ spec = Gem::Specification.new do |s|
   s.summary = "APEv2 Tag Reader/Writer"
   s.files = Dir['apetag.rb']
   s.require_path = "."
-  s.test_files = Dir["test/test_apetag.rb"]
-  s.has_rdoc = true
   s.add_dependency('cicphash', [">= 1.0.0"])
-  s.homepage = 'http://ruby-apetag.jeremyevans.net'
+  s.homepage = 'https://ruby-apetag.jeremyevans.net'
+  s.metadata = {
+    'bug_tracker_uri'   => 'https://github.com/jeremyevans/ape_tag_libs/issues',
+    'mailing_list_uri'  => 'https://github.com/jeremyevans/ape_tag_libs/discussions',
+    'source_code_uri'   => 'https://github.com/jeremyevans/ape_tag_libs/tree/master/ruby',
+  }
 end
-
