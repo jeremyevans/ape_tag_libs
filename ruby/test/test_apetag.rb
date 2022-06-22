@@ -1,5 +1,17 @@
 #!/usr/bin/env ruby
 require 'rubygems'
+
+if ENV.delete('COVERAGE')
+  require 'simplecov'
+
+  SimpleCov.start do
+    enable_coverage :branch
+    add_filter "/test/"
+    add_group('Missing'){|src| src.covered_percent < 100}
+    add_group('Covered'){|src| src.covered_percent == 100}
+  end
+end
+
 require 'apetag'
 ENV['MT_NO_PLUGINS'] = '1' # Work around stupid autoloading of plugins
 require 'minitest/autorun'
@@ -82,6 +94,7 @@ class ApeTagTest < Minitest::Test
     corrupt("corrupt-size-larger-than-possible", "Tag size (65) larger than possible")
     corrupt("corrupt-size-mismatch", "Header and footer size does not match")
     corrupt("corrupt-size-over-max-allowed", "Tag size (61504) larger than possible")
+    corrupt("corrupt-size-over-max-size", "Tag size (61504) is larger than 8192")
     corrupt("corrupt-value-not-utf8", "Invalid item value encoding (non UTF-8)")
   end
 
@@ -174,6 +187,7 @@ class ApeTagTest < Minitest::Test
     assert_files_equal('good-empty-id3', 'good-simple-4'){|tag| tag.update{|f| f.merge!('track'=>'1', 'genre'=>'Game', 'year'=>'1999', 'title'=>'Test Title', 'artist'=>'Test Artist', 'album'=>'Test Album', 'comment'=>'Test Comment')}}
     assert_files_equal('good-empty-id3', 'good-simple-4-uc'){|tag| tag.update{|f| f.merge!('Track'=>'1', 'Genre'=>'Game', 'Year'=>'1999', 'Title'=>'Test Title', 'Artist'=>'Test Artist', 'Album'=>'Test Album', 'Comment'=>'Test Comment')}}
     assert_files_equal('good-empty-id3', 'good-simple-4-date'){|tag| tag.update{|f| f.merge!('track'=>'1', 'genre'=>'Game', 'date'=>'12/31/1999', 'title'=>'Test Title', 'artist'=>'Test Artist', 'album'=>'Test Album', 'comment'=>'Test Comment')}}
+    assert_files_equal('good-empty-id3', 'good-simple-4-bad-date'){|tag| tag.update{|f| f.merge!('track'=>'256', 'genre'=>'Game', 'date'=>'ABCD', 'title'=>'Test Title', 'artist'=>'Test Artist', 'album'=>'Test Album', 'comment'=>'Test Comment')}}
     assert_files_equal('good-empty-id3', 'good-simple-4-long'){|tag| tag.update{|f| f.merge!('track'=>'1', 'genre'=>'Game', 'year'=>'1999'*2, 'title'=>'Test Title'*5, 'artist'=>'Test Artist'*5, 'album'=>'Test Album'*5, 'comment'=>'Test Comment'*5)}}
 
     assert_equal(false, ApeTag.new(tagname('good-empty-id3'), false).exists?)
@@ -306,6 +320,12 @@ class ApeTagTest < Minitest::Test
     ai << 'XYZ'
     assert_equal "\010\0\0\0\0\0\0\07BlaH\0BlAh\0XYZ", ai.raw
     assert_equal "BlAh\0XYZ", ai.string_value
+
+    if RUBY_VERSION >= '1.9'
+      ai = ApeItem.new('BlaH', ["\x80".force_encoding('BINARY')])
+      assert_equal(false, ai.valid_value?)
+      assert_raises(ApeTagError){ai.normalize_encodings}
+    end
   end
   
   # Test ApeItem.create methods
@@ -601,6 +621,14 @@ class ApeTagTest < Minitest::Test
     ApeTag.new(filename).remove!
     assert_equal 0, get_size(filename)
     File.delete(filename)
+  end
+
+  def test_pretty_print_missing_file
+    assert_equal('FILE NOT FOUND!', ApeTag.new('nonexistant').pretty_print)
+  end
+
+  def test_pretty_print_corrupt_tag
+    assert_includes(ApeTag.new('../test-files/corrupt-header.tag').pretty_print, 'CORRUPT TAG!: ')
   end
 
   if RUBY_VERSION > '1.9.0'

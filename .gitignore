@@ -1,8 +1,8 @@
-rdoc
 python/*.pyc
 python/test_ApeTag.html
 ruby/*.gem
-*.rbc
+ruby/coverage
+ruby/rdoc
 perl/ApeTag-*
 perl/Makefile
 perl/Makefile.old

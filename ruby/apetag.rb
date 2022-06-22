@@ -120,8 +120,10 @@ class ApeItem < Array
   def raw
     raise ApeTagError, "Invalid key, value, APE type, or Read-Only Flag" unless valid? 
     flags = ITEM_TYPES.index(ape_type) * 2 + (read_only ? 1 : 0)
+    # :nocov:
     k = RUBY_VERSION >= '1.9' ? key.dup.force_encoding('BINARY') : key
     sv = RUBY_VERSION >= '1.9' ? string_value.dup.force_encoding('BINARY') : string_value
+    # :nocov:
     "#{[sv.length, flags].pack('VN')}#{k}\0#{sv}"
   end
   
@@ -160,27 +162,29 @@ class ApeItem < Array
   
   # Check if the string value is valid UTF-8.
   def valid_value?
-    begin
-      if ape_type == 'utf8' || ape_type == 'external'
-        if RUBY_VERSION >= '1.9'
-          begin
-            map!{|v| v.to_s.encode('UTF-8')}
-          rescue EncodingError
-            return false
-          end
+    if ape_type == 'utf8' || ape_type == 'external'
+      # :nocov:
+      if RUBY_VERSION >= '1.9'
+      # :nocov:
+        begin
+          map!{|v| v.to_s.encode('UTF-8')}
+        rescue EncodingError
+          return false
         end
-        string_value.unpack('U*')
       end
-    rescue ArgumentError
-      false
-    else
-      true
+      string_value.unpack('U*')
     end
+  rescue ArgumentError
+    false
+  else
+    true
   end
 
   def self.new_from_parse(key, value, flags)
     ape_type = flags/2
-    if RUBY_VERSION >= '1.9.0'
+    # :nocov:
+    if RUBY_VERSION >= '1.9'
+    # :nocov:
       key.force_encoding('US-ASCII') 
       case ape_type
       when 0, 2
@@ -199,11 +203,9 @@ class ApeItem < Array
 
   if RUBY_VERSION >= '1.9.0'
     def encoded_key(key)
-      begin
-        key.encode('US-ASCII')
-      rescue EncodingError
-        return false
-      end
+      key.encode('US-ASCII')
+    rescue EncodingError
+      return false
     end
 
     def normalize_encodings
@@ -212,6 +214,7 @@ class ApeItem < Array
     rescue Encoding::UndefinedConversionError => e
       raise ApeTagError, "#{e.class}: #{e.message}"
     end
+  # :nocov:
   else
     def encoded_key(key)
       key
@@ -220,6 +223,7 @@ class ApeItem < Array
     def normalize_encodings
       self
     end
+  # :nocov:
   end
 end
 
@@ -320,13 +324,11 @@ class ApeTag
   
   # Pretty print tags, with one line per field, showing key and value.
   def pretty_print
-    begin
-      fields.values.sort_by{|value| value.key}.collect{|value| "#{value.key}: #{value.join(', ')}"}.join("\n")
-    rescue ApeTagError => e
-      "CORRUPT TAG!: #{e.message}"
-    rescue Errno::ENOENT, Errno::EINVAL
-      "FILE NOT FOUND!"
-    end
+    fields.values.sort_by{|value| value.key}.collect{|value| "#{value.key}: #{value.join(', ')}"}.join("\n")
+  rescue ApeTagError => e
+    "CORRUPT TAG!: #{e.message}"
+  rescue Errno::ENOENT, Errno::EINVAL
+    "FILE NOT FOUND!"
   end
   
   # The raw APEv2 + ID3v1.1 tag.  If one or the other is empty that part will be missing.
@@ -381,8 +383,10 @@ class ApeTag
         File.size(filename)
       elsif file.respond_to?(:size)
         file.size
+      # :nocov:
       else
         file.seek(0, IO::SEEK_END) && file.pos
+      # :nocov:
       end
     end
     
@@ -518,9 +522,11 @@ class ApeTag
     end
 end
 
+# :nocov:
 # If called directly from the command line, treat all arguments as filenames, and pretty print the APE tag's fields for each filename.
 if __FILE__ == $0
   ARGV.each do |filename| 
     puts filename, '-'*filename.length, ApeTag.new(filename).pretty_print, ''
   end
 end
+# :nocov:

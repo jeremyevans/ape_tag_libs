@@ -23,3 +23,10 @@ task :test do
   sh %{#{FileUtils::RUBY} #{'-w' if RUBY_VERSION >= '3'} -I. test/test_apetag.rb}
 end
 task :default => :test
+
+
+desc "Run specs with coverage"
+task :test_cov do
+  ENV['COVERAGE'] = '1'
+  sh %{#{FileUtils::RUBY} -I. test/test_apetag.rb}
+end
