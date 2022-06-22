@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby
 # encoding: ascii
 # This library implements a APEv2 reader/writer.
-# If called from the command line, it prints out the contents of the APEv2 tag 
-# for the given filename arguments.
 #
 # ruby-apetag is a pure Ruby library for manipulating APEv2 tags.
 # It aims for standards compliance with the APE spec (1). APEv2 is the standard
@@ -10,26 +8,33 @@
 # also be used with mp3s as an alternative to ID3v2.x (technically, it can be 
 # used on any file type and is not limited to storing just audio file metadata).
 #
-# The module is in written in pure Ruby, so it should be useable on all 
-# platforms that Ruby supports.  It is developed and tested on OpenBSD
-# with ruby 1.8 and ruby 1.9.
+# The module is in written in pure Ruby, so it should be usable on all 
+# platforms that Ruby supports.
 #
 # General Use:
 #
 #  require 'apetag'
 #  a = ApeTag.new('file.mp3')
-#  a.exists? # if it already has an APEv2 tag
-#  a.raw # the raw APEv2+ID3v1.1 tag string in the file
-#  a.fields # a CICPHash of fields, keys are strings, values are list of strings
-#  a.pretty_print # string suitable for pretty printing
-#  a.update{|fields| fields['Artist']='Test Artist'; fields.delete('Year')}
-#   # Update the tag with the added/changed/deleted fields
-#   # Note that you should do: a.update{|fields| fields.replace('Test'=>'Test')}
-#   # and NOT: a.update{|fields| fields = {'Test'=>'Test'}}
-#   # You need to update/modify the fields given, not reassign it
-#  a.remove! # remove the APEv2 and ID3v1.1 tags.
 #
-# To run the tests for the library, run test_apetag.rb.
+#  # Whether the file already has an APEv2 tag
+#  a.exists?
+#
+#  # The raw APEv2+ID3v1.1 tag string in the file
+#  a.raw
+#
+#  # A CICPHash of fields, keys are strings, values are array of strings
+#  a.fields 
+#
+#  # A string suitable for pretty printing
+#  a.pretty_print 
+#
+#  # Update the tag with the added/changed/deleted fields
+#  a.update{|fields| fields['Artist']='Test Artist'; fields.delete('Year')}
+#
+#  # Remove the APEv2 and ID3v1.1 tags.
+#  a.remove! 
+#
+# To run the tests for the library, use the default rake task.
 #
 # If you find any bugs, would like additional documentation, or want to submit a
 # patch, please use GitHub (https://github.com/jeremyevans/ape_tag_libs/issues)
@@ -40,6 +45,9 @@
 # (http://github.com/jeremyevans/ape_tag_libs).  Note that the 
 # library isn't modified on a regular basis, so it is unlikely to be different
 # from the latest release.
+#
+# If called from the command line, this file prints out the contents of the APEv2 tag 
+# for the given filename arguments.
 #
 # (1) http://wiki.hydrogenaudio.org/index.php?title=APEv2_specification
 
