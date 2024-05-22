@@ -322,7 +322,7 @@ class ApeTagTest < Minitest::Test
     assert_equal "BlAh\0XYZ", ai.string_value
 
     if RUBY_VERSION >= '1.9'
-      ai = ApeItem.new('BlaH', ["\x80".force_encoding('BINARY')])
+      ai = ApeItem.new('BlaH', ["\x80".dup.force_encoding('BINARY')])
       assert_equal(false, ai.valid_value?)
       assert_raises(ApeTagError){ai.normalize_encodings}
     end
