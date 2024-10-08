@@ -28,14 +28,26 @@ EXAMPLE_APE_FIELDS2 = {"Blah"=>["Blah"], "Comment"=>["XXXX-0000"], "Album"=>["Te
 EXAMPLE_APE_TAG_PRETTY_PRINT = "Album: Test Album, Other Album\nArtist: Test Artist\nComment: XXXX-0000\nDate: 2007\nTitle: Love Cheese\nTrack: 1"
 
 class ApeTagTest < Minitest::Test
+  if RUBY_VERSION >= '2.3'
+    def _dup_string_if_frozen(string)
+      +string
+    end
+  # :nocov:
+  else
+    def _dup_string_if_frozen(string)
+      string.frozen? ? string.dup : string
+    end
+  end
+  # :nocov:
+
   def binary(str)
-    str = str.dup if str.frozen?
+    str = _dup_string_if_frozen(str)
     str.force_encoding('BINARY') if str.respond_to?(:force_encoding)
     str
   end
 
   def utf8(str)
-    str = str.dup if str.frozen?
+    str = _dup_string_if_frozen(str)
     str.force_encoding('UTF-8') if str.respond_to?(:force_encoding)
     str
   end
