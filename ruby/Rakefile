@@ -1,5 +1,5 @@
 desc "Generate rdoc"
-task :website_rdoc do
+task :rdoc do
   rdoc_dir = "rdoc"
   rdoc_opts = ["--line-numbers", "--inline-source", '--title', 'ruby-apetag: APEv2 Tag Reader/Writer']
 
