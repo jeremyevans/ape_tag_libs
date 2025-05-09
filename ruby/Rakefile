@@ -1,16 +1,20 @@
-require "rdoc/task"
-
-RDoc::Task.new do |rdoc|
-  rdoc.rdoc_dir = "rdoc"
-  rdoc.options += ["--quiet", "--line-numbers", "--inline-source", '--title', 'ruby-apetag: APEv2 Tag Reader/Writer', '--main', 'apetag.rb']
+desc "Generate rdoc"
+task :website_rdoc do
+  rdoc_dir = "rdoc"
+  rdoc_opts = ["--line-numbers", "--inline-source", '--title', 'ruby-apetag: APEv2 Tag Reader/Writer']
 
   begin
-    gem 'hanna-nouveau'
-    rdoc.options += ['-f', 'hanna']
+    gem 'hanna'
+    rdoc_opts.concat(['-f', 'hanna'])
   rescue Gem::LoadError
   end
 
-  rdoc.rdoc_files.add %w"MIT-LICENSE apetag.rb"
+  rdoc_opts.concat(['--main', 'apetag.rb', "-o", rdoc_dir, 'MIT-LICENSE', 'apetag.rb'])
+
+  FileUtils.rm_rf(rdoc_dir)
+
+  require "rdoc"
+  RDoc::RDoc.new.document(rdoc_opts)
 end
 
 desc "Build apetag gem"
