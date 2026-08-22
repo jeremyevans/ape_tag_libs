@@ -128,10 +128,10 @@ class ApeItem < Array
   def raw
     raise ApeTagError, "Invalid key, value, APE type, or Read-Only Flag" unless valid? 
     flags = ITEM_TYPES.index(ape_type) * 2 + (read_only ? 1 : 0)
-    # :nocov:
+    # simplecov:disable
     k = RUBY_VERSION >= '1.9' ? key.dup.force_encoding('BINARY') : key
     sv = RUBY_VERSION >= '1.9' ? string_value.dup.force_encoding('BINARY') : string_value
-    # :nocov:
+    # simplecov:enable
     "#{[sv.length, flags].pack('VN')}#{k}\0#{sv}"
   end
   
@@ -171,9 +171,9 @@ class ApeItem < Array
   # Check if the string value is valid UTF-8.
   def valid_value?
     if ape_type == 'utf8' || ape_type == 'external'
-      # :nocov:
+      # simplecov:disable
       if RUBY_VERSION >= '1.9'
-      # :nocov:
+      # simplecov:enable
         begin
           map!{|v| v.to_s.encode('UTF-8')}
         rescue EncodingError
@@ -190,9 +190,9 @@ class ApeItem < Array
 
   def self.new_from_parse(key, value, flags)
     ape_type = flags/2
-    # :nocov:
+    # simplecov:disable
     if RUBY_VERSION >= '1.9'
-    # :nocov:
+    # simplecov:enable
       key.force_encoding('US-ASCII') 
       case ape_type
       when 0, 2
@@ -222,7 +222,7 @@ class ApeItem < Array
     rescue Encoding::UndefinedConversionError => e
       raise ApeTagError, "#{e.class}: #{e.message}"
     end
-  # :nocov:
+  # simplecov:disable
   else
     def encoded_key(key)
       key
@@ -231,7 +231,7 @@ class ApeItem < Array
     def normalize_encodings
       self
     end
-  # :nocov:
+  # simplecov:enable
   end
 end
 
@@ -391,10 +391,10 @@ class ApeTag
         File.size(filename)
       elsif file.respond_to?(:size)
         file.size
-      # :nocov:
+      # simplecov:disable
       else
         file.seek(0, IO::SEEK_END) && file.pos
-      # :nocov:
+      # simplecov:enable
       end
     end
     
@@ -530,11 +530,11 @@ class ApeTag
     end
 end
 
-# :nocov:
+# simplecov:disable
 # If called directly from the command line, treat all arguments as filenames, and pretty print the APE tag's fields for each filename.
 if __FILE__ == $0
   ARGV.each do |filename| 
     puts filename, '-'*filename.length, ApeTag.new(filename).pretty_print, ''
   end
 end
-# :nocov:
+# simplecov:enable
